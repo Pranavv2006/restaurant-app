@@ -13,4 +13,12 @@ const insertMerchant = () => {
         `;
 }
 
-module.exports = { insertMerchant };
+const merchantEmailCheck = () => {
+    return 'SELECT merchant_email FROM merchant WHERE merchant_email = $1';
+}
+
+const merchantUsernameCheck = () => {
+    return 'SELECT merchant_username FROM merchant WHERE merchant_username = $1';
+}
+
+module.exports = { insertMerchant, merchantEmailCheck, merchantUsernameCheck };
