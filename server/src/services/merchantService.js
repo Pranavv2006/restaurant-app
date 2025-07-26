@@ -13,6 +13,7 @@ const register = async (username, email, password, phone, resName, location) => 
             data: res.rows[0],
             message: 'Merchant registered successfully'
         };
+        
     } catch (error) {
         console.error(`Error registering mechant: ${error.message}`);
     }
