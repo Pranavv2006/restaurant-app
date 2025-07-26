@@ -1,9 +1,9 @@
-const {Client} = require('pg');
+const {Pool, Client} = require('pg');
 const path = require('path');
 
-require('dotenv').config({path: path.join(__dirname, '..', '..', '.env')});
+require('dotenv').config({path: path.join(__dirname, '..', '.env')});
 
-const client = new Client({
+const pool = new Pool({
     user: process.env.database_user,
     password: process.env.database_password,
     database: process.env.database_name,
@@ -11,8 +11,16 @@ const client = new Client({
     port: parseInt(process.env.database_port)
 });
 
-client.connect()
-    .then(() => console.log('Connected'))
-    .catch(error => console.error(error.stack));
+pool.on('error', (err) => {
+    console.error(`Pool error: ${err}`);
+});
 
-module.exports = client;
+pool.on('connect', () => {
+    console.log('New connection established');
+});
+
+pool.on('remove', () => {
+    console.log('Connection removed');
+})
+
+module.exports = pool;
