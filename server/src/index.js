@@ -2,12 +2,15 @@ const express = require('express');
 const path = require('path');
 const pool = require('./config/db');
 
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const merchantRegister = require('./routes/merchants/merchantRegister');
+
+require('dotenv').config();
 
 const app = express();
 const port = process.env.server_port || 3001;
 
 app.use(express.json())
+app.use('/merchant', merchantRegister);
 
 app.get('/', async (req, res) => {
     const result = await pool.query("SELECT current_database()");

@@ -12,3 +12,5 @@ const insertMerchant = () => {
             RETURNING *
         `;
 }
+
+module.exports = { insertMerchant };
