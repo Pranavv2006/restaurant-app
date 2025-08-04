@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./config/db');
 
 const merchantRoutes = require('./routes/merchantRoutes');
 const authenticate = require('./middlewares/authenticate');
@@ -33,3 +32,4 @@ app.listen(port, () => {
 });
 
 // use prisma/drizzle for model generation
+// rate limiting for register and login(cache-based/redis based)

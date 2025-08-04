@@ -1,9 +1,9 @@
-const merchantService = require('../services/merchantService');
+const merchantService = require('../services/loginRegisterService');
 
 const registerMerchant = async (req, res) => {
     try {
-        const {username, email, password, phone, resName, location} = req.body;
-        const result = await merchantService.register(username, email, password, phone, resName, location);
+        const {email, password, firstName, lastName, role} = req.body;
+        const result = await merchantService.register(email, password, firstName, lastName, role);
         
         if (result.success) {
             res.status(201).json(result);
