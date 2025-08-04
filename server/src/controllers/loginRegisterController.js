@@ -1,9 +1,10 @@
-const merchantService = require('../services/loginRegisterService');
+const registerService = require('../services/RegisterService');
+const loginService = require('../services/loginService');
 
-const registerMerchant = async (req, res) => {
+const registerController = async (req, res) => {
     try {
         const {email, password, firstName, lastName, role} = req.body;
-        const result = await merchantService.register(email, password, firstName, lastName, role);
+        const result = await registerService.register(email, password, firstName, lastName, role);
         
         if (result.success) {
             res.status(201).json(result);
@@ -15,7 +16,7 @@ const registerMerchant = async (req, res) => {
     }
 }
 
-const loginMerchant = async (req, res) => {
+const loginController = async (req, res) => {
     try {
         const {email, password} = req.body;
         if (!email || !password){
@@ -25,7 +26,7 @@ const loginMerchant = async (req, res) => {
             });
         }
 
-        const result = await merchantService.login(email, password);
+        const result = await loginService.login(email, password);
 
         if (result.status === 'success'){
             res.status(200).json(result);
@@ -40,4 +41,4 @@ const loginMerchant = async (req, res) => {
     }
 }
 
-module.exports = { registerMerchant, loginMerchant};
+module.exports = { registerController, loginController};
