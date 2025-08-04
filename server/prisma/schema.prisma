@@ -1,0 +1,157 @@
+datasource db {
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id Int @id @default(autoincrement())
+    email String @unique @db.VarChar(255)
+    password String
+    firstName String
+    lastName String
+
+    userPermissions UserPermission[]
+    userRoles UserRole[]
+    restaurants Restaurant[]
+    orders Order[]
+
+    @@map("Users")
+}
+
+model Permission {
+    id Int @id @default(autoincrement())
+    desc String 
+
+    userPermissions UserPermission[]
+
+    @@map("Permissions")
+}
+
+model Role {
+    id Int @id @default(autoincrement())
+    type String
+
+    userRoles UserRole[]
+
+    @@map("Roles")
+}
+
+model UserPermission {
+    userId Int @map("user_id")
+    permissionId Int @map("permission_id")
+    status Boolean @default(true) 
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+    @@id([userId, permissionId])
+    @@map("User_permissions")
+}
+
+model UserRole {
+    userId Int @map("user_id")
+    roleId Int @map("role_id")
+    status Boolean @default(true)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+    @@id([userId, roleId])
+    @@map("User_roles")
+}
+
+model Restaurant {
+    id Int @id @default(autoincrement())
+    merchantId Int @map("merchant_id")
+    name String 
+    location String?
+    phone String?
+    cuisine String?
+
+    user User @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+    orders Order[]
+    menus Menu[]
+
+    @@map("Restaurant")
+}
+
+model Order {
+    id Int @id @default(autoincrement())
+    userId Int @map("user_id")
+    restaurantId Int @map("restaurant_id")
+    status String @default("pending")
+    discount Decimal @default(0.00) @db.Decimal(10,2)
+    total Decimal @db.Decimal(10,2)
+    deliveryFee Decimal @default(0.00) @db.Decimal(10,2) @map("delivery_fee")
+    orderDate DateTime @default(now()) @map("order_date") 
+    deliveryTime DateTime? @db.Time() @map("delivery_time")
+    deliveryAddress String? @map("delivery_address")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+    items OrderItem[]
+    payments Payment[]
+
+    @@map("Order")
+}
+
+model Menu {
+    id Int @id @default(autoincrement())
+    restaurantId Int @map("restaurant_id")
+    name String
+    description String?
+    price Decimal @db.Decimal(10, 2)
+    imageUrl String? @map("image_url")
+
+    restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+    items OrderItem[]
+}
+
+model OrderItem {
+    id Int @id @default(autoincrement())
+    orderId Int @map("order_id")
+    menuId Int @map("menu_id")
+    quantity Int @default(1)
+    unitPrice Decimal @db.Decimal(10, 2) @map("unit_price")
+    subtotal Decimal @db.Decimal(10, 2)
+
+    order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+    @@map("Order_items")
+}
+
+model Payment {
+    id Int @id @default(autoincrement())
+    orderId Int @map("order_id")
+    transactionNo String @unique @map("transaction_no")
+    modeOfPayment PaymentMethod @map("mode_of_payment")
+    status PaymentStatus @default(PENDING)
+    date DateTime @default(now())
+    gateway String?
+
+    order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentMethod {
+    CASH
+    CREDIT_CARD
+    DEBIT_CARD
+    UPI
+    WALLET
+    NET_BANKING
+    COD
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+}

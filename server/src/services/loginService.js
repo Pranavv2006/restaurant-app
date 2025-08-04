@@ -1,59 +1,6 @@
-const pool = require('../config/db');
-const merchantModel = require('../models/merchantModel');
+const jwt = require('jsonwebtoken');  
+const prisma = require('../models/prismaClient');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-const register = async (username, email, password, phone, resName, location) => {
-    try {
-        const emailCheck = await pool.query(
-            merchantModel.merchantEmailCheck(),
-            [email]
-        );
-
-        if (emailCheck.rows.length > 0) {
-            return {
-                success: false,
-                message: 'Email already exists',
-                error: 'DUPLICATE_EMAIL'
-            };
-        }
-
-        const usernameCheck = await pool.query(
-            merchantModel.merchantUsernameCheck(),
-            [username]
-        );
-        
-        if (usernameCheck.rows.length > 0) {
-            return {
-                success: false,
-                message: 'Username already exists',
-                error: 'DUPLICATE_USERNAME'
-            };
-        }
-
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        const query = merchantModel.insertMerchant();
-        const values = [username, email, hashedPassword, phone, resName, location];
-
-        const res = await pool.query(query, values);
-
-        return {
-            success: true, 
-            data: res.rows[0],
-            message: 'Merchant registered successfully'
-        };
-                
-    } catch (error) {
-        console.error(`Error registering merchant: ${error.message}`);
-        return {
-            success: false,
-            message: 'Failed to register merchant',
-            error: error.message
-        };
-    }
-}
 
 const login = async (email, password) => {
     try {
@@ -107,5 +54,3 @@ const login = async (email, password) => {
         };
     }
 }
-
-module.exports = {register, login};

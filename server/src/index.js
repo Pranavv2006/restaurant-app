@@ -1,8 +1,7 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./config/db');
 
-const merchantRoutes = require('./routes/merchantRoutes');
+const loginRegisterRoutes = require('./routes/loginRegisterRoutes');
 const authenticate = require('./middlewares/authenticate');
 
 require('dotenv').config();
@@ -11,7 +10,7 @@ const app = express();
 const port = process.env.server_port || 3001;
 
 app.use(express.json())
-app.use('/merchant', merchantRoutes);
+app.use('/Restaurant', loginRegisterRoutes);
 
 app.get('/merchant/profile', authenticate, (req, res) => {
     res.json({
@@ -33,3 +32,4 @@ app.listen(port, () => {
 });
 
 // use prisma/drizzle for model generation
+// rate limiting for register and login(cache-based/redis based)
