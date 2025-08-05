@@ -4,40 +4,80 @@ const bcrypt = require('bcrypt');
 
 const login = async (email, password) => {
     try {
-        const validate = await pool.query(
-            'SELECT * FROM merchant WHERE merchant_email = $1', 
-            [email]
-        );
+        const validate = await prisma.user.findUnique({
+            where: {
+                email: email
+            },
+            include: {
+                userRoles: {
+                    where: {status: true},
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
 
-        if (validate.rows.length === 0) {
-            const err = new Error('Merchant Not Found!');
-            err.status = 400;
-            throw err;
+        if (!validate) {
+            return {
+                success: false,
+                message: 'Email not Found',
+                error: 'EMAIL_DOES_NOT_EXIST'
+            }
         }
 
-        const merchant = validate.rows[0];
+        const user = validate;
 
-        if (await bcrypt.compare(password, merchant.merchant_password)) {
+        if (await bcrypt.compare(password, user.password)) {
+
+            const roles = user.userRoles.map(ur => ({
+                id: ur.role.id,
+                type: ur.role.type
+            }));
+
+            const userType = roles.length > 0 ? roles[0].type : 'Customer';
+
             const tokenPayload = {
-                merchantId: merchant.merchant_id,
-                email: merchant.merchant_email,
-                username: merchant.merchant_username,
-                restaurantName: merchant.restaurant_name
+                userId: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                roles: roles
             };
 
-            const accessToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET);
+            const accessToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET, {
+                expiresIn: '1h'
+            });
+
+            let welcomeMessage = '';
+
+            switch (userType) {
+                case 'Customer':
+                    welcomeMessage = 'Wecome Customer';
+                    break;
+                
+                case 'Merchant':
+                    welcomeMessage = 'Welcome Merchant';
+                    break;
+
+                case 'SuperAdmin':
+                    welcomeMessage = 'Welcome SuperAdmin'
+                default:
+                    break;
+            }
 
             return {
                 status: 'success',
-                message: 'Merchant Logged In!',
+                message: `${userType} Logged In Successfully!`,
+                welcomeMessage: welcomeMessage,
                 data: {
                     accessToken,
-                    merchant: {
-                        id: merchant.merchant_id,
-                        username: merchant.merchant_username,
-                        email: merchant.merchant_email,
-                        restaurantName: merchant.restaurant_name,
-                        location: merchant.merchant_location
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        roleType: userType
                     }
                 }
             };
@@ -54,3 +94,5 @@ const login = async (email, password) => {
         };
     }
 }
+
+module.exports = {login}
