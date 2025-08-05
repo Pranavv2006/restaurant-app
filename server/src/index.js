@@ -3,6 +3,7 @@ const path = require('path');
 
 const loginRegisterRoutes = require('./routes/loginRegisterRoutes');
 const authenticate = require('./middlewares/authenticate');
+const prisma = require('./models/prismaClient'); // This is missing
 
 require('dotenv').config();
 
@@ -23,7 +24,7 @@ app.get('/merchant/profile', authenticate, (req, res) => {
 })
 
 app.get('/', async (req, res) => {
-    const result = await pool.query("SELECT current_database()");
+    const result = await prisma.$queryRaw`SELECT current_database()`;
     res.send(`The Database name is ${result.rows[0].current_database}`);
 });
 
