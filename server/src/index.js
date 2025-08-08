@@ -3,7 +3,8 @@ const path = require('path');
 
 const loginRegisterRoutes = require('./routes/loginRegisterRoutes');
 const authenticate = require('./middlewares/authenticate');
-const prisma = require('./models/prismaClient'); // This is missing
+const prisma = require('./models/prismaClient'); 
+const rateLimit = require('express-rate-limit')
 
 require('dotenv').config();
 
@@ -11,9 +12,16 @@ const app = express();
 const port = process.env.server_port || 3001;
 
 app.use(express.json())
-app.use('/Restaurant', loginRegisterRoutes);
 
-app.get('/merchant/profile', authenticate, (req, res) => {
+const limiter = rateLimit({
+    max: 5,
+    windowMs: 10 * 60 * 1000,
+    message: "Toom many Requests, please try again after 10 minutes"
+})
+
+app.use('/Restaurant',limiter, loginRegisterRoutes);
+
+app.get('/Restaurant/profile', authenticate, (req, res) => {
     res.json({
         status: 'success',
         message: 'Profile retrieved',
@@ -25,7 +33,7 @@ app.get('/merchant/profile', authenticate, (req, res) => {
 
 app.get('/', async (req, res) => {
     const result = await prisma.$queryRaw`SELECT current_database()`;
-    res.send(`The Database name is ${result.rows[0].current_database}`);
+    res.send(`The Database name is ${result[0].current_database}`);
 });
 
 app.listen(port, () => {
