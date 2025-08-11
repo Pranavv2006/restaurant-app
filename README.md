@@ -1,3 +1,3 @@
 # restaurant-app <br>
-### Day 1, 2, 3: Created Database Design (To be finalized)
+### Week 1-2: Database Design
 ![Restaurant Design](./Database_design/Restaurant_Database_Design.png)
