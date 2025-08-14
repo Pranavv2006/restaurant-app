@@ -16,7 +16,7 @@ app.use(express.json())
 const limiter = rateLimit({
     max: 5,
     windowMs: 10 * 60 * 1000,
-    message: "Toom many Requests, please try again after 10 minutes"
+    message: "Too many Requests, please try again after 10 minutes"
 })
 
 app.use('/Restaurant',limiter, loginRegisterRoutes);

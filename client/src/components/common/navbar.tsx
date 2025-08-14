@@ -1,30 +1,19 @@
 const Navbar = () => {
     return (
-        <nav className="bg-white shadow-xl border-b border-orange-200 rounded mx-28 my-3">
-            <div className="max-w-7xl mx-auto px-4 sm:px-12 lg:px-24">
-                <div className="flex justify-between items-center h-16">
-                    
-                    {/* Title/Logo on the left */}
-                    <div className="flex items-center space-x-3">
-                        <span className="text-2xl">🍽️</span>
-                        <h1 className="text-xl font-bold text-gray-900">
-                            Tasty Bites
-                        </h1>
-                    </div>
-
-                    {/* Sign Up and Login on the right */}
-                    <div className="flex items-center space-x-4">
-                        <button className="text-gray-700 hover:text-orange-500 font-medium transition-colors">
-                            Login
-                        </button>
-                        <button className="bg-orange-500 hover:bg-white hover:border-2 hover:border-orange-500 hover:text-orange-500 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
-                            Sign Up
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    )
-}
+        <header className="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800">
+  <nav className="max-w-[85rem] w-full mx-auto px-4 flex flex-wrap basis-full items-center justify-between">
+    <a className="sm:order-1 flex-none text-xl font-semibold dark:text-white focus:outline-hidden focus:opacity-80" href="#">DineDash</a>
+    <div className="sm:order-3 flex items-center gap-x-2">
+      <button type="button" className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-violet-700 text-white shadow-2xs hover:bg-violet-400 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none">
+        Register
+      </button>
+      <button type="button" className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-violet-700 text-white shadow-2xs hover:bg-violet-400 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none">
+        Login
+      </button>
+    </div>
+  </nav>
+</header>
+    );
+};
 
 export default Navbar;
