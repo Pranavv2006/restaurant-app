@@ -18,6 +18,16 @@ const Landing = () => {
         setIsLoginOpen(true);
     };
 
+    const handleSwitchToLogin = () => {
+        setIsRegisterOpen(false);
+        setIsLoginOpen(true);
+    };
+
+    const handleSwitchToRegister = () => {
+        setIsLoginOpen(false);
+        setIsRegisterOpen(true);
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
             <Navbar onRegisterClick={handleRegisterClick} onLoginClick={handleLoginClick} />
@@ -28,8 +38,8 @@ const Landing = () => {
 
             <Footer />
 
-            {isRegisterOpen && <Register onClose={() => setIsRegisterOpen(false)} />}
-            {isLoginOpen && <Login onClose={() => setIsLoginOpen(false)} />}
+            {isRegisterOpen && <Register onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={handleSwitchToLogin} />}
+            {isLoginOpen && <Login onClose={() => setIsLoginOpen(false)} onSwitchToRegister={handleSwitchToRegister} />}
         </div>
     );
 };
