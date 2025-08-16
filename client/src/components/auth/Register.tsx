@@ -1,9 +1,33 @@
+import { useState } from "react";
+
 interface RegisterProps {
   onClose: () => void;
   onSwitchToLogin: () => void;
 }
 
+interface RegisterFormData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
 const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
+
+    const [formData, setFormData] = useState<RegisterFormData>({
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+        }));
+    };
 
     const handleSwitchToLogin = () => {
         onClose();
@@ -30,12 +54,14 @@ const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
                                 <div>
                                     <label className="block text-sm mb-2 dark:text-white">Email address</label>
                                     <input 
-                                        type="email" 
+                                        type="email"
                                         id="email" 
                                         name="email" 
                                         className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
                                         required 
                                         placeholder="Enter your email"
+                                        value={formData.email}
+                                        onChange={handleChange}
                                     />
                                 </div>
 
@@ -48,6 +74,8 @@ const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
                                         className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
                                         required 
                                         placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={handleChange}
                                     />
                                 </div>
 
@@ -60,6 +88,8 @@ const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
                                         className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
                                         required 
                                         placeholder="Enter your first name"
+                                        value={formData.firstName}
+                                        onChange={handleChange}
                                     />
                                 </div>
 
@@ -72,6 +102,8 @@ const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
                                         className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
                                         required 
                                         placeholder="Enter your last name"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
                                     />
                                 </div>
 
@@ -80,19 +112,19 @@ const Register = ({ onClose, onSwitchToLogin }: RegisterProps) => {
                                     <ul className="items-center w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg sm:flex dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         <li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                                             <div className="flex items-center ps-3">
-                                                <input id="horizontal-list-radio-license" type="radio" value="" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                                                <input id="horizontal-list-radio-license" type="radio" value="Customer" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                                                 <label htmlFor="horizontal-list-radio-license" className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Customer</label>
                                             </div>
                                         </li>
                                         <li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                                             <div className="flex items-center ps-3">
-                                                <input id="horizontal-list-radio-id" type="radio" value="" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                                                <input id="horizontal-list-radio-id" type="radio" value="Merchant" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                                                 <label htmlFor="horizontal-list-radio-id" className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Merchant</label>
                                             </div>
                                         </li>
                                         <li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
                                             <div className="flex items-center ps-3">
-                                                <input id="horizontal-list-radio-military" type="radio" value="" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                                                <input id="horizontal-list-radio-military" type="radio" value="SuperAdmin" name="list-radio" className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                                                 <label htmlFor="horizontal-list-radio-military" className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">SuperAdmin</label>
                                             </div>
                                         </li>
