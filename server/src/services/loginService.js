@@ -79,7 +79,8 @@ const login = async (email, password) => {
                         lastName: user.lastName,
                         roleType: userType
                     }
-                }
+                },
+                statusCode: 200
             };
         } else {
             const err = new Error('Wrong Password!');
