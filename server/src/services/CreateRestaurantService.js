@@ -44,6 +44,6 @@ const createRestaurant = async (merchantId, name, location, phone, cuisine) => {
             message: error.message
         };
     }
-}
+};
 
 module.exports = { createRestaurant };
