@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors'); // ✅ Add this
 const path = require('path');
 
 const loginRegisterRoutes = require('./routes/loginRegisterRoutes');
@@ -9,7 +10,19 @@ const rateLimit = require('express-rate-limit')
 require('dotenv').config();
 
 const app = express();
-const port = process.env.server_port || 3001;
+const port = process.env.server_port || 3000;
+
+// ✅ Add CORS - MUST be before other middleware
+app.use(cors({
+    origin: [
+        'http://localhost:5173', // Vite dev server
+        'http://localhost:3000',  // In case frontend runs on 3000
+        'http://localhost:4173'   // Vite preview
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json())
 
@@ -19,7 +32,7 @@ const limiter = rateLimit({
     message: "Too many Requests, please try again after 10 minutes"
 })
 
-app.use('/Restaurant',limiter, loginRegisterRoutes);
+app.use('/Restaurant', limiter, loginRegisterRoutes);
 
 app.get('/Restaurant/profile', authenticate, (req, res) => {
     res.json({

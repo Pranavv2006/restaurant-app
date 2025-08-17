@@ -1,75 +1,236 @@
+import React, { useState } from "react";
+import { authService, type LoginData } from "../../services/AuthService";
+import WrongPassword from "./WrongPassword";
+
 interface LoginProps {
   onClose: () => void;
-  onSwitchToRegister: () => void;
+  onSwitchToRegister?: () => void;
 }
 
 const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
+    const [formData, setFormData] = useState<LoginData>({
+        email: '',
+        password: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [showWrongPasswordModal, setShowWrongPasswordModal] = useState(false);
+    const [wrongPasswordError, setWrongPasswordError] = useState('');
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // Clear errors when user starts typing
+        if (error) setError('');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            console.log('Submitting login form with data:', formData);
+
+            const response = await authService.login(formData);
+            
+            console.log('Login response:', response);
+
+            if (response.status === 'success') {
+                setSuccess(`${response.message} ${response.welcomeMessage || ''}`);
+                
+                // Reset form
+                setFormData({
+                    email: '',
+                    password: ''
+                });
+
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    onClose();
+                    window.location.reload(); // Simple refresh to update UI
+                }, 2000);
+            } else {
+                // Login failed - show error modal for authentication errors
+                const errorMessage = response.message || 'Login failed';
+                setWrongPasswordError(errorMessage);
+                setShowWrongPasswordModal(true);
+            }
+        } catch (error: any) {
+            console.error('Login error:', error);
+            
+            const errorMessage = error.message || 'An error occurred during login';
+            
+            if (errorMessage.toLowerCase().includes('password') || 
+                errorMessage.toLowerCase().includes('incorrect') ||
+                errorMessage.toLowerCase().includes('invalid') ||
+                errorMessage.toLowerCase().includes('wrong') ||
+                errorMessage.toLowerCase().includes('authentication') ||
+                errorMessage.toLowerCase().includes('credentials') ||
+                errorMessage.toLowerCase().includes('login failed') ||
+                errorMessage.toLowerCase().includes('unauthorized')) {
+                
+                setWrongPasswordError(errorMessage);
+                setShowWrongPasswordModal(true);
+            } else {
+                // Show other errors inline (network errors, etc.)
+                setError(errorMessage);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleWrongPasswordModalClose = () => {
+        setShowWrongPasswordModal(false);
+        setWrongPasswordError('');
+        // Clear the password field when modal closes for security
+        setFormData(prev => ({
+            ...prev,
+            password: ''
+        }));
+    };
 
     const handleSwitchToRegister = () => {
-        onClose();
-        onSwitchToRegister();
+        if (onSwitchToRegister) {
+            onClose();
+            onSwitchToRegister();
+        }
     };
 
     return(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-2xl max-w-lg w-full m-3 dark:bg-neutral-900 dark:border-neutral-800">
-                <div className="p-4 sm:p-7">
-                    <div className="text-center">
-                        <h3 className="block text-2xl font-bold text-gray-800 dark:text-neutral-200">Sign in</h3>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                            Don't have an account yet?
-                            <a onClick={handleSwitchToRegister} className="text-violet-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-violet-500 ml-1">
-                                Sign up here
-                            </a>
-                        </p>
-                    </div>
-
-                    <div className="mt-5">
-                        <form>
-                            <div className="grid gap-y-4">
-                                <div>
-                                    <label className="block text-sm mb-2 dark:text-white">Email address</label>
-                                    <input 
-                                        type="email" 
-                                        id="email" 
-                                        name="email" 
-                                        className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                                        required 
-                                        placeholder="Enter your email"
-                                    />
-                                </div>
-
-                                <div>
-                                    <div className="flex flex-wrap justify-between items-center gap-2">
-                                        <label htmlFor="password" className="block text-sm mb-2 dark:text-white">Password</label>
-                                    </div>
-                                    <input 
-                                        type="password" 
-                                        id="password" 
-                                        name="password" 
-                                        className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                                        required 
-                                        placeholder="Enter your password"
-                                    />
-                                </div>
-
-                                <button type="submit" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none">
-                                    Sign in
+        <>
+            {/* Login Modal */}
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-2xl max-w-lg w-full m-3 dark:bg-neutral-900 dark:border-neutral-800">
+                    <div className="p-4 sm:p-7">
+                        <div className="text-center">
+                            <h3 className="block text-2xl font-bold text-gray-800 dark:text-neutral-200">Sign in</h3>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
+                                Don't have an account yet?
+                                <button 
+                                    onClick={handleSwitchToRegister}
+                                    className="text-violet-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-violet-500 ml-1 cursor-pointer"
+                                    type="button"
+                                >
+                                    Sign up here
                                 </button>
+                            </p>
+                        </div>
+
+                        {/* Error Message (for non-authentication errors) */}
+                        {error && (
+                            <div className="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
+                                <strong>Error:</strong> {error}
                             </div>
-                        </form>
-                        
-                        {/* Close button */}
-                        <button 
-                            onClick={onClose}
-                            className="mt-4 w-full py-2 px-4 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                            Close
-                        </button>
+                        )}
+
+                        {/* Success Message */}
+                        {success && (
+                            <div className="mt-4 p-3 bg-green-100 border border-green-300 text-green-700 rounded-lg text-sm">
+                                <strong>Success:</strong> {success}
+                            </div>
+                        )}
+
+                        <div className="mt-5">
+                            <form onSubmit={handleSubmit}>
+                                <div className="grid gap-y-4">
+                                    {/* Email */}
+                                    <div>
+                                        <label className="block text-sm mb-2 dark:text-white">Email address *</label>
+                                        <input 
+                                            type="email" 
+                                            name="email" 
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                                            required 
+                                            placeholder="Enter your email"
+                                            disabled={loading}
+                                        />
+                                    </div>
+
+                                    {/* Password */}
+                                    <div>
+                                        <div className="flex flex-wrap justify-between items-center gap-2">
+                                            <label htmlFor="password" className="block text-sm mb-2 dark:text-white">Password *</label>
+                                            <a className="inline-flex items-center gap-x-1 text-sm text-violet-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-violet-500" href="#">
+                                                Forgot password?
+                                            </a>
+                                        </div>
+                                        <input 
+                                            type="password" 
+                                            name="password" 
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                                            required 
+                                            placeholder="Enter your password"
+                                            disabled={loading}
+                                        />
+                                    </div>
+
+                                    {/* Remember Me */}
+                                    <div className="flex items-center">
+                                        <div className="flex">
+                                            <input 
+                                                id="remember-me" 
+                                                name="remember-me" 
+                                                type="checkbox" 
+                                                className="shrink-0 mt-0.5 border-gray-200 rounded-sm text-violet-600 focus:ring-violet-500 dark:bg-neutral-800 dark:border-neutral-800 dark:checked:bg-violet-500 dark:checked:border-violet-500 dark:focus:ring-offset-gray-800" 
+                                                disabled={loading}
+                                            />
+                                        </div>
+                                        <div className="ms-3">
+                                            <label htmlFor="remember-me" className="text-sm dark:text-white">Remember me</label>
+                                        </div>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button 
+                                        type="submit" 
+                                        disabled={loading}
+                                        className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Signing in...
+                                            </>
+                                        ) : (
+                                            'Sign in'
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <button 
+                                onClick={onClose}
+                                disabled={loading}
+                                className="mt-4 w-full py-2 px-4 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Wrong Password Modal */}
+            <WrongPassword 
+                isOpen={showWrongPasswordModal}
+                onClose={handleWrongPasswordModalClose}
+                errorMessage={wrongPasswordError}
+            />
+        </>
     );
 };
 

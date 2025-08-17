@@ -150,10 +150,10 @@ const register = async (email, password, firstName, lastName, role) => {
         }
         
     } catch (error) {
-        console.error(`Error registering merchant: ${error.message}`);
+        console.error(`Error registering User: ${error.message}`);
         return {
             success: false,
-            message: 'Failed to register merchant',
+            message: 'Failed to register User',
             error: error.message
         };
     }
