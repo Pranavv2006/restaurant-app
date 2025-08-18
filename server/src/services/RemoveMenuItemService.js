@@ -3,22 +3,10 @@ const prisma = require('../models/prismaClient');
 const removeMenuItem = async (menuItemId) => {
     try {
         const menuItem = await prisma.menu.findUnique({
-            where: {
-                id: menuItemId
-            },
+            where: { id: menuItemId },
             include: {
                 restaurant: {
-                    select: {
-                        id: true,
-                        merchantId: true,
-                        name: true
-                    }
-                },
-                items: {
-                    select: {
-                        id: true,
-                        orderId: true
-                    }
+                    select: { id: true, merchantId: true, name: true }
                 }
             }
         });
@@ -30,6 +18,23 @@ const removeMenuItem = async (menuItemId) => {
             };
         }
 
+        const [deletedOrderItemsResult, deletedMenu] = await prisma.$transaction([
+            prisma.orderItem.deleteMany({ where: { menuId: id } }),
+            prisma.menu.delete({ where: { id } })
+        ]);
+
+        return {
+            status: 'success',
+            message: 'Menu item and related order items removed successfully',
+            data: {
+                deletedMenu: {
+                    id: deletedMenu.id,
+                    name: deletedMenu.name,
+                    restaurantId: deletedMenu.restaurantId
+                },
+                deletedOrderItemsCount: deletedOrderItemsResult.count ?? deletedOrderItemsResult
+            }
+        };
 
         return {
             status: 'success',
