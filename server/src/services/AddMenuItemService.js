@@ -1,4 +1,4 @@
-const primsa = require('../prismaClient');
+const primsa = require('../models/prismaClient');
 
 const addMenuItem = async (restaurantId, name, description, price, image_url) => {
     try {
