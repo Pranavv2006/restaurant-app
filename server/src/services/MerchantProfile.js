@@ -26,6 +26,7 @@ const getMerchantProfile = async (merchantId) => {
         }
         return {
             status: 'success',
+            message: 'Merchant profile retrieved successfully',
             data: {
                 profile: {
                     id: profile.id,
