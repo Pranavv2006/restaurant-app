@@ -13,7 +13,7 @@ const removeMenuItem = async (menuItemId) => {
 
         if (!menuItem) {
             return {
-                status: 'fail',
+                success: false,
                 message: 'Menu item not found'
             };
         }
@@ -24,7 +24,7 @@ const removeMenuItem = async (menuItemId) => {
         ]);
 
         return {
-            status: 'success',
+            success: true,
             message: 'Menu item and related order items removed successfully',
             data: {
                 deletedMenu: {
@@ -35,11 +35,12 @@ const removeMenuItem = async (menuItemId) => {
                 deletedOrderItemsCount: deletedOrderItemsResult.count ?? deletedOrderItemsResult
             }
         };
-        
+
     } catch (error) {
+        console.error(`Error removing menu item: ${error.message}`);
         return {
-            status: 'fail',
-            message: error.message
+            success: false,
+            error: error.message
         };
     }
 };

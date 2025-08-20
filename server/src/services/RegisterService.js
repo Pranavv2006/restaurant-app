@@ -153,7 +153,6 @@ const register = async (email, password, firstName, lastName, role) => {
         console.error(`Error registering User: ${error.message}`);
         return {
             success: false,
-            message: 'Failed to register User',
             error: error.message
         };
     }

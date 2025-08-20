@@ -31,8 +31,10 @@ const CheckRestaurantService = async (userId) => {
             }
         }
     } catch (error) {
+        console.error(`Error checking restaurant: ${error.message}`);
         return {
-            message: error.message
+            success: false,
+            error: error.message
         };
     }
 };

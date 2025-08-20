@@ -40,8 +40,10 @@ const addMenuItem = async (restaurantId, name, description, price, image_url) =>
             }
         };
     } catch (error) {
+        console.error(`Error adding menu item: ${error.message}`);
         return {
-            message: error.message
+            success: false,
+            error: error.message
         };
     }
 };

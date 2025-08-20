@@ -20,7 +20,7 @@ const getMerchantProfile = async (merchantId) => {
         
         if(!profile){
             return {
-                status: 'error',
+                success: false,
                 message: 'Merchant profile not found'
             };
         }
@@ -37,7 +37,11 @@ const getMerchantProfile = async (merchantId) => {
             },
         };
     } catch (error) {
-        throw new Error('Error fetching merchant profile');
+        console.error(`Error retrieving merchant profile: ${error.message}`);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 };
 
