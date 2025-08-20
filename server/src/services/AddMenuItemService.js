@@ -29,11 +29,18 @@ const addMenuItem = async (restaurantId, name, description, price, image_url) =>
         return {
             status: 'success',
             message: 'Menu item added successfully',
-            data: menuItem
+            data: {
+                menuItem: {
+                    id: menuItem.id,
+                    name: menuItem.name,
+                    description: menuItem.description,
+                    price: menuItem.price,
+                    image_url: menuItem.image_url
+                }
+            }
         };
     } catch (error) {
         return {
-            status: 'fail',
             message: error.message
         };
     }

@@ -12,10 +12,7 @@ const getMerchantProfile = async (merchantId) => {
                 restaurants: {
                     select: {
                         id: true,
-                        name: true,
-                        location: true,
-                        phone: true,
-                        cuisine: true
+                        name: true
                     }
                 }
             }
@@ -29,7 +26,15 @@ const getMerchantProfile = async (merchantId) => {
         }
         return {
             status: 'success',
-            data: profile
+            data: {
+                profile: {
+                    id: profile.id,
+                    email: profile.email,
+                    firstName: profile.firstName,
+                    lastName: profile.lastName,
+                    restaurant: profile.restaurants[1]
+                }
+            },
         };
     } catch (error) {
         throw new Error('Error fetching merchant profile');

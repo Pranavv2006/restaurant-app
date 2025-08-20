@@ -35,12 +35,7 @@ const removeMenuItem = async (menuItemId) => {
                 deletedOrderItemsCount: deletedOrderItemsResult.count ?? deletedOrderItemsResult
             }
         };
-
-        return {
-            status: 'success',
-            message: 'Menu item removed successfully',
-            data: menuItem
-        };
+        
     } catch (error) {
         return {
             status: 'fail',
