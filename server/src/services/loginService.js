@@ -67,7 +67,7 @@ const login = async (email, password) => {
             }
 
             return {
-                status: 'success',
+                success: true,
                 message: `${userType} Logged In Successfully!`,
                 welcomeMessage: welcomeMessage,
                 data: {
