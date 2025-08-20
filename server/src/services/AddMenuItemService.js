@@ -1,4 +1,4 @@
-const primsa = require('../prismaClient');
+const prisma = require('../models/prismaClient');
 
 const addMenuItem = async (restaurantId, name, description, price, image_url) => {
     try {
@@ -29,12 +29,21 @@ const addMenuItem = async (restaurantId, name, description, price, image_url) =>
         return {
             status: 'success',
             message: 'Menu item added successfully',
-            data: menuItem
+            data: {
+                menuItem: {
+                    id: menuItem.id,
+                    name: menuItem.name,
+                    description: menuItem.description,
+                    price: menuItem.price,
+                    image_url: menuItem.image_url
+                }
+            }
         };
     } catch (error) {
+        console.error(`Error adding menu item: ${error.message}`);
         return {
-            status: 'fail',
-            message: error.message
+            success: false,
+            error: error.message
         };
     }
 };

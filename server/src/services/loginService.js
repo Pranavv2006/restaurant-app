@@ -67,7 +67,7 @@ const login = async (email, password) => {
             }
 
             return {
-                status: 'success',
+                success: true,
                 message: `${userType} Logged In Successfully!`,
                 welcomeMessage: welcomeMessage,
                 data: {
@@ -87,11 +87,11 @@ const login = async (email, password) => {
             err.status = 400;
             throw err;
         }
-    } catch (err) {
+    } catch (error) {
+        console.error(`Error during login: ${error.message}`);
         return {
-            status: 'fail',
-            message: err.message,
-            statusCode: err.status || 500
+            success: false,
+            message: error.message
         };
     }
 }

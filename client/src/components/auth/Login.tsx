@@ -24,7 +24,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
             ...prev,
             [name]: value
         }));
-        // Clear errors when user starts typing
         if (error) setError('');
     };
 
@@ -44,13 +43,11 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
             if (response.status === 'success') {
                 setSuccess(`${response.message} ${response.welcomeMessage || ''}`);
                 
-                // Reset form
                 setFormData({
                     email: '',
                     password: ''
                 });
 
-                // Close modal after 2 seconds
                 setTimeout(() => {
                     onClose();
                     window.location.reload(); // Simple refresh to update UI

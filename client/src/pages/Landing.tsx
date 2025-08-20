@@ -4,7 +4,7 @@ import Footer from "../components/common/Footer";
 import AboutUs from "../components/landing/AboutUs";
 import Register from "../components/auth/Register";
 import Login from "../components/auth/Login";
-import UserCreation from "../components/auth/UserCreation"; // ✅ Import UserCreation
+import UserCreation from "../components/auth/UserCreation";
 import { useState } from "react";
 
 const Landing = () => {

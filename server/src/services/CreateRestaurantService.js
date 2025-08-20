@@ -34,14 +34,23 @@ const createRestaurant = async (merchantId, name, location, phone, cuisine) => {
         });
 
         return {
-            status: 'success',
+            success: true,
             message: 'Restaurant created successfully',
-            data: restaurant
+            data: {
+                restaurant: {
+                    id: restaurant.id,
+                    name: restaurant.name,
+                    location: restaurant.location,
+                    phone: restaurant.phone,
+                    cuisine: restaurant.cuisine
+                }
+            }
         };
     } catch (error) {
+        console.error(`Error creating restaurant: ${error.message}`);
         return {
-            status: 'fail',
-            message: error.message
+            success: false,
+            error: error.message
         };
     }
 };
