@@ -69,7 +69,10 @@ const register = async (email, password, firstName, lastName, role) => {
             });
 
             if(!roletype){
-                throw new Error('Role does not exist');
+                return {
+                    success: false,
+                    message: 'Role not found'
+                };
             }
 
             await tx.userRole.create({
@@ -153,7 +156,7 @@ const register = async (email, password, firstName, lastName, role) => {
         console.error(`Error registering User: ${error.message}`);
         return {
             success: false,
-            error: error.message
+            message: error.message
         };
     }
 }

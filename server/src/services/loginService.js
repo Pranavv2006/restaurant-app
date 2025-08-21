@@ -18,6 +18,14 @@ const login = async (email, password) => {
             }
         })
 
+        if (!email || !password) {
+            return {
+                success: false,
+                message: 'Email and password are required',
+                error: 'MISSING_CREDENTIALS'
+            }
+        }
+
         if (!validate) {
             return {
                 success: false,
@@ -83,9 +91,10 @@ const login = async (email, password) => {
                 statusCode: 200
             };
         } else {
-            const err = new Error('Wrong Password!');
-            err.status = 400;
-            throw err;
+            return {
+                success: false,
+                message: 'Invalid password'
+            };
         }
     } catch (error) {
         console.error(`Error during login: ${error.message}`);

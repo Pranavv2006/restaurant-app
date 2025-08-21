@@ -1,5 +1,4 @@
 const registerService = require('../services/RegisterService');
-const loginService = require('../services/loginService');
 
 const registerController = async (req, res) => {
     try {
@@ -12,7 +11,10 @@ const registerController = async (req, res) => {
             res.status(400).json(result);
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
     }
 }
-module.exports = { registerController};
+module.exports = { registerController };
