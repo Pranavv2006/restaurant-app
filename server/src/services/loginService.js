@@ -29,8 +29,7 @@ const login = async (email, password) => {
         if (!validate) {
             return {
                 success: false,
-                message: 'Email not Found',
-                error: 'EMAIL_DOES_NOT_EXIST'
+                message: 'Email not Found'
             }
         }
 
@@ -87,8 +86,7 @@ const login = async (email, password) => {
                         lastName: user.lastName,
                         roleType: userType
                     }
-                },
-                statusCode: 200
+                }
             };
         } else {
             return {

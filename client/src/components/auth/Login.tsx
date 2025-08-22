@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { authService, type LoginData } from "../../services/AuthService";
-import WrongPassword from "./WrongPassword";
 
 interface LoginProps {
   onClose: () => void;
@@ -15,8 +14,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [showWrongPasswordModal, setShowWrongPasswordModal] = useState(false);
-    const [wrongPasswordError, setWrongPasswordError] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -40,9 +37,13 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
             
             console.log('Login response:', response);
 
-            if (response.status === 'success') {
-                setSuccess(`${response.message} ${response.welcomeMessage || ''}`);
-                
+            const isSuccess = response?.success === true;
+
+            const backendMessage = response?.message || 'Login failed';
+
+            if (isSuccess) {
+                setSuccess(`${backendMessage} ${response.welcomeMessage || ''}`);
+
                 setFormData({
                     email: '',
                     password: ''
@@ -50,47 +51,35 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
 
                 setTimeout(() => {
                     onClose();
-                    window.location.reload(); // Simple refresh to update UI
-                }, 2000);
-            } else {
-                // Login failed - show error modal for authentication errors
-                const errorMessage = response.message || 'Login failed';
-                setWrongPasswordError(errorMessage);
-                setShowWrongPasswordModal(true);
+                    window.location.reload();
+                }, 1000);
+                return;
             }
+
+            const isAuthFailure = response?.success;
+
+            if (isAuthFailure) {
+                setError(backendMessage);
+                setFormData(prev => ({ ...prev, password: '' }));
+            } else {
+                setError(backendMessage);
+            }
+
         } catch (error: any) {
             console.error('Login error:', error);
-            
-            const errorMessage = error.message || 'An error occurred during login';
-            
-            if (errorMessage.toLowerCase().includes('password') || 
-                errorMessage.toLowerCase().includes('incorrect') ||
-                errorMessage.toLowerCase().includes('invalid') ||
-                errorMessage.toLowerCase().includes('wrong') ||
-                errorMessage.toLowerCase().includes('authentication') ||
-                errorMessage.toLowerCase().includes('credentials') ||
-                errorMessage.toLowerCase().includes('login failed') ||
-                errorMessage.toLowerCase().includes('unauthorized')) {
-                
-                setWrongPasswordError(errorMessage);
-                setShowWrongPasswordModal(true);
+            const errorMessage = error?.message || 'An error occurred during login';
+
+            if (error?.request || /network error/i.test(errorMessage)) {
+                setError('No response received from server. Please check if the backend is running.');
+            } else if (/password|invalid|incorrect|unauthorized|credentials/i.test(errorMessage)) {
+                setError(errorMessage);
+                setFormData(prev => ({ ...prev, password: '' }));
             } else {
-                // Show other errors inline (network errors, etc.)
                 setError(errorMessage);
             }
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleWrongPasswordModalClose = () => {
-        setShowWrongPasswordModal(false);
-        setWrongPasswordError('');
-        // Clear the password field when modal closes for security
-        setFormData(prev => ({
-            ...prev,
-            password: ''
-        }));
     };
 
     const handleSwitchToRegister = () => {
@@ -220,13 +209,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
                     </div>
                 </div>
             </div>
-
-            {/* Wrong Password Modal */}
-            <WrongPassword 
-                isOpen={showWrongPasswordModal}
-                onClose={handleWrongPasswordModalClose}
-                errorMessage={wrongPasswordError}
-            />
         </>
     );
 };
