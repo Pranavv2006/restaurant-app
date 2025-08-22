@@ -2,7 +2,7 @@ const MerchantProfileService = require('../services/MerchantProfileService');
 
 const merchantProfileController = async (req, res) => {
     try {
-        const { merchantId } = req.params;
+        const { merchantId } = req.body;
 
         const result = await MerchantProfileService.getMerchantProfile(merchantId);
 
