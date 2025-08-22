@@ -9,7 +9,10 @@ const addMenuItem = async (restaurantId, name, description, price, image_url) =>
         });
 
         if (!restaurant) {
-            throw new Error('Restaurant not found');
+            return {
+                success: false,
+                message: 'Restaurant not found'
+            };
         }
 
         const menuItem = await prisma.menuItem.create({
