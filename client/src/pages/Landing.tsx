@@ -31,11 +31,9 @@ const Landing = () => {
         setIsRegisterOpen(true);
     };
 
-    // ✅ Handle successful registration
     const handleRegistrationSuccess = (userName: string) => {
         setRegisteredUserName(userName);
         setIsUserCreationOpen(true);
-        // Register modal will close itself via onClose
     };
 
     // ✅ Handle success modal close

@@ -67,7 +67,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
                         const userId = userJson?.id ?? null;
 
                         if (userRole === 'Merchant') {
-                            // call without arg — server should derive merchant from JWT, or service will attach params correctly
                             const checkResult = await merchantService.checkRestaurant({ merchantId: userId });
                             console.log('Restaurant check result:', checkResult);
                             
