@@ -1,22 +1,22 @@
-const CheckRestaurantService = require('../services/CheckRestaurantService');
+const { checkRestaurantService } = require('../services/CheckRestaurantService');
 
 const checkRestaurantController = async (req, res) => {
     try {
-        const { restaurantId } = req.body;
+        const { merchantId } = req.body || {};
 
-        const result = await CheckRestaurantService.checkRestaurant(restaurantId);
-
-        if (result.success) {
-            res.status(200).json(result);
-        } else {
-            res.status(404).json(result);
+        if (!merchantId && !(req.user && req.user.id)) {
+            return res.status(400).json({ success: false, message: 'Merchant ID not provided' });
         }
+
+        const idToCheck = merchantId ? Number(merchantId) : Number(req.user.id);
+        console.log('Checking restaurant for merchant:', idToCheck);
+
+        const result = await checkRestaurantService(idToCheck);
+        return res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        console.error('Check restaurant controller error:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
     }
 };
 
-module.exports = {checkRestaurantController};
+module.exports = { checkRestaurantController };

@@ -2,8 +2,13 @@ const prisma = require('../models/prismaClient');
 
 const getMerchantProfile = async (merchantId) => {
     try {
-        const profile = await prisma.restaurant.findUnique({
-            where: { id: merchantId },
+        const id = Number(merchantId);
+        if (!Number.isInteger(id)) {
+            return { success: false, error: 'Invalid merchant id' };
+        }
+
+        const profile = await prisma.user.findUnique({
+            where: { id },
             select: {
                 id: true,
                 email: true,
@@ -12,30 +17,32 @@ const getMerchantProfile = async (merchantId) => {
                 restaurants: {
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        location: true,
+                        phone: true,
+                        cuisine: true
                     }
                 }
             }
         });
         
-        if(!profile){
+        if (!profile) {
             return {
                 success: false,
                 message: 'Merchant profile not found'
             };
         }
+
         return {
-            status: 'success',
+            success: true,
             message: 'Merchant profile retrieved successfully',
             data: {
-                profile: {
-                    id: profile.id,
-                    email: profile.email,
-                    firstName: profile.firstName,
-                    lastName: profile.lastName,
-                    restaurant: profile.restaurants[1]
-                }
-            },
+                id: profile.id,
+                email: profile.email,
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                restaurants: profile.restaurants
+            }
         };
     } catch (error) {
         console.error(`Error retrieving merchant profile: ${error.message}`);

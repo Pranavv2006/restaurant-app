@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { authService, type LoginData } from "../../services/AuthService";
+import { useNavigate } from "react-router-dom";
+import merchantService from "../../services/MerchantService";
 
 interface LoginProps {
   onClose: () => void;
@@ -14,6 +16,7 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const navigate = useNavigate();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -34,29 +37,59 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
             console.log('Submitting login form with data:', formData);
 
             const response = await authService.login(formData);
-            
             console.log('Login response:', response);
 
             const isSuccess = response?.success === true;
-
             const backendMessage = response?.message || 'Login failed';
 
             if (isSuccess) {
-                setSuccess(`${backendMessage} ${response.welcomeMessage || ''}`);
+                if (response?.data?.user) {
+                    const userData = {
+                        id: response.data.user.id,
+                        email: response.data.user.email,
+                        firstName: response.data.user.firstName,
+                        lastName: response.data.user.lastName,
+                        roleType: response.data.user.roleType
+                    };
+                    
+                    console.log('Storing user data:', userData);
+                    localStorage.setItem('user', JSON.stringify(userData));
+                }
 
-                setFormData({
-                    email: '',
-                    password: ''
-                });
+                setTimeout(async () => {
+                    try {
+                        const user = response?.data?.user;
+                        const userRole = user?.roleType;
 
-                setTimeout(() => {
-                    onClose();
-                    window.location.reload();
-                }, 1000);
+                        console.log('User role:', userRole);
+                        const raw = localStorage.getItem('user');
+                        const userJson = raw ? JSON.parse(raw) : null;
+                        const userId = userJson?.id ?? null;
+
+                        if (userRole === 'Merchant') {
+                            // call without arg — server should derive merchant from JWT, or service will attach params correctly
+                            const checkResult = await merchantService.checkRestaurant({ merchantId: userId });
+                            console.log('Restaurant check result:', checkResult);
+                            
+                            if (checkResult.success && checkResult.hasRestaurant) {
+                                navigate('/merchant');
+                            } else {
+                                navigate('/create-restaurant');
+                            }
+                        } else {
+                            navigate('/');
+                        }
+                        onClose();
+                    } catch (error) {
+                        console.error('Post-login navigation error:', error);
+                        navigate('/merchant');
+                        onClose();
+                    }
+                }, 100);
                 return;
             }
 
-            const isAuthFailure = response?.success;
+            const isAuthFailure = response?.success === false;
 
             if (isAuthFailure) {
                 setError(backendMessage);

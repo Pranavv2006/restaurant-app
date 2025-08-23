@@ -1,33 +1,88 @@
 const prisma = require('../models/prismaClient');
 
-const createRestaurant = async (merchantId, name, location, phone, cuisine) => {
-    try{
-        const merchant = await prisma.user.findFirst({
-            where: {
-                id: merchantId,
+const createRestaurant = async (restaurantData) => {
+    try {
+        const { name, location, phone, cuisine, merchantId } = restaurantData;
+
+        if (!name || !location || !phone || !cuisine || !merchantId) {
+            return {
+                success: false,
+                message: 'All fields are required',
+                error: 'Missing required fields'
+            };
+        }
+
+        const merchantIdNum = Number(merchantId);
+        if (!Number.isInteger(merchantIdNum)) {
+            return {
+                success: false,
+                message: 'Invalid merchant ID',
+                error: 'Merchant ID must be a valid number'
+            };
+        }
+
+        const userWithRoles = await prisma.user.findUnique({
+            where: { id: merchantIdNum },
+            include: {
                 userRoles: {
-                    some: {
-                        role: {
-                            type: 'Merchant'
-                        }
+                    where: { status: true },
+                    include: {
+                        role: true
                     }
                 }
             }
         });
 
-        if (!merchant) {
-            throw new Error('Merchant not found');
+        if (!userWithRoles) {
+            return {
+                success: false,
+                message: 'User not found',
+                error: 'Invalid merchant ID'
+            };
         }
 
+        // ✅ Check if user has merchant role
+        const isMerchant = userWithRoles.userRoles.some(
+            userRole => userRole.role.type.toLowerCase() === 'merchant'
+        );
+
+        if (!isMerchant) {
+            return {
+                success: false,
+                message: 'User is not a merchant',
+                error: 'Only merchants can create restaurants'
+            };
+        }
+
+        // Check if merchant already has a restaurant
+        const existingRestaurant = await prisma.restaurant.findFirst({
+            where: { merchantId: merchantIdNum }
+        });
+
+        if (existingRestaurant) {
+            return {
+                success: false,
+                message: 'Merchant already has a restaurant',
+                error: 'Each merchant can only have one restaurant'
+            };
+        }
+
+        // ✅ Create restaurant according to your schema
         const restaurant = await prisma.restaurant.create({
             data: {
                 name,
                 location,
                 phone,
                 cuisine,
-                merchant: {
-                    connect: {
-                        id: merchantId
+                merchantId: merchantIdNum
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true
                     }
                 }
             }
@@ -42,14 +97,36 @@ const createRestaurant = async (merchantId, name, location, phone, cuisine) => {
                     name: restaurant.name,
                     location: restaurant.location,
                     phone: restaurant.phone,
-                    cuisine: restaurant.cuisine
+                    cuisine: restaurant.cuisine,
+                    merchantId: restaurant.merchantId,
+                    merchant: restaurant.user
                 }
             }
         };
+
     } catch (error) {
-        console.error(`Error creating restaurant: ${error.message}`);
+        console.error('Error creating restaurant:', error);
+        
+        // Handle specific Prisma errors
+        if (error.code === 'P2002') {
+            return {
+                success: false,
+                message: 'Restaurant with this information already exists',
+                error: 'Duplicate restaurant data'
+            };
+        }
+
+        if (error.code === 'P2025') {
+            return {
+                success: false,
+                message: 'Merchant not found',
+                error: 'Invalid merchant reference'
+            };
+        }
+
         return {
             success: false,
+            message: 'Failed to create restaurant',
             error: error.message
         };
     }

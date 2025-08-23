@@ -4,6 +4,13 @@ const retrieveMerchantMenu = async (restaurantId) => {
     try{
         const id = Number(restaurantId);
 
+        if (!Number.isInteger(id)) {
+            return { 
+                success: false, 
+                error: 'Invalid restaurant id' 
+            };
+        }
+
         const menu = await prisma.menu.findMany({
             where: {
                 restaurantId: id,
@@ -13,7 +20,7 @@ const retrieveMerchantMenu = async (restaurantId) => {
                 name: true,
                 description: true,
                 price: true,
-                image_url: true
+                imageUrl: true
             }
         });
 
