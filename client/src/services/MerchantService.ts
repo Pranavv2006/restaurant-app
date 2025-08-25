@@ -89,9 +89,14 @@ const merchantService = {
     merchantId: MerchantProfileData
   ): Promise<MerchantProfileResponse> => {
     try {
+      const token = localStorage.getItem("authToken");
       const response = await axiosInstance.get<MerchantProfileResponse>(
-        "/Merchant/profile",
-        { params: { merchantId } }
+        `/Merchant/merchant-profile/${merchantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       return response.data;
     } catch (error: any) {
