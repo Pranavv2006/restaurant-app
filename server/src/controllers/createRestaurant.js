@@ -1,10 +1,20 @@
-const CreateRestaurantService = require('../services/CreateRestaurantService');
+const { createRestaurant } = require('../services/CreateRestaurantService');
 
 const createRestaurantController = async (req, res) => {
     try {
-        const { merchantId, name, location, phone, cuisine} = req.body;
+        const { merchantId, name, location, phone, cuisine } = req.body;
 
-        const result = await CreateRestaurantService.createRestaurant(merchantId, name, location, phone, cuisine);
+        const restaurantData = {
+            merchantId,
+            name,
+            location,
+            phone,
+            cuisine
+        };
+
+        console.log('Creating restaurant with data:', restaurantData);
+
+        const result = await createRestaurant(restaurantData);
 
         if (result.success) {
             res.status(201).json(result);
@@ -12,9 +22,11 @@ const createRestaurantController = async (req, res) => {
             res.status(400).json(result);
         }
     } catch (error) {
+        console.error('Create restaurant controller error:', error);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Internal server error',
+            error: error.message
         });
     }
 };
