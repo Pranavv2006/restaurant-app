@@ -1,5 +1,5 @@
 import Navbar from "../components/common/Navbar";
-import Hero from "../components/common/Hero";   
+import Hero from "../components/common/Hero";
 import Footer from "../components/common/Footer";
 import AboutUs from "../components/landing/AboutUs";
 import Register from "../components/auth/Register";
@@ -8,81 +8,79 @@ import UserCreation from "../components/auth/UserCreation";
 import { useState } from "react";
 
 const Landing = () => {
-    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const [isUserCreationOpen, setIsUserCreationOpen] = useState(false); // ✅ Add success modal state
-    const [registeredUserName, setRegisteredUserName] = useState(''); // ✅ Store user name
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isUserCreationOpen, setIsUserCreationOpen] = useState(false);
+  const [registeredUserName, setRegisteredUserName] = useState("");
 
-    const handleRegisterClick = () => {
-        setIsRegisterOpen(true);
-    };
+  const handleRegisterClick = () => {
+    setIsRegisterOpen(true);
+  };
 
-    const handleLoginClick = () => {
-        setIsLoginOpen(true);
-    };
+  const handleLoginClick = () => {
+    setIsLoginOpen(true);
+  };
 
-    const handleSwitchToLogin = () => {
-        setIsRegisterOpen(false);
-        setIsLoginOpen(true);
-    };
+  const handleSwitchToLogin = () => {
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
+  };
 
-    const handleSwitchToRegister = () => {
-        setIsLoginOpen(false);
-        setIsRegisterOpen(true);
-    };
+  const handleSwitchToRegister = () => {
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
+  };
 
-    const handleRegistrationSuccess = (userName: string) => {
-        setRegisteredUserName(userName);
-        setIsUserCreationOpen(true);
-    };
+  const handleRegistrationSuccess = (userName: string) => {
+    setRegisteredUserName(userName);
+    setIsUserCreationOpen(true);
+  };
 
-    // ✅ Handle success modal close
-    const handleUserCreationClose = () => {
-        setIsUserCreationOpen(false);
-        setRegisteredUserName('');
-        // Optionally switch to login after success modal closes
-        setTimeout(() => {
-            setIsLoginOpen(true);
-        }, 500);
-    };
+  const handleUserCreationClose = () => {
+    setIsUserCreationOpen(false);
+    setRegisteredUserName("");
+    setTimeout(() => {
+      setIsLoginOpen(true);
+    }, 500);
+  };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
-            <Navbar onRegisterClick={handleRegisterClick} onLoginClick={handleLoginClick} />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+      <Navbar
+        onRegisterClick={handleRegisterClick}
+        onLoginClick={handleLoginClick}
+      />
 
-            <Hero />
+      <Hero />
 
-            <AboutUs />
+      <AboutUs />
 
-            <Footer />
+      <Footer />
 
-            {/* Register Modal */}
-            {isRegisterOpen && (
-                <Register 
-                    onClose={() => setIsRegisterOpen(false)} 
-                    onSwitchToLogin={handleSwitchToLogin}
-                    onSuccess={handleRegistrationSuccess} // ✅ Pass success handler
-                />
-            )}
+      {isRegisterOpen && (
+        <Register
+          onClose={() => setIsRegisterOpen(false)}
+          onSwitchToLogin={handleSwitchToLogin}
+          onSuccess={handleRegistrationSuccess}
+        />
+      )}
 
-            {/* Login Modal */}
-            {isLoginOpen && (
-                <Login 
-                    onClose={() => setIsLoginOpen(false)} 
-                    onSwitchToRegister={handleSwitchToRegister} 
-                />
-            )}
+      {isLoginOpen && (
+        <Login
+          onClose={() => setIsLoginOpen(false)}
+          onSwitchToRegister={handleSwitchToRegister}
+        />
+      )}
 
-            {/* Success Modal */}
-            {isUserCreationOpen && (
-                <UserCreation 
-                    isOpen={isUserCreationOpen}
-                    onClose={handleUserCreationClose}
-                    userName={registeredUserName}
-                />
-            )}
-        </div>
-    );
+      {isUserCreationOpen && (
+        <UserCreation
+          isOpen={isUserCreationOpen}
+          onClose={handleUserCreationClose}
+          userName={registeredUserName}
+        />
+      )}
+    </div>
+  );
 };
 
 export default Landing;

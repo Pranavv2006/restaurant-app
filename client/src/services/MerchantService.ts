@@ -19,6 +19,14 @@ export interface RestaurantData {
   cuisine: string;
 }
 
+export interface CreateRestaurantData {
+  merchantId: number;
+  name: string;
+  location: string;
+  phone: string;
+  cuisine: string;
+}
+
 export interface CreateRestaurantResponse {
   success: boolean;
   message: string;
@@ -64,7 +72,7 @@ const merchantService = {
   },
 
   createRestaurant: async (
-    restaurantData: RestaurantData
+    restaurantData: CreateRestaurantData
   ): Promise<CreateRestaurantResponse> => {
     try {
       const response = await axiosInstance.post<CreateRestaurantResponse>(
