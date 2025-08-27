@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import merchantService from "../../services/MerchantService";
 
 interface FormData {
@@ -26,7 +26,95 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   const totalSteps = 3;
+
+  useEffect(() => {
+    const loadGoogleMapsAPI = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        console.log("Google Maps API already loaded");
+        return;
+      }
+
+      const apiKey = import.meta.env.VITE_APP_GOOGLE_PLACES_API_KEY;
+
+      console.log("Environment variables:", {
+        apiKey: apiKey,
+        allEnvVars: import.meta.env, // Log all environment variables
+      });
+
+      if (!apiKey) {
+        console.error(
+          "Google Places API key not found in environment variables"
+        );
+        setError("Google Places API key not configured");
+        return;
+      }
+
+      console.log(
+        "Loading Google Maps API with key:",
+        apiKey.substring(0, 10) + "..."
+      );
+
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log("Google Maps API loaded successfully");
+      };
+      script.onerror = () => {
+        console.error("Failed to load Google Maps API");
+        setError("Failed to load Google Maps API");
+      };
+      document.head.appendChild(script);
+    };
+
+    loadGoogleMapsAPI();
+  }, []);
+
+  useEffect(() => {
+    if (
+      currentStep === 2 &&
+      inputRef.current &&
+      window.google &&
+      window.google.maps &&
+      window.google.maps.places
+    ) {
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          inputRef.current,
+          {
+            types: ["establishment", "geocode"],
+            componentRestrictions: { country: "us" }, // Restrict to US, change as needed
+            fields: ["formatted_address", "name", "place_id", "geometry"],
+          }
+        );
+
+        autocompleteRef.current.addListener("place_changed", () => {
+          const place = autocompleteRef.current?.getPlace();
+          if (place?.formatted_address) {
+            setForm((prev) => ({
+              ...prev,
+              location: place.formatted_address as string,
+            }));
+          }
+        });
+      } catch (error) {
+        console.error("Error initializing Google Places:", error);
+      }
+    }
+
+    return () => {
+      if (autocompleteRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(
+          autocompleteRef.current
+        );
+      }
+    };
+  }, [currentStep]);
 
   useEffect(() => {
     try {
@@ -111,7 +199,7 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
       if (result.success) {
         setSuccess(result.message || "Restaurant created successfully!");
         setTimeout(() => {
-          onSuccess(); // Call the success callback
+          onSuccess();
         }, 1500);
       } else {
         setError(
@@ -181,7 +269,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Close button */}
         <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
@@ -204,7 +291,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
           </button>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm font-medium text-gray-500">
@@ -222,7 +308,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
           </div>
         </div>
 
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             {getStepTitle()}
@@ -230,14 +315,12 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
           <p className="text-gray-600">{getStepDescription()}</p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
             <strong>Error:</strong> {error}
           </div>
         )}
 
-        {/* Success Message */}
         {success && (
           <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-700 rounded-lg text-sm">
             <strong>Success:</strong> {success}
@@ -268,24 +351,52 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
             </div>
           )}
 
-          {/* Step 2: Location */}
+          {/* Step 2: Location with Google Places Autocomplete */}
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
                 <label className="block mb-2 text-sm text-gray-700 font-medium">
                   Location
                 </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={form.location}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
-                  placeholder="Enter restaurant location"
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="py-3 px-4 pr-10 block w-full border-gray-200 rounded-lg text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
+                    placeholder="Search for restaurant location..."
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Start typing to search for your restaurant's address
+                </p>
               </div>
             </div>
           )}
