@@ -33,7 +33,13 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
 
   useEffect(() => {
     const loadGoogleMapsAPI = () => {
-      if (window.google && window.google.maps && window.google.maps.places) {
+      const existingScript = document.querySelector(
+        'script[src*="maps.googleapis.com"]'
+      );
+      if (
+        existingScript ||
+        (window.google && window.google.maps && window.google.maps.places)
+      ) {
         console.log("Google Maps API already loaded");
         return;
       }
@@ -42,7 +48,7 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
 
       console.log("Environment variables:", {
         apiKey: apiKey,
-        allEnvVars: import.meta.env, // Log all environment variables
+        allEnvVars: import.meta.env,
       });
 
       if (!apiKey) {
@@ -59,7 +65,7 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
       );
 
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
       script.async = true;
       script.defer = true;
       script.onload = () => {
@@ -67,7 +73,9 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
       };
       script.onerror = () => {
         console.error("Failed to load Google Maps API");
-        setError("Failed to load Google Maps API");
+        setError(
+          "Failed to load Google Maps API. Please check your API key and enable required APIs."
+        );
       };
       document.head.appendChild(script);
     };
@@ -84,17 +92,24 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
       window.google.maps.places
     ) {
       try {
+        console.log("Initializing Google Places Autocomplete...");
+
         autocompleteRef.current = new window.google.maps.places.Autocomplete(
           inputRef.current,
           {
             types: ["establishment", "geocode"],
-            componentRestrictions: { country: "us" }, // Restrict to US, change as needed
+            componentRestrictions: { country: "in" },
             fields: ["formatted_address", "name", "place_id", "geometry"],
           }
         );
 
+        console.log("Autocomplete initialized:", autocompleteRef.current);
+
         autocompleteRef.current.addListener("place_changed", () => {
+          console.log("Place changed event triggered");
           const place = autocompleteRef.current?.getPlace();
+          console.log("Selected place:", place);
+
           if (place?.formatted_address) {
             setForm((prev) => ({
               ...prev,
@@ -104,6 +119,7 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
         });
       } catch (error) {
         console.error("Error initializing Google Places:", error);
+        setError("Error initializing location search. Please try again.");
       }
     }
 
@@ -329,7 +345,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Step 1: Restaurant Name */}
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
@@ -351,7 +366,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
             </div>
           )}
 
-          {/* Step 2: Location with Google Places Autocomplete */}
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
@@ -401,7 +415,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
             </div>
           )}
 
-          {/* Step 3: Phone & Cuisine */}
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
@@ -438,7 +451,6 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
             </div>
           )}
 
-          {/* Navigation Buttons */}
           <div className="flex justify-between mt-8">
             {currentStep > 1 ? (
               <button
