@@ -13,7 +13,6 @@ const Merchant = () => {
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showRestaurantMenu, setShowRestaurantMenu] = useState(false);
 
   useEffect(() => {
     try {
@@ -88,7 +87,6 @@ const Merchant = () => {
   const handleRestaurantCreated = () => {
     setShowCreateModal(false);
     setHasRestaurant(true);
-    setShowRestaurantMenu(true);
   };
 
   if (loading) {
@@ -125,18 +123,20 @@ const Merchant = () => {
           />
         )}
 
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">
-              Merchant Dashboard
-            </h1>
-            <p className="text-lg text-gray-600 mb-8">
-              Welcome to your restaurant management panel
-            </p>
+        {hasRestaurant === true ? (
+          <MenuBoard />
+        ) : (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                Merchant Dashboard
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Welcome to your restaurant management panel
+              </p>
+            </div>
           </div>
-        </div>
-
-        {showRestaurantMenu && <MenuBoard />}
+        )}
       </div>
     </div>
   );
