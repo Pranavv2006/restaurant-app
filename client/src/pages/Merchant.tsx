@@ -5,6 +5,7 @@ import RestaurantCreationToast from "../components/merchant/RestaurantCreationTo
 import CreateRestaurant from "../components/merchant/CreateRestaurant";
 import merchantService from "../services/MerchantService";
 import axiosInstance from "../api/axiosConfig";
+import MenuBoard from "../components/merchant/MenuBoard";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Merchant = () => {
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showRestaurantMenu, setShowRestaurantMenu] = useState(false);
 
   useEffect(() => {
     try {
@@ -86,6 +88,7 @@ const Merchant = () => {
   const handleRestaurantCreated = () => {
     setShowCreateModal(false);
     setHasRestaurant(true);
+    setShowRestaurantMenu(true);
   };
 
   if (loading) {
@@ -132,6 +135,8 @@ const Merchant = () => {
             </p>
           </div>
         </div>
+
+        {showRestaurantMenu && <MenuBoard />}
       </div>
     </div>
   );
