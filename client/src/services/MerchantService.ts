@@ -1,5 +1,45 @@
 import axiosInstance from "../api/axiosConfig";
 
+export interface AddMenuItemData {
+  restaurantId: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+}
+
+export interface AddMenuItemResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    menuItem: {
+      id: number;
+      name: string;
+      description: string;
+      price: number;
+      image_url: string;
+    };
+  };
+  error?: string;
+}
+export interface MenuItemData {
+  restaurantId: number;
+}
+
+export interface MenuItemResponse {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+}
+
+export interface RetrieveMenuResponse {
+  success: boolean;
+  data?: MenuItemResponse[];
+  error?: string;
+}
+
 export interface CheckRestaurantData {
   merchantId: number;
 }
@@ -81,7 +121,6 @@ const merchantService = {
       console.error("checkRestaurant error:", error);
 
       if (error?.response?.status === 401) {
-        // Clear invalid token
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
         return {
@@ -126,7 +165,6 @@ const merchantService = {
       console.error("createRestaurant error:", error);
 
       if (error?.response?.status === 401) {
-        // Clear invalid token
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
         return {
@@ -175,7 +213,6 @@ const merchantService = {
       console.error("getMerchantProfile error:", error);
 
       if (error?.response?.status === 401) {
-        // Clear invalid token
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
         return {
@@ -192,6 +229,100 @@ const merchantService = {
       return {
         success: false,
         message: "Failed to get profile",
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  retrieveMenu: async (
+    retrieveMenuData: MenuItemData
+  ): Promise<RetrieveMenuResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.get<RetrieveMenuResponse>(
+        `/Merchant/retrieve-menu?restaurantId=${retrieveMenuData.restaurantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("retrieveMenu error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RetrieveMenuResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  AddMenuItem: async (
+    menuItemData: MenuItemData
+  ): Promise<AddMenuItemResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          message: "No authentication token found. Please login again.",
+          error: "Authentication required",
+        };
+      }
+
+      const response = await axiosInstance.post<AddMenuItemResponse>(
+        "/Merchant/add-item",
+        menuItemData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("AddMenuItem error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          message: "Authentication expired. Please login again.",
+          error: "Authentication expired",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as AddMenuItemResponse;
+      }
+
+      return {
+        success: false,
+        message: "Failed to add menu item",
         error: error?.message || "Network error",
       };
     }

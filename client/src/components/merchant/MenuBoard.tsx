@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AddMenuItem from "./AddMenuItemCard";
 
 interface MenuItem {
   id: number;
@@ -51,6 +52,10 @@ const MenuBoard = () => {
 
   const handleDeleteMenuItem = (id: number) => {
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleMenuItemSuccess = (newItem: any) => {
+    setMenuItems((prev) => [...prev, newItem]);
   };
 
   return (
@@ -301,28 +306,10 @@ const MenuBoard = () => {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Add New Menu Item</h3>
-            <p className="text-gray-600 mb-4">
-              Add menu item form will go here
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add Item
-              </button>
-            </div>
-          </div>
-        </div>
+        <AddMenuItem
+          onClose={() => setShowAddModal(false)}
+          onSuccess={handleMenuItemSuccess}
+        />
       )}
     </div>
   );
