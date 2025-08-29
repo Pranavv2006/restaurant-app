@@ -1,54 +1,60 @@
-const prisma = require('../models/prismaClient');
+const prisma = require("../models/prismaClient");
 
-const addMenuItem = async (restaurantId, name, description, price, image_url) => {
-    try {
-        const restaurant = await prisma.restaurant.findUnique({
-            where: {
-                id: restaurantId
-            }
-        });
+const addMenuItem = async (
+  restaurantId,
+  name,
+  description,
+  price,
+  imageUrl
+) => {
+  try {
+    console.log("Adding menu item with params:", {
+      restaurantId,
+      name,
+      description,
+      price,
+      imageUrl,
+    });
 
-        if (!restaurant) {
-            return {
-                success: false,
-                message: 'Restaurant not found'
-            };
-        }
+    const restaurant = await prisma.restaurant.findUnique({
+      where: {
+        id: restaurantId,
+      },
+    });
 
-        const menuItem = await prisma.menuItem.create({
-            data: {
-                name,
-                description,
-                price,
-                image_url,
-                restaurant: {
-                    connect: {
-                        id: restaurantId
-                    }
-                }
-            }
-        });
-
-        return {
-            status: 'success',
-            message: 'Menu item added successfully',
-            data: {
-                menuItem: {
-                    id: menuItem.id,
-                    name: menuItem.name,
-                    description: menuItem.description,
-                    price: menuItem.price,
-                    image_url: menuItem.image_url
-                }
-            }
-        };
-    } catch (error) {
-        console.error(`Error adding menu item: ${error.message}`);
-        return {
-            success: false,
-            error: error.message
-        };
+    if (!restaurant) {
+      return {
+        success: false,
+        error: "Restaurant not found",
+      };
     }
+
+    const menuItem = await prisma.menu.create({
+      data: {
+        restaurantId: restaurantId,
+        name: name,
+        description: description,
+        price: price,
+        imageUrl: imageUrl || "",
+      },
+    });
+
+    console.log("Menu item created successfully:", menuItem);
+
+    return {
+      success: true,
+      message: "Menu item added successfully",
+      data: {
+        menuItem: menuItem,
+      },
+    };
+  } catch (error) {
+    console.error(`Error adding menu item: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
 };
 
 module.exports = { addMenuItem };

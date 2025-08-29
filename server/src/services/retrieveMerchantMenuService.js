@@ -20,9 +20,11 @@ const retrieveMerchantMenu = async (restaurantId) => {
         name: true,
         description: true,
         price: true,
-        image_url: true,
+        imageUrl: true,
       },
     });
+
+    console.log(`Found ${menuItems.length} menu items for restaurant ${id}`);
 
     return {
       success: true,
