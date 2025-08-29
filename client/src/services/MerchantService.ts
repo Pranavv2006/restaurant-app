@@ -5,12 +5,12 @@ export interface AddMenuItemData {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  image_url: string;
 }
 
 export interface AddMenuItemResponse {
   success: boolean;
-  message: string;
+  message?: string;
   data?: {
     menuItem: {
       id: number;
@@ -31,7 +31,7 @@ export interface MenuItemResponse {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  image_url: string;
 }
 
 export interface RetrieveMenuResponse {
@@ -47,7 +47,19 @@ export interface CheckRestaurantData {
 export interface CheckRestaurantResponse {
   success: boolean;
   hasRestaurant?: boolean;
-  data?: CheckRestaurantData | null;
+  data?: {
+    id: number;
+    name: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    merchant?: {
+      id: number;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+  } | null;
   error?: string;
 }
 
@@ -279,8 +291,8 @@ const merchantService = {
     }
   },
 
-  AddMenuItem: async (
-    menuItemData: MenuItemData
+  addMenuItem: async (
+    addMenuItemData: AddMenuItemData
   ): Promise<AddMenuItemResponse> => {
     try {
       const token = localStorage.getItem("authToken");
@@ -288,14 +300,15 @@ const merchantService = {
       if (!token) {
         return {
           success: false,
-          message: "No authentication token found. Please login again.",
-          error: "Authentication required",
+          error: "No authentication token found. Please login again.",
         };
       }
 
+      console.log("Adding menu item:", addMenuItemData);
+
       const response = await axiosInstance.post<AddMenuItemResponse>(
-        "/Merchant/add-item",
-        menuItemData,
+        "/Merchant/add-menu-item",
+        addMenuItemData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -304,15 +317,14 @@ const merchantService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error("AddMenuItem error:", error);
+      console.error("addMenuItem error:", error);
 
       if (error?.response?.status === 401) {
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
         return {
           success: false,
-          message: "Authentication expired. Please login again.",
-          error: "Authentication expired",
+          error: "Authentication expired. Please login again.",
         };
       }
 
@@ -322,7 +334,6 @@ const merchantService = {
 
       return {
         success: false,
-        message: "Failed to add menu item",
         error: error?.message || "Network error",
       };
     }

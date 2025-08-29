@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import merchantService from "../../services/MerchantService";
 
 interface AddMenuItemData {
   name: string;
@@ -10,9 +11,14 @@ interface AddMenuItemData {
 interface AddMenuItemProps {
   onClose: () => void;
   onSuccess: (newItem: any) => void;
+  restaurantId: number; // Add this prop
 }
 
-const AddMenuItem = ({ onClose, onSuccess }: AddMenuItemProps) => {
+const AddMenuItem = ({
+  onClose,
+  onSuccess,
+  restaurantId,
+}: AddMenuItemProps) => {
   const [formData, setFormData] = useState<AddMenuItemData>({
     name: "",
     description: "",
@@ -41,7 +47,6 @@ const AddMenuItem = ({ onClose, onSuccess }: AddMenuItemProps) => {
     setSuccess("");
 
     try {
-      // Validate price
       const priceNum = parseFloat(formData.price);
       if (isNaN(priceNum) || priceNum <= 0) {
         setError("Please enter a valid price");
@@ -49,35 +54,41 @@ const AddMenuItem = ({ onClose, onSuccess }: AddMenuItemProps) => {
         return;
       }
 
-      console.log("Submitting menu item with data:", formData);
-
-      const mockResponse = {
-        success: true,
-        message: "Menu item added successfully!",
-        data: {
-          id: Date.now(), // Mock ID
-          name: formData.name,
-          description: formData.description,
-          price: priceNum,
-          image_url: formData.image_url || undefined,
-        },
+      const requestData = {
+        restaurantId: restaurantId,
+        name: formData.name,
+        description: formData.description,
+        price: priceNum,
+        image_url: formData.image_url || "",
       };
 
-      if (mockResponse.success) {
-        setSuccess(mockResponse.message);
+      console.log("Submitting menu item with data:", requestData);
+
+      const response = await merchantService.addMenuItem(requestData);
+
+      if (response.success) {
+        setSuccess(response.message || "Menu item added successfully");
 
         setTimeout(() => {
-          onSuccess(mockResponse.data);
+          if (response.data?.menuItem) {
+            onSuccess({
+              id: response.data.menuItem.id,
+              name: response.data.menuItem.name,
+              description: response.data.menuItem.description,
+              price: response.data.menuItem.price,
+              imageUrl: response.data.menuItem.image_url,
+            });
+          }
           onClose();
         }, 1000);
       } else {
-        setError("Failed to add menu item");
+        setError(response.error || "Failed to add menu item");
       }
     } catch (error: any) {
       console.error("Add menu item error:", error);
-      const errorMessage =
-        error?.message || "An error occurred while adding the menu item";
-      setError(errorMessage);
+      setError(
+        error?.message || "An error occurred while adding the menu item"
+      );
     } finally {
       setLoading(false);
     }

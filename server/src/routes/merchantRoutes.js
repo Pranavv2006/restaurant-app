@@ -11,7 +11,7 @@ const retrieveItems = require("../controllers/retrieveMenu");
 router.post("/create-restaurant", create.createRestaurantController);
 router.post("/check-restaurant", check.checkRestaurantController);
 router.post("/add-item", item.addMenuController);
-router.post("/remove-item", removeItem.removeMenuController);
+router.delete("/remove-item", removeItem.removeMenuController);
 router.get("/retrieve-menu", retrieveItems.retrieveMenuController);
 router.get("/merchant-profile/:merchantId", profile.merchantProfileController);
 

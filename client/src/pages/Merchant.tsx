@@ -12,6 +12,8 @@ const Merchant = () => {
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<number | null>(null);
+  const [restaurantId, setRestaurantId] = useState<number | null>(null); // Add this
+  const [restaurantData, setRestaurantData] = useState<any>(null); // Add this
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
@@ -32,28 +34,41 @@ const Merchant = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const checkRestaurant = async () => {
-      if (!merchantId) return;
+  const checkRestaurant = async () => {
+    if (!merchantId) return;
 
-      try {
-        setLoading(true);
-        const result = await merchantService.checkRestaurant({ merchantId });
+    try {
+      setLoading(true);
+      const result = await merchantService.checkRestaurant({ merchantId });
 
-        if (result.success) {
-          setHasRestaurant(result.hasRestaurant || false);
+      if (result.success) {
+        setHasRestaurant(result.hasRestaurant || false);
+
+        if (result.hasRestaurant && result.data) {
+          setRestaurantId(result.data.id);
+          setRestaurantData(result.data);
+          console.log("Restaurant found:", result.data);
         } else {
-          console.error("Failed to check restaurant:", result.error);
-          setHasRestaurant(false);
+          setRestaurantId(null);
+          setRestaurantData(null);
         }
-      } catch (error) {
-        console.error("Error checking restaurant:", error);
+      } else {
+        console.error("Failed to check restaurant:", result.error);
         setHasRestaurant(false);
-      } finally {
-        setLoading(false);
+        setRestaurantId(null);
+        setRestaurantData(null);
       }
-    };
+    } catch (error) {
+      console.error("Error checking restaurant:", error);
+      setHasRestaurant(false);
+      setRestaurantId(null);
+      setRestaurantData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (merchantId) {
       checkRestaurant();
     }
@@ -84,9 +99,20 @@ const Merchant = () => {
     setShowCreateModal(false);
   };
 
-  const handleRestaurantCreated = () => {
+  const handleRestaurantCreated = (newRestaurantData?: any) => {
     setShowCreateModal(false);
     setHasRestaurant(true);
+
+    if (newRestaurantData && newRestaurantData.id) {
+      setRestaurantId(newRestaurantData.id);
+      setRestaurantData(newRestaurantData);
+      console.log("New restaurant created:", newRestaurantData);
+    } else {
+      console.log("Restaurant created, but no data passed. Refetching...");
+      if (merchantId) {
+        checkRestaurant();
+      }
+    }
   };
 
   if (loading) {
@@ -123,8 +149,11 @@ const Merchant = () => {
           />
         )}
 
-        {hasRestaurant === true ? (
-          <MenuBoard />
+        {hasRestaurant === true && restaurantId ? (
+          <MenuBoard
+            restaurantId={restaurantId}
+            restaurantData={restaurantData}
+          />
         ) : (
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
@@ -133,6 +162,9 @@ const Merchant = () => {
               </h1>
               <p className="text-lg text-gray-600 mb-8">
                 Welcome to your restaurant management panel
+              </p>
+              <p className="text-sm text-gray-500">
+                Create a restaurant to start managing your menu
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import merchantService from "../../services/MerchantService";
 import AddMenuItem from "./AddMenuItemCard";
 
 interface MenuItem {
@@ -6,41 +7,53 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
-  image_url?: string;
+  imageUrl?: string;
 }
 
-const MenuBoard = () => {
+interface MenuBoardProps {
+  restaurantId: number;
+  restaurantData?: any;
+}
+
+const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const mockMenuItems: MenuItem[] = [
-      {
-        id: 1,
-        name: "Margherita Pizza",
-        description: "Fresh tomatoes, mozzarella cheese, and basil",
-        price: 12.99,
-        image_url:
-          "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=80&h=80&fit=crop&crop=center",
-      },
-      {
-        id: 2,
-        name: "Caesar Salad",
-        description: "Crisp romaine lettuce with parmesan and croutons",
-        price: 8.99,
-      },
-      {
-        id: 3,
-        name: "Grilled Chicken",
-        description: "Tender grilled chicken breast with herbs",
-        price: 15.99,
-        image_url:
-          "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=80&h=80&fit=crop&crop=center",
-      },
-    ];
-    setMenuItems(mockMenuItems);
-  }, []);
+    const fetchMenuItems = async () => {
+      if (!restaurantId) return;
+
+      try {
+        setLoading(true);
+        setError("");
+
+        console.log("Fetching menu for restaurant:", restaurantId);
+
+        const result = await merchantService.retrieveMenu({ restaurantId });
+
+        if (result.success && result.data) {
+          setMenuItems(result.data);
+          console.log("Menu items loaded:", result.data);
+        } else {
+          console.log("No menu items found or error:", result.error);
+          setMenuItems([]);
+          if (result.error) {
+            setError(result.error);
+          }
+        }
+      } catch (error: any) {
+        console.error("Error fetching menu items:", error);
+        setError("Failed to load menu items");
+        setMenuItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, [restaurantId]);
 
   const handleAddMenuItem = () => {
     setShowAddModal(true);
@@ -54,33 +67,50 @@ const MenuBoard = () => {
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const handleMenuItemSuccess = (newItem: any) => {
+  const handleMenuItemSuccess = (newItem: MenuItem) => {
     setMenuItems((prev) => [...prev, newItem]);
   };
+
+  const handleCloseAddModal = () => {
+    setShowAddModal(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading menu items...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
       <div className="flex flex-col">
-        <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+        <div className="overflow-x-auto">
           <div className="min-w-full inline-block align-middle">
             <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
               <div className="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200">
                     Menu Items
+                    {restaurantData && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        - {restaurantData.name}
+                      </span>
+                    )}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-neutral-400">
                     Add menu items, edit prices and descriptions.
                   </p>
+                  {error && (
+                    <p className="text-sm text-red-600 mt-1">{error}</p>
+                  )}
                 </div>
                 <div>
                   <div className="inline-flex gap-x-2">
-                    <button
-                      className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-50 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                      type="button"
-                    >
-                      View all
-                    </button>
                     <button
                       onClick={handleAddMenuItem}
                       className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
@@ -107,199 +137,97 @@ const MenuBoard = () => {
                 </div>
               </div>
 
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead className="bg-gray-50 dark:bg-neutral-800">
-                  <tr>
-                    <th scope="col" className="ps-6 py-3 text-start">
-                      <label
-                        htmlFor="hs-at-with-checkboxes-main"
-                        className="flex"
+              {menuItems.length === 0 ? (
+                <div className="px-6 py-12 text-center">
+                  <p className="text-gray-500">
+                    No menu items found. Add your first menu item!
+                  </p>
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                  <thead className="bg-gray-50 dark:bg-neutral-800">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="ps-6 lg:ps-3 xl:ps-0 pe-6 py-3 text-start"
                       >
-                        <input
-                          type="checkbox"
-                          className="shrink-0 border-gray-300 rounded-sm text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-600 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-                          id="hs-at-with-checkboxes-main"
-                        />
-                        <span className="sr-only">Checkbox</span>
-                      </label>
-                    </th>
-                    <th
-                      scope="col"
-                      className="ps-6 lg:ps-3 xl:ps-0 pe-6 py-3 text-start"
-                    >
-                      <div className="flex items-center gap-x-2">
                         <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
                           Item Name
                         </span>
-                      </div>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-start">
-                      <div className="flex items-center gap-x-2">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-start">
                         <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
                           Description
                         </span>
-                      </div>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-start">
-                      <div className="flex items-center gap-x-2">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-start">
                         <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
                           Price
                         </span>
-                      </div>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-end">
-                      <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
-                        Actions
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                  {menuItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="size-px whitespace-nowrap">
-                        <div className="ps-6 py-3">
-                          <label
-                            htmlFor={`hs-at-with-checkboxes-${item.id}`}
-                            className="flex"
-                          >
-                            <input
-                              type="checkbox"
-                              className="shrink-0 border-gray-300 rounded-sm text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-600 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-                              id={`hs-at-with-checkboxes-${item.id}`}
-                            />
-                            <span className="sr-only">Checkbox</span>
-                          </label>
-                        </div>
-                      </td>
-                      <td className="size-px whitespace-nowrap">
-                        <div className="ps-6 lg:ps-3 xl:ps-0 pe-6 py-3">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-end">
+                        <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
+                          Actions
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                    {menuItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-x-3">
-                            {item.image_url ? (
+                            {item.imageUrl ? (
                               <img
                                 className="inline-block size-9.5 rounded-lg object-cover"
-                                src={item.image_url}
+                                src={item.imageUrl}
                                 alt={item.name}
                               />
                             ) : (
                               <div className="size-9.5 rounded-lg bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
-                                <svg
-                                  className="size-5 text-gray-500 dark:text-neutral-500"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                                  <circle cx="12" cy="13" r="3" />
-                                </svg>
+                                <span className="text-xs text-gray-500">
+                                  No Image
+                                </span>
                               </div>
                             )}
-                            <div className="grow">
+                            <div>
                               <span className="block text-sm font-semibold text-gray-800 dark:text-neutral-200">
                                 {item.name}
                               </span>
-                              <span className="block text-sm text-gray-500 dark:text-neutral-500">
-                                ID: {item.id}
-                              </span>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="h-px w-72 whitespace-nowrap">
-                        <div className="px-6 py-3">
-                          <span className="block text-sm text-gray-800 dark:text-neutral-200">
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-800 dark:text-neutral-200">
                             {item.description}
                           </span>
-                        </div>
-                      </td>
-                      <td className="size-px whitespace-nowrap">
-                        <div className="px-6 py-3">
+                        </td>
+                        <td className="px-6 py-4">
                           <span className="text-sm font-semibold text-gray-800 dark:text-neutral-200">
                             ${item.price.toFixed(2)}
                           </span>
-                        </div>
-                      </td>
-                      <td className="size-px whitespace-nowrap">
-                        <div className="px-6 py-1.5 flex gap-x-2">
-                          <button
-                            onClick={() => handleEditMenuItem(item.id)}
-                            className="inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-blue-500"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMenuItem(item.id)}
-                            className="inline-flex items-center gap-x-1 text-sm text-red-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-red-500"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-neutral-400">
-                    <span className="font-semibold text-gray-800 dark:text-neutral-200">
-                      {menuItems.length}
-                    </span>{" "}
-                    menu items
-                  </p>
-                </div>
-                <div>
-                  <div className="inline-flex gap-x-2">
-                    <button
-                      type="button"
-                      className="py-1.5 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-50 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                    >
-                      <svg
-                        className="shrink-0 size-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m15 18-6-6 6-6" />
-                      </svg>
-                      Prev
-                    </button>
-                    <button
-                      type="button"
-                      className="py-1.5 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-50 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                    >
-                      Next
-                      <svg
-                        className="shrink-0 size-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+                        </td>
+                        <td className="px-6 py-4 text-end">
+                          <div className="flex gap-x-2 justify-end">
+                            <button
+                              onClick={() => handleEditMenuItem(item.id)}
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMenuItem(item.id)}
+                              className="text-sm text-red-600 hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
@@ -307,8 +235,9 @@ const MenuBoard = () => {
 
       {showAddModal && (
         <AddMenuItem
-          onClose={() => setShowAddModal(false)}
+          onClose={handleCloseAddModal}
           onSuccess={handleMenuItemSuccess}
+          restaurantId={restaurantId}
         />
       )}
     </div>

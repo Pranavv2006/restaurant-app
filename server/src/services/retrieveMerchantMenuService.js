@@ -11,7 +11,7 @@ const retrieveMerchantMenu = async (restaurantId) => {
       };
     }
 
-    const menu = await prisma.menu.findMany({
+    const menuItems = await prisma.menu.findMany({
       where: {
         restaurantId: id,
       },
@@ -20,26 +20,13 @@ const retrieveMerchantMenu = async (restaurantId) => {
         name: true,
         description: true,
         price: true,
-        imageUrl: true,
+        image_url: true,
       },
     });
 
-    if (menu.length === 0) {
-      return {
-        success: false,
-        error: "No menu items found for this restaurant.",
-      };
-    }
-
     return {
       success: true,
-      data: {
-        id: menu.id,
-        name: menu.name,
-        description: menu.description,
-        price: menu.price,
-        imageUrl: menu.imageUrl,
-      },
+      data: menuItems,
     };
   } catch (error) {
     console.error(`Error retrieving restaurant menu: ${error.message}`);
