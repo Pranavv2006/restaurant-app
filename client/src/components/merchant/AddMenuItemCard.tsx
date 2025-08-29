@@ -62,9 +62,16 @@ const AddMenuItem = ({
         imageUrl: formData.imageUrl || "",
       };
 
-      console.log("Submitting menu item with data:", requestData);
+      console.log("Restaurant ID being sent:", restaurantId);
+      console.log("Full request data:", requestData);
+      console.log("Request data types:", {
+        restaurantId: typeof requestData.restaurantId,
+        price: typeof requestData.price,
+        name: typeof requestData.name,
+      });
 
       const response = await merchantService.addMenuItem(requestData);
+      console.log("Response received:", response);
 
       if (response.success) {
         setSuccess(response.message || "Menu item added successfully");
@@ -86,8 +93,11 @@ const AddMenuItem = ({
       }
     } catch (error: any) {
       console.error("Add menu item error:", error);
+      console.error("Error response:", error?.response?.data);
       setError(
-        error?.message || "An error occurred while adding the menu item"
+        error?.response?.data?.error ||
+          error?.message ||
+          "An error occurred while adding the menu item"
       );
     } finally {
       setLoading(false);
@@ -138,7 +148,6 @@ const AddMenuItem = ({
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-sm mb-2 dark:text-white">
                     Description *
@@ -157,7 +166,7 @@ const AddMenuItem = ({
 
                 <div>
                   <label className="block text-sm mb-2 dark:text-white">
-                    Price ($) *
+                    Price ₹ *
                   </label>
                   <input
                     type="number"
@@ -188,7 +197,6 @@ const AddMenuItem = ({
                   />
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading || success !== ""}

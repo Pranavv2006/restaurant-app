@@ -38,11 +38,12 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
             id: item.id,
             name: item.name,
             description: item.description,
-            price: item.price,
-            imageUrl: item.image_url,
+            price: Number(item.price),
+            imageUrl: item.imageUrl,
           }));
+
           setMenuItems(mappedItems);
-          console.log("Menu items loaded:", result.data);
+          console.log("Menu items loaded:", mappedItems);
         } else {
           console.log("No menu items found or error:", result.error);
           setMenuItems([]);
@@ -120,7 +121,7 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                   <div className="inline-flex gap-x-2">
                     <button
                       onClick={handleAddMenuItem}
-                      className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                      className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"
                       type="button"
                     >
                       <svg
@@ -154,10 +155,7 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                   <thead className="bg-gray-50 dark:bg-neutral-800">
                     <tr>
-                      <th
-                        scope="col"
-                        className="ps-6 lg:ps-3 xl:ps-0 pe-6 py-3 text-start"
-                      >
+                      <th scope="col" className="px-6 py-3 text-start">
                         <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
                           Item Name
                         </span>
@@ -182,39 +180,47 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                   <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                     {menuItems.map((item) => (
                       <tr key={item.id}>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 w-1/3">
+                          {" "}
                           <div className="flex items-center gap-x-3">
                             {item.imageUrl ? (
                               <img
-                                className="inline-block size-9.5 rounded-lg object-cover"
+                                className="inline-block w-12 h-12 rounded-lg object-cover flex-shrink-0"
                                 src={item.imageUrl}
                                 alt={item.name}
                               />
                             ) : (
-                              <div className="size-9.5 rounded-lg bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-neutral-700 flex items-center justify-center flex-shrink-0">
                                 <span className="text-xs text-gray-500">
                                   No Image
                                 </span>
                               </div>
                             )}
-                            <div>
-                              <span className="block text-sm font-semibold text-gray-800 dark:text-neutral-200">
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold text-gray-800 dark:text-neutral-200 break-words">
                                 {item.name}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-800 dark:text-neutral-200">
+                        <td className="px-6 py-4 w-1/3">
+                          {" "}
+                          <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
                             {item.description}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 w-1/6">
+                          {" "}
                           <span className="text-sm font-semibold text-gray-800 dark:text-neutral-200">
-                            ${item.price.toFixed(2)}
+                            $
+                            {typeof item.price === "number"
+                              ? item.price.toFixed(2)
+                              : parseFloat(item.price || 0).toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-end">
+                        <td className="px-6 py-4 text-end w-1/6">
+                          {" "}
+                          {/* Added width control */}
                           <div className="flex gap-x-2 justify-end">
                             <button
                               onClick={() => handleEditMenuItem(item.id)}
