@@ -5,7 +5,7 @@ export interface AddMenuItemData {
   name: string;
   description: string;
   price: number;
-  image_url: string;
+  imageUrl: string;
 }
 
 export interface AddMenuItemResponse {
@@ -17,7 +17,7 @@ export interface AddMenuItemResponse {
       name: string;
       description: string;
       price: number;
-      image_url: string;
+      imageUrl: string;
     };
   };
   error?: string;
@@ -31,7 +31,7 @@ export interface MenuItemResponse {
   name: string;
   description: string;
   price: number;
-  image_url: string;
+  imageUrl: string;
 }
 
 export interface RetrieveMenuResponse {

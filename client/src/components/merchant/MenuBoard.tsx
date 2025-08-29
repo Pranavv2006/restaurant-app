@@ -34,7 +34,14 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
         const result = await merchantService.retrieveMenu({ restaurantId });
 
         if (result.success && result.data) {
-          setMenuItems(result.data);
+          const mappedItems = result.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            imageUrl: item.image_url,
+          }));
+          setMenuItems(mappedItems);
           console.log("Menu items loaded:", result.data);
         } else {
           console.log("No menu items found or error:", result.error);

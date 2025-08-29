@@ -5,13 +5,13 @@ interface AddMenuItemData {
   name: string;
   description: string;
   price: string;
-  image_url?: string;
+  imageUrl?: string;
 }
 
 interface AddMenuItemProps {
   onClose: () => void;
   onSuccess: (newItem: any) => void;
-  restaurantId: number; // Add this prop
+  restaurantId: number;
 }
 
 const AddMenuItem = ({
@@ -23,7 +23,7 @@ const AddMenuItem = ({
     name: "",
     description: "",
     price: "",
-    image_url: "",
+    imageUrl: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,7 +59,7 @@ const AddMenuItem = ({
         name: formData.name,
         description: formData.description,
         price: priceNum,
-        image_url: formData.image_url || "",
+        imageUrl: formData.imageUrl || "",
       };
 
       console.log("Submitting menu item with data:", requestData);
@@ -76,7 +76,7 @@ const AddMenuItem = ({
               name: response.data.menuItem.name,
               description: response.data.menuItem.description,
               price: response.data.menuItem.price,
-              imageUrl: response.data.menuItem.image_url,
+              imageUrl: response.data.menuItem.imageUrl,
             });
           }
           onClose();
@@ -179,8 +179,8 @@ const AddMenuItem = ({
                   </label>
                   <input
                     type="url"
-                    name="image_url"
-                    value={formData.image_url}
+                    name="imageUrl"
+                    value={formData.imageUrl}
                     onChange={handleChange}
                     className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                     placeholder="https://example.com/image.jpg"
