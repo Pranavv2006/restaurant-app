@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NavbarMerchant from "../components/merchant/NavbarMerchant";
 import RestaurantCreationToast from "../components/merchant/RestaurantCreationToast";
 import CreateRestaurant from "../components/merchant/CreateRestaurant";
+import MerchantSidebar from "../components/merchant/MerchantSidebar";
 import merchantService from "../services/MerchantService";
 import axiosInstance from "../api/axiosConfig";
 import MenuBoard from "../components/merchant/MenuBoard";
@@ -12,8 +13,8 @@ const Merchant = () => {
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<number | null>(null);
-  const [restaurantId, setRestaurantId] = useState<number | null>(null); // Add this
-  const [restaurantData, setRestaurantData] = useState<any>(null); // Add this
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [restaurantData, setRestaurantData] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
@@ -130,9 +131,13 @@ const Merchant = () => {
   }
 
   return (
-    <div>
+    <div className="min-h-screen">
+      {/* Navbar at the very top */}
       <NavbarMerchant handleLogout={handleLogout} />
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+
+      {/* Use MerchantSidebar component properly */}
+      <MerchantSidebar>
+        {/* Toast notifications */}
         {hasRestaurant === false && (
           <div className="fixed top-4 right-4 z-50">
             <RestaurantCreationToast
@@ -142,6 +147,7 @@ const Merchant = () => {
           </div>
         )}
 
+        {/* Create Restaurant Modal */}
         {showCreateModal && (
           <CreateRestaurant
             onClose={handleCloseModal}
@@ -149,13 +155,14 @@ const Merchant = () => {
           />
         )}
 
+        {/* Main Content */}
         {hasRestaurant === true && restaurantId ? (
           <MenuBoard
             restaurantId={restaurantId}
             restaurantData={restaurantData}
           />
         ) : (
-          <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-800 mb-4">
                 Merchant Dashboard
@@ -169,7 +176,7 @@ const Merchant = () => {
             </div>
           </div>
         )}
-      </div>
+      </MerchantSidebar>
     </div>
   );
 };
