@@ -16,6 +16,7 @@ const Merchant = () => {
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [restaurantData, setRestaurantData] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [activePage, setActivePage] = useState<string>("dashboard"); // Add navigation state
 
   useEffect(() => {
     try {
@@ -116,6 +117,163 @@ const Merchant = () => {
     }
   };
 
+  // Handle sidebar navigation
+  const handleNavigation = (page: string) => {
+    setActivePage(page);
+  };
+
+  // Render content based on active page and restaurant status
+  const renderContent = () => {
+    // If no restaurant exists, show creation prompt
+    if (hasRestaurant === false) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+              Merchant Dashboard
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Welcome to your restaurant management panel
+            </p>
+            <p className="text-sm text-gray-500">
+              Create a restaurant to start managing your menu
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // If restaurant exists but no restaurant ID yet
+    if (!restaurantId) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+              Merchant Dashboard
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Welcome to your restaurant management panel
+            </p>
+            <p className="text-sm text-gray-500">Loading restaurant data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Restaurant exists, show content based on active page
+    switch (activePage) {
+      case "dashboard":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                Merchant Dashboard
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Welcome to your restaurant management panel
+              </p>
+            </div>
+          </div>
+        );
+
+      case "menu":
+        return (
+          <MenuBoard
+            restaurantId={restaurantId}
+            restaurantData={restaurantData}
+          />
+        );
+
+      case "add-menu":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                Add Menu Item
+              </h1>
+              <p className="text-gray-600">
+                Add menu item functionality coming soon...
+              </p>
+            </div>
+          </div>
+        );
+
+      case "categories":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                Categories
+              </h1>
+              <p className="text-gray-600">
+                Categories management coming soon...
+              </p>
+            </div>
+          </div>
+        );
+
+      case "active-orders":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                Active Orders
+              </h1>
+              <p className="text-gray-600">Active orders page coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case "order-history":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                Order History
+              </h1>
+              <p className="text-gray-600">Order history page coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case "analytics":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                Analytics
+              </h1>
+              <p className="text-gray-600">Analytics page coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case "profile":
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
+              <p className="text-gray-600">Profile page coming soon...</p>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                Merchant Dashboard
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Welcome to your restaurant management panel
+              </p>
+            </div>
+          </div>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div>
@@ -135,8 +293,8 @@ const Merchant = () => {
       {/* Navbar at the very top */}
       <NavbarMerchant handleLogout={handleLogout} />
 
-      {/* Use MerchantSidebar component properly */}
-      <MerchantSidebar>
+      {/* Use MerchantSidebar component with navigation props */}
+      <MerchantSidebar onNavigate={handleNavigation} activePage={activePage}>
         {/* Toast notifications */}
         {hasRestaurant === false && (
           <div className="fixed top-4 right-4 z-50">
@@ -155,27 +313,8 @@ const Merchant = () => {
           />
         )}
 
-        {/* Main Content */}
-        {hasRestaurant === true && restaurantId ? (
-          <MenuBoard
-            restaurantId={restaurantId}
-            restaurantData={restaurantData}
-          />
-        ) : (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                Merchant Dashboard
-              </h1>
-              <p className="text-lg text-gray-600 mb-8">
-                Welcome to your restaurant management panel
-              </p>
-              <p className="text-sm text-gray-500">
-                Create a restaurant to start managing your menu
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Dynamic Content Based on Navigation */}
+        {renderContent()}
       </MerchantSidebar>
     </div>
   );

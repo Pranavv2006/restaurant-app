@@ -2,13 +2,56 @@ import React, { useState } from "react";
 
 interface MerchantSidebarProps {
   children?: React.ReactNode;
+  onNavigate?: (page: string) => void;
+  activePage?: string;
 }
 
-const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
+const MerchantSidebar = ({
+  children,
+  onNavigate,
+  activePage = "dashboard",
+}: MerchantSidebarProps) => {
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
   const toggleAccordion = (accordionId: string) => {
     setActiveAccordion(activeAccordion === accordionId ? null : accordionId);
+  };
+
+  const handleNavigation = (page: string) => {
+    if (onNavigate) {
+      onNavigate(page);
+    }
+  };
+
+  const getBreadcrumbText = () => {
+    switch (activePage) {
+      case "dashboard":
+        return "Dashboard";
+      case "menu":
+        return "Menu Management";
+      case "add-menu":
+        return "Add Menu Item";
+      case "categories":
+        return "Categories";
+      case "active-orders":
+        return "Active Orders";
+      case "order-history":
+        return "Order History";
+      case "order-analytics":
+        return "Order Analytics";
+      case "restaurant-profile":
+        return "Restaurant Profile";
+      case "business-hours":
+        return "Business Hours";
+      case "payment-settings":
+        return "Payment Settings";
+      case "analytics":
+        return "Analytics";
+      case "profile":
+        return "Profile";
+      default:
+        return "Dashboard";
+    }
   };
 
   return (
@@ -65,7 +108,7 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
               className="text-sm font-semibold text-gray-800 truncate dark:text-neutral-400"
               aria-current="page"
             >
-              Dashboard
+              {getBreadcrumbText()}
             </li>
           </ol>
         </div>
@@ -87,9 +130,11 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
             >
               <ul className="flex flex-col space-y-1">
                 <li>
-                  <a
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 bg-white/10 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 dark:bg-neutral-700 dark:text-white"
-                    href="#"
+                  <button
+                    onClick={() => handleNavigation("dashboard")}
+                    className={`w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                      activePage === "dashboard" ? "bg-white/10" : ""
+                    }`}
                   >
                     <svg
                       className="shrink-0 size-4"
@@ -107,7 +152,7 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                     Dashboard
-                  </a>
+                  </button>
                 </li>
 
                 <li className="hs-accordion">
@@ -159,28 +204,34 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                   >
                     <ul className="ps-8 pt-1 space-y-1">
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("menu")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "menu" ? "bg-white/10" : ""
+                          }`}
                         >
                           View Menu Items
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("add-menu")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "add-menu" ? "bg-white/10" : ""
+                          }`}
                         >
                           Add Menu Item
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("categories")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "categories" ? "bg-white/10" : ""
+                          }`}
                         >
                           Categories
-                        </a>
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -238,28 +289,36 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                   >
                     <ul className="ps-8 pt-1 space-y-1">
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("active-orders")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "active-orders" ? "bg-white/10" : ""
+                          }`}
                         >
                           Active Orders
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("order-history")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "order-history" ? "bg-white/10" : ""
+                          }`}
                         >
                           Order History
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("order-analytics")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "order-analytics"
+                              ? "bg-white/10"
+                              : ""
+                          }`}
                         >
                           Order Analytics
-                        </a>
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -313,37 +372,49 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                   >
                     <ul className="ps-8 pt-1 space-y-1">
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("restaurant-profile")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "restaurant-profile"
+                              ? "bg-white/10"
+                              : ""
+                          }`}
                         >
                           Restaurant Profile
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("business-hours")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "business-hours" ? "bg-white/10" : ""
+                          }`}
                         >
                           Business Hours
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a
-                          className="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10"
-                          href="#"
+                        <button
+                          onClick={() => handleNavigation("payment-settings")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "payment-settings"
+                              ? "bg-white/10"
+                              : ""
+                          }`}
                         >
                           Payment Settings
-                        </a>
+                        </button>
                       </li>
                     </ul>
                   </div>
                 </li>
 
                 <li>
-                  <a
-                    className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 dark:hover:bg-neutral-700 dark:text-white"
-                    href="#"
+                  <button
+                    onClick={() => handleNavigation("analytics")}
+                    className={`w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                      activePage === "analytics" ? "bg-white/10" : ""
+                    }`}
                   >
                     <svg
                       className="shrink-0 size-4"
@@ -363,13 +434,15 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                       <path d="M3 21a16 16 0 0 0 13.8-8" />
                     </svg>
                     Analytics
-                  </a>
+                  </button>
                 </li>
 
                 <li>
-                  <a
-                    className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 dark:hover:bg-neutral-700 dark:text-white"
-                    href="#"
+                  <button
+                    onClick={() => handleNavigation("profile")}
+                    className={`w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                      activePage === "profile" ? "bg-white/10" : ""
+                    }`}
                   >
                     <svg
                       className="shrink-0 size-4"
@@ -388,7 +461,7 @@ const MerchantSidebar = ({ children }: MerchantSidebarProps) => {
                       <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
                     </svg>
                     Profile
-                  </a>
+                  </button>
                 </li>
               </ul>
             </nav>
