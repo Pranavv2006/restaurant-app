@@ -4,15 +4,6 @@ const addItemController = async (req, res) => {
   try {
     const { restaurantId, name, description, price, imageUrl } = req.body;
 
-    console.log("Received add menu item request:", {
-      restaurantId,
-      name,
-      description,
-      price,
-      imageUrl,
-    });
-
-    // Validate required fields
     if (!restaurantId || !name || !description || price === undefined) {
       return res.status(400).json({
         success: false,
@@ -21,7 +12,6 @@ const addItemController = async (req, res) => {
       });
     }
 
-    // Validate data types
     const restaurantIdNum = Number(restaurantId);
     const priceNum = Number(price);
 

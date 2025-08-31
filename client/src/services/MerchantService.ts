@@ -8,6 +8,23 @@ export interface AddMenuItemData {
   imageUrl: string;
 }
 
+export interface RemoveMenuItemData {
+  menuItemId: number;
+}
+
+export interface RemoveMenuItemResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    deletedMenu: {
+      id: number;
+      name: string;
+      restaurantId: number;
+    };
+  };
+  error?: string;
+}
+
 export interface AddMenuItemResponse {
   success: boolean;
   message?: string;
@@ -330,6 +347,51 @@ const merchantService = {
 
       if (error?.response?.data) {
         return error.response.data as AddMenuItemResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  removeMenuItem: async (
+    removeMenuItemData: RemoveMenuItemData
+  ): Promise<RemoveMenuItemResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.delete<RemoveMenuItemResponse>(
+        `/Merchant/remove-menu-item/${removeMenuItemData.menuItemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("removeMenuItem error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RemoveMenuItemResponse;
       }
 
       return {
