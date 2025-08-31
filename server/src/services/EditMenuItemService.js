@@ -1,4 +1,3 @@
-const { restaurant } = require("../models/prismaClient");
 const prisma = require("../utils/prismaClient");
 
 const editMenuItem = async (menuItemId, name, description, price, imageUrl) => {
@@ -6,6 +5,11 @@ const editMenuItem = async (menuItemId, name, description, price, imageUrl) => {
     const menuItem = await prisma.menu.findUnique({
       where: {
         id: menuItemId,
+      },
+      include: {
+        restaurant: {
+          select: { id: true, merchantId: true, name: true },
+        },
       },
     });
 
