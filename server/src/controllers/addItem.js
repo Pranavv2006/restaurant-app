@@ -29,7 +29,6 @@ const addItemController = async (req, res) => {
       });
     }
 
-    // Call the service
     const result = await addMenuItem(
       restaurantIdNum,
       name,
