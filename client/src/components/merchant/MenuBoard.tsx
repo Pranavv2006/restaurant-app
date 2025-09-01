@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import merchantService from "../../services/MerchantService";
 import AddMenuItem from "./AddMenuItemCard";
+import EditMenuItem from "./EditMenuItemCard";
 
 interface MenuItem {
   id: number;
@@ -19,7 +20,10 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [error, setError] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -68,19 +72,56 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
   };
 
   const handleEditMenuItem = (id: number) => {
-    console.log("Edit menu item:", id);
+    const itemToEdit = menuItems.find((item) => item.id === id);
+    if (itemToEdit) {
+      setEditingItem(itemToEdit);
+      setShowEditModal(true);
+    }
   };
 
-  const handleDeleteMenuItem = (id: number) => {
-    setMenuItems((prev) => prev.filter((item) => item.id !== id));
+  const handleDeleteMenuItem = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this menu item?")) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(id);
+
+      const result = await merchantService.removeMenuItem({ menuItemId: id });
+
+      if (result.success) {
+        setMenuItems((prev) => prev.filter((item) => item.id !== id));
+        console.log("Menu item deleted successfully");
+      } else {
+        setError(result.error || "Failed to delete menu item");
+      }
+    } catch (error: any) {
+      console.error("Error deleting menu item:", error);
+      setError("Failed to delete menu item");
+    } finally {
+      setDeleteLoading(null);
+    }
   };
 
   const handleMenuItemSuccess = (newItem: MenuItem) => {
     setMenuItems((prev) => [...prev, newItem]);
   };
 
+  const handleEditSuccess = (updatedItem: MenuItem) => {
+    setMenuItems((prev) =>
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+    );
+    setShowEditModal(false);
+    setEditingItem(null);
+  };
+
   const handleCloseAddModal = () => {
     setShowAddModal(false);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditingItem(null);
   };
 
   if (loading) {
@@ -181,7 +222,6 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                     {menuItems.map((item) => (
                       <tr key={item.id}>
                         <td className="px-6 py-4 w-1/3">
-                          {" "}
                           <div className="flex items-center gap-x-3">
                             {item.imageUrl ? (
                               <img
@@ -204,13 +244,11 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                           </div>
                         </td>
                         <td className="px-6 py-4 w-1/3">
-                          {" "}
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
                             {item.description}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">
-                          {" "}
                           <span className="text-sm font-semibold text-gray-800 dark:text-neutral-200">
                             $
                             {typeof item.price === "number"
@@ -219,20 +257,72 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-end w-1/6">
-                          {" "}
-                          {/* Added width control */}
                           <div className="flex gap-x-2 justify-end">
                             <button
                               onClick={() => handleEditMenuItem(item.id)}
-                              className="text-sm text-blue-600 hover:underline"
+                              className="inline-flex items-center gap-x-1 text-sm text-blue-600 hover:underline"
                             >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteMenuItem(item.id)}
-                              className="text-sm text-red-600 hover:underline"
+                              disabled={deleteLoading === item.id}
+                              className="inline-flex items-center gap-x-1 text-sm text-red-600 hover:underline disabled:opacity-50"
                             >
-                              Delete
+                              {deleteLoading === item.id ? (
+                                <>
+                                  <svg
+                                    className="w-4 h-4 animate-spin"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Deleting...
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                  Delete
+                                </>
+                              )}
                             </button>
                           </div>
                         </td>
@@ -251,6 +341,15 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
           onClose={handleCloseAddModal}
           onSuccess={handleMenuItemSuccess}
           restaurantId={restaurantId}
+        />
+      )}
+
+      {showEditModal && editingItem && (
+        <EditMenuItem
+          onClose={handleCloseEditModal}
+          onSuccess={handleEditSuccess}
+          restaurantId={restaurantId}
+          menuItem={editingItem}
         />
       )}
     </div>

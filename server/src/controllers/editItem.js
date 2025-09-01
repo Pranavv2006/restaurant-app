@@ -2,10 +2,11 @@ const EditMenuItemService = require("../services/EditMenuItemService");
 
 const EditMenuItemController = async (req, res) => {
   try {
-    const { menuItemId, name, description, price, imageUrl } = req.body;
+    const { menuItemId } = req.params;
+    const { name, description, price, imageUrl } = req.body;
 
     const result = await EditMenuItemService.editMenuItem(
-      menuItemId,
+      parseInt(menuItemId),
       name,
       description,
       price,
