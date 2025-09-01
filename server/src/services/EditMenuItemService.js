@@ -1,4 +1,4 @@
-const prisma = require("../utils/prismaClient");
+const prisma = require("../models/prismaClient");
 
 const editMenuItem = async (menuItemId, name, description, price, imageUrl) => {
   try {

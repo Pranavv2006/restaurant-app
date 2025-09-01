@@ -11,7 +11,7 @@ export interface EditMenuItemData {
 export interface EditMenuItemResponse {
   success: boolean;
   data?: {
-    menuItemId: number;
+    id: number;
     name: string;
     description: string;
     price: number;
@@ -434,9 +434,11 @@ const merchantService = {
         };
       }
 
+      const { menuItemId, ...bodyData } = editMenuItemData;
+
       const response = await axiosInstance.put<EditMenuItemResponse>(
-        `/Merchant/edit-menu-item/${editMenuItemData.menuItemId}`,
-        editMenuItemData,
+        `/Merchant/edit-menu-item/${menuItemId}`,
+        bodyData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
