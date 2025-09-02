@@ -408,61 +408,6 @@ const MerchantSidebar = ({
                     </ul>
                   </div>
                 </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNavigation("analytics")}
-                    className={`w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
-                      activePage === "analytics" ? "bg-white/10" : ""
-                    }`}
-                  >
-                    <svg
-                      className="shrink-0 size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 3v5h5" />
-                      <path d="M21 21v-5h-5" />
-                      <path d="M21 3a16 16 0 0 0-13.8 8" />
-                      <path d="M3 21a16 16 0 0 0 13.8-8" />
-                    </svg>
-                    Analytics
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNavigation("profile")}
-                    className={`w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
-                      activePage === "profile" ? "bg-white/10" : ""
-                    }`}
-                  >
-                    <svg
-                      className="shrink-0 size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <circle cx="12" cy="10" r="3" />
-                      <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-                    </svg>
-                    Profile
-                  </button>
-                </li>
               </ul>
             </nav>
           </div>

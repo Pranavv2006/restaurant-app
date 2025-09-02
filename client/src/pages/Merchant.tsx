@@ -7,6 +7,7 @@ import MerchantSidebar from "../components/merchant/MerchantSidebar";
 import merchantService from "../services/MerchantService";
 import axiosInstance from "../api/axiosConfig";
 import MenuBoard from "../components/merchant/MenuBoard";
+import VisitorsCard from "../components/merchant/WeeklyOrders";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -49,22 +50,27 @@ const Merchant = () => {
         if (result.hasRestaurant && result.data) {
           setRestaurantId(result.data.id);
           setRestaurantData(result.data);
+          // Store restaurant ID in localStorage
+          localStorage.setItem("restaurantId", result.data.id.toString());
           console.log("Restaurant found:", result.data);
         } else {
           setRestaurantId(null);
           setRestaurantData(null);
+          localStorage.removeItem("restaurantId");
         }
       } else {
         console.error("Failed to check restaurant:", result.error);
         setHasRestaurant(false);
         setRestaurantId(null);
         setRestaurantData(null);
+        localStorage.removeItem("restaurantId");
       }
     } catch (error) {
       console.error("Error checking restaurant:", error);
       setHasRestaurant(false);
       setRestaurantId(null);
       setRestaurantData(null);
+      localStorage.removeItem("restaurantId");
     } finally {
       setLoading(false);
     }
@@ -108,6 +114,8 @@ const Merchant = () => {
     if (newRestaurantData && newRestaurantData.id) {
       setRestaurantId(newRestaurantData.id);
       setRestaurantData(newRestaurantData);
+      // Store restaurant ID in localStorage
+      localStorage.setItem("restaurantId", newRestaurantData.id.toString());
       console.log("New restaurant created:", newRestaurantData);
     } else {
       console.log("Restaurant created, but no data passed. Refetching...");
@@ -164,14 +172,29 @@ const Merchant = () => {
     switch (activePage) {
       case "dashboard":
         return (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                Merchant Dashboard
-              </h1>
-              <p className="text-lg text-gray-600 mb-8">
-                Welcome to your restaurant management panel
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="col-span-1">
+              <div className="text-center lg:text-left">
+                <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                  Merchant Dashboard
+                </h1>
+                <p className="text-lg text-gray-600 mb-8">
+                  Welcome to your restaurant management panel
+                </p>
+                {restaurantData && (
+                  <div className="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                      {restaurantData.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {restaurantData.location} • {restaurantData.cuisine}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="col-span-1">
+              <VisitorsCard restaurantId={restaurantId} />
             </div>
           </div>
         );
