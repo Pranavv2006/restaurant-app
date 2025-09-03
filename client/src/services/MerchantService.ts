@@ -41,7 +41,7 @@ export interface AddMenuItemData {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  imageFile: File;
 }
 
 export interface RemoveMenuItemData {
@@ -344,7 +344,9 @@ const merchantService = {
     }
   },
 
-  addMenuItem: async (formData: FormData): Promise<AddMenuItemResponse> => {
+  addMenuItem: async (
+    addMenuItemData: AddMenuItemData
+  ): Promise<AddMenuItemResponse> => {
     try {
       const token = localStorage.getItem("authToken");
 
@@ -355,15 +357,24 @@ const merchantService = {
         };
       }
 
+      const formData = new FormData();
+      formData.append("restaurantId", addMenuItemData.restaurantId.toString());
+      formData.append("name", addMenuItemData.name);
+      formData.append("description", addMenuItemData.description);
+      formData.append("price", addMenuItemData.price.toString());
+      formData.append("image", addMenuItemData.imageFile);
+
       console.log("Adding menu item with FormData");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
 
       const response = await axiosInstance.post<AddMenuItemResponse>(
         `/Merchant/add-menu-item`,
-        formData, // Send FormData directly
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data", // Important for file uploads
           },
         }
       );
