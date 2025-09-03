@@ -344,9 +344,7 @@ const merchantService = {
     }
   },
 
-  addMenuItem: async (
-    addMenuItemData: AddMenuItemData
-  ): Promise<AddMenuItemResponse> => {
+  addMenuItem: async (formData: FormData): Promise<AddMenuItemResponse> => {
     try {
       const token = localStorage.getItem("authToken");
 
@@ -357,14 +355,15 @@ const merchantService = {
         };
       }
 
-      console.log("Adding menu item:", addMenuItemData);
+      console.log("Adding menu item with FormData");
 
       const response = await axiosInstance.post<AddMenuItemResponse>(
-        "/Merchant/add-menu-item",
-        addMenuItemData,
+        `/Merchant/add-menu-item`,
+        formData, // Send FormData directly
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data", // Important for file uploads
           },
         }
       );

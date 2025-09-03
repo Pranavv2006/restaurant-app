@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { useDropzone } from "react-dropzone";
 import merchantService from "../../services/MerchantService";
 
 interface AddMenuItemData {
   name: string;
   description: string;
   price: string;
-  imageUrl?: string;
+  imageFile?: File;
 }
 
 interface AddMenuItemProps {
@@ -23,11 +24,30 @@ const AddMenuItem = ({
     name: "",
     description: "",
     price: "",
-    imageUrl: "",
+    imageFile: undefined,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const onDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        imageFile: acceptedFiles[0],
+      }));
+      setError("");
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
+    },
+    multiple: false,
+    maxSize: 5 * 1024 * 1024,
+  });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -54,21 +74,20 @@ const AddMenuItem = ({
         return;
       }
 
-      const requestData = {
-        restaurantId: restaurantId,
-        name: formData.name,
-        description: formData.description,
-        price: priceNum,
-        imageUrl: formData.imageUrl || "",
-      };
+      if (!formData.imageFile) {
+        setError("Please upload an image for the menu item");
+        setLoading(false);
+        return;
+      }
 
-      console.log("Restaurant ID being sent:", restaurantId);
-      console.log("Full request data:", requestData);
-      console.log("Request data types:", {
-        restaurantId: typeof requestData.restaurantId,
-        price: typeof requestData.price,
-        name: typeof requestData.name,
-      });
+      const requestData = new FormData();
+      requestData.append("restaurantId", restaurantId.toString());
+      requestData.append("name", formData.name);
+      requestData.append("description", formData.description);
+      requestData.append("price", priceNum.toString());
+      requestData.append("image", formData.imageFile);
+
+      console.log("Request data being sent:", requestData);
 
       const response = await merchantService.addMenuItem(requestData);
       console.log("Response received:", response);
@@ -93,7 +112,6 @@ const AddMenuItem = ({
       }
     } catch (error: any) {
       console.error("Add menu item error:", error);
-      console.error("Error response:", error?.response?.data);
       setError(
         error?.response?.data?.error ||
           error?.message ||
@@ -184,17 +202,81 @@ const AddMenuItem = ({
 
                 <div>
                   <label className="block text-sm mb-2 dark:text-white">
-                    Image URL (Optional)
+                    Image Upload *
                   </label>
-                  <input
-                    type="url"
-                    name="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={handleChange}
-                    className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                    placeholder="https://example.com/image.jpg"
-                    disabled={loading}
-                  />
+                  <div
+                    {...getRootProps()}
+                    className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                      isDragActive
+                        ? "border-violet-500 bg-violet-50"
+                        : "border-gray-300 hover:border-violet-500"
+                    } ${loading ? "opacity-50 pointer-events-none" : ""}`}
+                  >
+                    <input {...getInputProps()} />
+                    {formData.imageFile ? (
+                      <div className="text-center">
+                        <svg
+                          className="mx-auto h-8 w-8 text-green-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                        <p className="text-sm text-green-600 font-medium mt-1">
+                          {formData.imageFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(formData.imageFile.size / 1024 / 1024).toFixed(2)}{" "}
+                          MB
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <svg
+                          className="mx-auto h-8 w-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          ></path>
+                        </svg>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {isDragActive
+                            ? "Drop the image here"
+                            : "Drag & drop an image, or click to select"}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {formData.imageFile && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          imageFile: undefined,
+                        }))
+                      }
+                      className="mt-2 text-xs text-red-600 hover:text-red-800"
+                      disabled={loading}
+                    >
+                      Remove image
+                    </button>
+                  )}
                 </div>
 
                 <button

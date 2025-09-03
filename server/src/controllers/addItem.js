@@ -1,40 +1,66 @@
+const multer = require("multer");
+const path = require("path");
 const { addMenuItem } = require("../services/AddMenuItemService");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/menu-items/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "menu-item-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  },
+});
 
 const addItemController = async (req, res) => {
   try {
-    const { restaurantId, name, description, price, imageUrl } = req.body;
+    const { restaurantId, name, description, price } = req.body;
+    const imageFile = req.file;
 
-    if (!restaurantId || !name || !description || price === undefined) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "Missing required fields: restaurantId, name, description, price",
-      });
-    }
-
-    const restaurantIdNum = Number(restaurantId);
-    const priceNum = Number(price);
-
-    if (!Number.isInteger(restaurantIdNum)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid restaurant ID",
-      });
-    }
-
-    if (isNaN(priceNum) || priceNum <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid price",
-      });
-    }
-
-    const result = await addMenuItem(
-      restaurantIdNum,
+    console.log("Add menu item request:", {
+      restaurantId,
       name,
       description,
-      priceNum,
-      imageUrl || ""
+      price,
+      imageFile: imageFile ? imageFile.filename : "No file",
+    });
+
+    if (!restaurantId || !name || !description || !price) {
+      return res.status(400).json({
+        success: false,
+        error: "All fields are required",
+      });
+    }
+
+    if (!imageFile) {
+      return res.status(400).json({
+        success: false,
+        error: "Image file is required",
+      });
+    }
+
+    const imageUrl = `/uploads/menu-items/${imageFile.filename}`;
+
+    const result = await addMenuItem(
+      parseInt(restaurantId),
+      name,
+      description,
+      parseFloat(price),
+      imageUrl
     );
 
     if (result.success) {
@@ -52,4 +78,7 @@ const addItemController = async (req, res) => {
   }
 };
 
-module.exports = { addItemController };
+module.exports = {
+  addItemController,
+  uploadMiddleware: upload.single("image"),
+};
