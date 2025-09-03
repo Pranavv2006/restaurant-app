@@ -3,8 +3,9 @@ const prisma = require("../models/prismaClient");
 const WeeklyOrders = async (restaurantId) => {
   try {
     const today = new Date();
-
     const dayOfWeek = today.getDay();
+
+    const monday = new Date(today);
     monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
     monday.setHours(0, 0, 0, 0);
 

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const loginRegisterRoutes = require("./routes/loginRegisterRoutes");
 const merchantRoutes = require("./routes/merchantRoutes");
@@ -43,6 +44,31 @@ const jwtGuard = (req, res, next) => {
 app.use("/Restaurant", limiter, jwtGuard, loginRegisterRoutes);
 
 app.use("/Restaurant/Merchant", authenticate, merchantRoutes);
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("✅ Created uploads directory:", uploadsDir);
+}
+
+const menuItemsDir = path.join(uploadsDir, "menu-items");
+if (!fs.existsSync(menuItemsDir)) {
+  fs.mkdirSync(menuItemsDir, { recursive: true });
+  console.log("✅ Created menu-items directory:", menuItemsDir);
+}
+
+// ✅ IMPORTANT: Add static file serving BEFORE other middleware
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+console.log(
+  "✅ Static file serving enabled for:",
+  path.join(__dirname, "uploads")
+);
+
+// Other middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", async (req, res) => {
   const result = await prisma.$queryRaw`SELECT current_database()`;

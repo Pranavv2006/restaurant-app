@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import merchantService from "../../services/MerchantService";
+import type { AddMenuItemData as ServiceAddMenuItemData } from "../../services/MerchantService";
 
-interface AddMenuItemData {
+interface AddMenuItemFormData {
   name: string;
   description: string;
   price: string;
@@ -20,7 +21,7 @@ const AddMenuItem = ({
   onSuccess,
   restaurantId,
 }: AddMenuItemProps) => {
-  const [formData, setFormData] = useState<AddMenuItemData>({
+  const [formData, setFormData] = useState<AddMenuItemFormData>({
     name: "",
     description: "",
     price: "",
@@ -75,35 +76,32 @@ const AddMenuItem = ({
       }
 
       if (!formData.imageFile) {
-        setError("Please upload an image for the menu item");
+        setError("Please select an image file");
         setLoading(false);
         return;
       }
 
-      const requestData = new FormData();
-      requestData.append("restaurantId", restaurantId.toString());
-      requestData.append("name", formData.name);
-      requestData.append("description", formData.description);
-      requestData.append("price", priceNum.toString());
-      requestData.append("image", formData.imageFile);
+      const requestData: ServiceAddMenuItemData = {
+        restaurantId: restaurantId,
+        name: formData.name,
+        description: formData.description,
+        price: priceNum,
+        imageFile: formData.imageFile,
+      };
 
-      console.log("Request data being sent:", requestData);
+      console.log("Submitting form data:", {
+        ...requestData,
+        imageFile: formData.imageFile.name,
+      });
 
       const response = await merchantService.addMenuItem(requestData);
-      console.log("Response received:", response);
 
       if (response.success) {
         setSuccess(response.message || "Menu item added successfully");
 
         setTimeout(() => {
           if (response.data?.menuItem) {
-            onSuccess({
-              id: response.data.menuItem.id,
-              name: response.data.menuItem.name,
-              description: response.data.menuItem.description,
-              price: response.data.menuItem.price,
-              imageUrl: response.data.menuItem.imageUrl,
-            });
+            onSuccess(response.data.menuItem);
           }
           onClose();
         }, 1000);

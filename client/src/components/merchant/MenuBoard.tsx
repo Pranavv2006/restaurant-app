@@ -124,6 +124,15 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
     setEditingItem(null);
   };
 
+  const getImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return "/placeholder-image.jpg";
+
+    if (imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+    return `http://localhost:3000${imageUrl}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -226,8 +235,16 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                             {item.imageUrl ? (
                               <img
                                 className="inline-block w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                                src={item.imageUrl}
+                                src={getImageUrl(item.imageUrl)}
                                 alt={item.name}
+                                onError={(e) => {
+                                  console.error(
+                                    "Image failed to load:",
+                                    item.imageUrl
+                                  );
+                                  e.currentTarget.src =
+                                    "/placeholder-image.jpg"; // Fallback
+                                }}
                               />
                             ) : (
                               <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-neutral-700 flex items-center justify-center flex-shrink-0">

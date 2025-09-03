@@ -26,6 +26,10 @@ const retrieveMerchantMenu = async (restaurantId) => {
 
     console.log(`Found ${menuItems.length} menu items for restaurant ${id}`);
 
+    menuItems.forEach((item) => {
+      console.log(`Item: ${item.name}, ImageURL: ${item.imageUrl}`);
+    });
+
     return {
       success: true,
       data: menuItems,

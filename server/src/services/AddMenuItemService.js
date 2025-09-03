@@ -16,6 +16,28 @@ const addMenuItem = async (
       imageUrl,
     });
 
+    // Validation
+    if (
+      !restaurantId ||
+      !name ||
+      !description ||
+      price === undefined ||
+      price === null
+    ) {
+      return {
+        success: false,
+        error:
+          "Missing required fields: restaurantId, name, description, and price are required",
+      };
+    }
+
+    if (!imageUrl || imageUrl.trim() === "") {
+      return {
+        success: false,
+        error: "Image is required",
+      };
+    }
+
     const restaurant = await prisma.restaurant.findUnique({
       where: {
         id: restaurantId,
