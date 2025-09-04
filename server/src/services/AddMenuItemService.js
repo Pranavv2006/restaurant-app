@@ -8,7 +8,7 @@ const addMenuItem = async (
   imageUrl
 ) => {
   try {
-    console.log("Adding menu item with params:", {
+    console.log("💾 Adding menu item with params:", {
       restaurantId,
       name,
       description,
@@ -16,7 +16,6 @@ const addMenuItem = async (
       imageUrl,
     });
 
-    // Validation
     if (
       !restaurantId ||
       !name ||
@@ -57,11 +56,11 @@ const addMenuItem = async (
         name: name,
         description: description,
         price: price,
-        imageUrl: imageUrl || "",
+        imageUrl: imageUrl,
       },
     });
 
-    console.log("Menu item created successfully:", menuItem);
+    console.log("✅ Menu item created successfully:", menuItem);
 
     return {
       success: true,
@@ -71,7 +70,7 @@ const addMenuItem = async (
       },
     };
   } catch (error) {
-    console.error(`Error adding menu item: ${error.message}`);
+    console.error(`❌ Error adding menu item: ${error.message}`);
     return {
       success: false,
       error: error.message,

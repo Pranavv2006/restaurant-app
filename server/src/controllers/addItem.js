@@ -3,26 +3,30 @@ const path = require("path");
 const fs = require("fs");
 const { addMenuItem } = require("../services/AddMenuItemService");
 
-const uploadsDir = path.join(__dirname, "../../uploads/menu-items");
+const uploadsDir = path.join(__dirname, "../uploads/menu-items");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("Created uploads directory:", uploadsDir);
+  console.log("✅ Created uploads directory:", uploadsDir);
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    console.log("📁 Saving file to:", uploadsDir);
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, "menu-item-" + uniqueSuffix + path.extname(file.originalname));
+    const filename =
+      "menu-item-" + uniqueSuffix + path.extname(file.originalname);
+    console.log("📝 Generated filename:", filename);
+    cb(null, filename);
   },
 });
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
@@ -35,15 +39,15 @@ const upload = multer({
 
 const addItemController = async (req, res) => {
   try {
-    console.log("Add menu item controller hit!");
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file);
+    console.log("🍽️ Adding menu item...");
+    console.log("📄 Request body:", req.body);
+    console.log("📁 Uploaded file:", req.file);
 
     const { restaurantId, name, description, price } = req.body;
     const imageFile = req.file;
 
     if (!restaurantId || !name || !description || !price) {
-      console.log("Missing required fields");
+      console.log("❌ Missing required fields");
       return res.status(400).json({
         success: false,
         error:
@@ -52,22 +56,19 @@ const addItemController = async (req, res) => {
     }
 
     if (!imageFile) {
-      console.log("No image file provided");
+      console.log("❌ No image file provided");
       return res.status(400).json({
         success: false,
         error: "Image file is required",
       });
     }
 
-    const imageUrl = `/uploads/menu-items/${imageFile.filename}`;
+    const imageUrl = `uploads/menu-items/${imageFile.filename}`;
 
-    console.log("Calling addMenuItem service with:", {
-      restaurantId: parseInt(restaurantId),
-      name,
-      description,
-      price: parseFloat(price),
-      imageUrl,
-    });
+    console.log(
+      "💾 Image will be accessible at:",
+      `http://localhost:3000/${imageUrl}`
+    );
 
     const result = await addMenuItem(
       parseInt(restaurantId),
@@ -77,15 +78,24 @@ const addItemController = async (req, res) => {
       imageUrl
     );
 
-    console.log("Service result:", result);
-
     if (result.success) {
+      console.log("✅ Menu item added successfully");
       res.status(201).json(result);
     } else {
+      console.log("❌ Failed to add menu item:", result.error);
+      if (fs.existsSync(imageFile.path)) {
+        fs.unlinkSync(imageFile.path);
+        console.log("🗑️ Cleaned up uploaded file");
+      }
       res.status(400).json(result);
     }
   } catch (error) {
-    console.error("Error in addItemController:", error);
+    console.error("❌ Error in addItemController:", error);
+
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+      console.log("🗑️ Cleaned up uploaded file due to error");
+    }
 
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({

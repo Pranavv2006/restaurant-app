@@ -130,7 +130,14 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
     if (imageUrl.startsWith("http")) {
       return imageUrl;
     }
-    return `http://localhost:3000${imageUrl}`;
+
+    const baseUrl = "http://localhost:3000";
+
+    const cleanImageUrl = imageUrl.startsWith("/")
+      ? imageUrl.slice(1)
+      : imageUrl;
+
+    return `${baseUrl}/${cleanImageUrl}`;
   };
 
   if (loading) {
