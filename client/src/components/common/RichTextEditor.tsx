@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 
 interface RichTextEditorProps {
   initialContent?: string;
@@ -17,23 +17,57 @@ function MenuBar({ editor }: { editor: Editor | null }) {
     selector: (ctx) => {
       const ed = ctx.editor;
       return {
-        isBold: ed.isActive("bold"),
-        canBold: ed.can().chain().toggleBold().run(),
-        isItalic: ed.isActive("italic"),
-        canItalic: ed.can().chain().toggleItalic().run(),
-        isStrike: ed.isActive("strike"),
-        canStrike: ed.can().chain().toggleStrike().run(),
-        isCode: ed.isActive("code"),
-        canCode: ed.can().chain().toggleCode().run(),
-        isBulletList: ed.isActive("bulletList"),
-        isOrderedList: ed.isActive("orderedList"),
-        isCodeBlock: ed.isActive("codeBlock"),
-        isBlockquote: ed.isActive("blockquote"),
-        canUndo: ed.can().chain().undo().run(),
-        canRedo: ed.can().chain().redo().run(),
+        isBold: ed ? ed.isActive("bold") : false,
+        canBold: ed ? ed.can().chain().toggleBold().run() : false,
+        isItalic: ed ? ed.isActive("italic") : false,
+        canItalic: ed ? ed.can().chain().toggleItalic().run() : false,
+        isStrike: ed ? ed.isActive("strike") : false,
+        canStrike: ed ? ed.can().chain().toggleStrike().run() : false,
+        isCode: ed ? ed.isActive("code") : false,
+        canCode: ed ? ed.can().chain().toggleCode().run() : false,
+        canClearMarks: ed ? ed.can().chain().unsetAllMarks().run() : false,
+        isParagraph: ed ? ed.isActive("paragraph") : false,
+        isHeading1: ed ? ed.isActive("heading", { level: 1 }) : false,
+        isHeading2: ed ? ed.isActive("heading", { level: 2 }) : false,
+        isHeading3: ed ? ed.isActive("heading", { level: 3 }) : false,
+        isHeading4: ed ? ed.isActive("heading", { level: 4 }) : false,
+        isHeading5: ed ? ed.isActive("heading", { level: 5 }) : false,
+        isHeading6: ed ? ed.isActive("heading", { level: 6 }) : false,
+        isBulletList: ed ? ed.isActive("bulletList") : false,
+        isOrderedList: ed ? ed.isActive("orderedList") : false,
+        isCodeBlock: ed ? ed.isActive("codeBlock") : false,
+        isBlockquote: ed ? ed.isActive("blockquote") : false,
+        canUndo: ed ? ed.can().chain().undo().run() : false,
+        canRedo: ed ? ed.can().chain().redo().run() : false,
       };
     },
   });
+
+  // ✅ Safe fallback so TS knows we always have an object to read from
+  const state = editorState ?? {
+    isBold: false,
+    canBold: false,
+    isItalic: false,
+    canItalic: false,
+    isStrike: false,
+    canStrike: false,
+    isCode: false,
+    canCode: false,
+    canClearMarks: false,
+    isParagraph: false,
+    isHeading1: false,
+    isHeading2: false,
+    isHeading3: false,
+    isHeading4: false,
+    isHeading5: false,
+    isHeading6: false,
+    isBulletList: false,
+    isOrderedList: false,
+    isCodeBlock: false,
+    isBlockquote: false,
+    canUndo: false,
+    canRedo: false,
+  };
 
   if (!editor) return null;
 
@@ -42,9 +76,9 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        disabled={!editorState.canBold}
+        disabled={!state.canBold}
         className={
-          editorState.isBold
+          state.isBold
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -55,9 +89,9 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        disabled={!editorState.canItalic}
+        disabled={!state.canItalic}
         className={
-          editorState.isItalic
+          state.isItalic
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -68,9 +102,9 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        disabled={!editorState.canStrike}
+        disabled={!state.canStrike}
         className={
-          editorState.isStrike
+          state.isStrike
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -81,9 +115,9 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCode().run()}
-        disabled={!editorState.canCode}
+        disabled={!state.canCode}
         className={
-          editorState.isCode
+          state.isCode
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -95,7 +129,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={
-          editorState.isBulletList
+          state.isBulletList
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -107,7 +141,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={
-          editorState.isOrderedList
+          state.isOrderedList
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -119,7 +153,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         className={
-          editorState.isCodeBlock
+          state.isCodeBlock
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -131,7 +165,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         className={
-          editorState.isBlockquote
+          state.isBlockquote
             ? "is-active px-2 py-1 rounded bg-violet-600 text-white"
             : "px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
         }
@@ -142,7 +176,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editorState.canUndo}
+        disabled={!state.canUndo}
         className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
       >
         Undo
@@ -151,7 +185,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editorState.canRedo}
+        disabled={!state.canRedo}
         className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 dark:text-gray-200"
       >
         Redo
