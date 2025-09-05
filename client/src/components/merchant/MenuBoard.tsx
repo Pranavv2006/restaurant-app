@@ -269,7 +269,9 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                         </td>
                         <td className="px-6 py-4 w-1/3">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {item.description}
+                            {item.description.length > 50
+                              ? item.description.slice(0, 50) + "..."
+                              : item.description}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">
