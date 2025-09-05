@@ -63,10 +63,10 @@ const AddMenuItem = ({
   };
 
   const handleDescriptionChange = (html: string) => {
-    console.log("Description updated:", html); // Optional: For debugging
+    console.log("Description updated:", html);
     setFormData((prev) => ({
       ...prev,
-      description: html, // Store the HTML content
+      description: html,
     }));
   };
 
@@ -177,10 +177,12 @@ const AddMenuItem = ({
                   <label className="block text-sm mb-2 dark:text-white">
                     Description *
                   </label>
-                  <RichTextEditor
-                    initialContent={formData.description}
-                    onContentChange={handleDescriptionChange}
-                  />
+                  <div className="dark:bg-neutral-900 border rounded-lg overflow-hidden">
+                    <RichTextEditor
+                      initialContent={formData.description}
+                      onContentChange={handleDescriptionChange}
+                    />
+                  </div>
                 </div>
 
                 <div>

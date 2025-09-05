@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import merchantService from "../../services/MerchantService";
+import RichTextEditor from "../common/RichTextEditor"; // Add this import
 
 interface EditMenuItemData {
   name: string;
@@ -46,6 +47,15 @@ const EditMenuItem = ({
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+    if (error) setError("");
+  };
+
+  // Add this new handler for rich text description
+  const handleDescriptionChange = (html: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: html,
     }));
     if (error) setError("");
   };
@@ -158,15 +168,9 @@ const EditMenuItem = ({
                   <label className="block text-sm mb-2 dark:text-white">
                     Description *
                   </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={3}
-                    className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                    required
-                    placeholder="Describe your menu item..."
-                    disabled={loading}
+                  <RichTextEditor
+                    initialContent={formData.description}
+                    onContentChange={handleDescriptionChange}
                   />
                 </div>
 
