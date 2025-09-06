@@ -130,6 +130,7 @@ export interface CreateRestaurantData {
   location: string;
   phone: string;
   cuisine: string;
+  imageFile?: File; // Add this field
 }
 
 export interface CreateRestaurantResponse {
@@ -153,7 +154,14 @@ export interface MerchantProfileResponse {
     email: string;
     firstName: string;
     lastName: string;
-    restaurants: RestaurantData[];
+    restaurants: {
+      id: number;
+      name: string;
+      location: string;
+      phone: string;
+      cuisine: string;
+      imageUrl: string; // Ensure imageUrl is included
+    }[];
   };
   error?: string;
 }
@@ -203,7 +211,7 @@ const merchantService = {
   },
 
   createRestaurant: async (
-    restaurantData: CreateRestaurantData
+    formData: FormData
   ): Promise<CreateRestaurantResponse> => {
     try {
       const token = localStorage.getItem("authToken");
@@ -218,13 +226,15 @@ const merchantService = {
 
       const response = await axiosInstance.post<CreateRestaurantResponse>(
         "/Merchant/create-restaurant",
-        restaurantData,
+        formData, // Pass FormData directly
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data", // Ensure correct content type
           },
         }
       );
+
       return response.data;
     } catch (error: any) {
       console.error("createRestaurant error:", error);

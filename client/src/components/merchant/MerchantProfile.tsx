@@ -7,6 +7,7 @@ interface Restaurant {
   location: string;
   phone: string;
   cuisine: string;
+  imageUrl: string;
 }
 
 interface MerchantData {
@@ -237,6 +238,13 @@ const MerchantProfile = () => {
                 <span className="font-medium text-gray-900">
                   {restaurant.cuisine}
                 </span>
+              </div>
+              <div className="flex justify-center mt-4">
+                <img
+                  src={`${import.meta.env.VITE_API_URL}${restaurant.imageUrl}`} // Use the correct API URL
+                  alt="Restaurant"
+                  className="rounded-lg shadow-md max-w-full h-auto"
+                />
               </div>
             </div>
           </div>
