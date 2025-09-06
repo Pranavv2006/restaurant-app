@@ -1,5 +1,21 @@
 import axiosInstance from "../api/axiosConfig";
 
+export interface WeeklyOrdersData {
+  restaurantId: number;
+}
+
+export interface WeeklyOrdersItem {
+  date: string;
+  count: number;
+}
+
+export interface WeeklyOrdersResponse {
+  success: boolean;
+  data?: WeeklyOrdersItem[];
+  message?: string;
+  error?: string;
+}
+
 export interface EditMenuItemData {
   menuItemId: number;
   name?: string;
@@ -25,7 +41,7 @@ export interface AddMenuItemData {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  imageFile: File;
 }
 
 export interface RemoveMenuItemData {
@@ -341,11 +357,21 @@ const merchantService = {
         };
       }
 
-      console.log("Adding menu item:", addMenuItemData);
+      const formData = new FormData();
+      formData.append("restaurantId", addMenuItemData.restaurantId.toString());
+      formData.append("name", addMenuItemData.name);
+      formData.append("description", addMenuItemData.description);
+      formData.append("price", addMenuItemData.price.toString());
+      formData.append("image", addMenuItemData.imageFile);
+
+      console.log("Adding menu item with FormData");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
 
       const response = await axiosInstance.post<AddMenuItemResponse>(
-        "/Merchant/add-menu-item",
-        addMenuItemData,
+        `/Merchant/add-menu-item`,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -460,6 +486,53 @@ const merchantService = {
 
       if (error?.response?.data) {
         return error.response.data as EditMenuItemResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  WeeklyOrders: async (
+    weeklyOrdersData: WeeklyOrdersData
+  ): Promise<WeeklyOrdersResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const { restaurantId } = weeklyOrdersData;
+
+      const response = await axiosInstance.get<WeeklyOrdersResponse>(
+        `/Merchant/weekly-orders/${restaurantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("WeeklyOrders error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as WeeklyOrdersResponse;
       }
 
       return {

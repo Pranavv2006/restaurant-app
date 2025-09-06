@@ -124,6 +124,22 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
     setEditingItem(null);
   };
 
+  const getImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return "/placeholder-image.jpg";
+
+    if (imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+
+    const baseUrl = "http://localhost:3000";
+
+    const cleanImageUrl = imageUrl.startsWith("/")
+      ? imageUrl.slice(1)
+      : imageUrl;
+
+    return `${baseUrl}/${cleanImageUrl}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -226,8 +242,16 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                             {item.imageUrl ? (
                               <img
                                 className="inline-block w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                                src={item.imageUrl}
+                                src={getImageUrl(item.imageUrl)}
                                 alt={item.name}
+                                onError={(e) => {
+                                  console.error(
+                                    "Image failed to load:",
+                                    item.imageUrl
+                                  );
+                                  e.currentTarget.src =
+                                    "/placeholder-image.jpg"; // Fallback
+                                }}
                               />
                             ) : (
                               <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-neutral-700 flex items-center justify-center flex-shrink-0">
@@ -245,7 +269,9 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                         </td>
                         <td className="px-6 py-4 w-1/3">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {item.description}
+                            {item.description.length > 50
+                              ? item.description.slice(0, 50) + "..."
+                              : item.description}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">

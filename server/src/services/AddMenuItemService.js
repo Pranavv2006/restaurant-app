@@ -8,13 +8,34 @@ const addMenuItem = async (
   imageUrl
 ) => {
   try {
-    console.log("Adding menu item with params:", {
+    console.log("💾 Adding menu item with params:", {
       restaurantId,
       name,
       description,
       price,
       imageUrl,
     });
+
+    if (
+      !restaurantId ||
+      !name ||
+      !description ||
+      price === undefined ||
+      price === null
+    ) {
+      return {
+        success: false,
+        error:
+          "Missing required fields: restaurantId, name, description, and price are required",
+      };
+    }
+
+    if (!imageUrl || imageUrl.trim() === "") {
+      return {
+        success: false,
+        error: "Image is required",
+      };
+    }
 
     const restaurant = await prisma.restaurant.findUnique({
       where: {
@@ -35,11 +56,11 @@ const addMenuItem = async (
         name: name,
         description: description,
         price: price,
-        imageUrl: imageUrl || "",
+        imageUrl: imageUrl,
       },
     });
 
-    console.log("Menu item created successfully:", menuItem);
+    console.log("✅ Menu item created successfully:", menuItem);
 
     return {
       success: true,
@@ -49,7 +70,7 @@ const addMenuItem = async (
       },
     };
   } catch (error) {
-    console.error(`Error adding menu item: ${error.message}`);
+    console.error(`❌ Error adding menu item: ${error.message}`);
     return {
       success: false,
       error: error.message,
