@@ -140,6 +140,12 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
     return `${baseUrl}/${cleanImageUrl}`;
   };
 
+  const stripHtmlTags = (html: string): string => {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    return div.textContent || div.innerText || "";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -269,9 +275,10 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                         </td>
                         <td className="px-6 py-4 w-1/3">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {item.description.length > 50
-                              ? item.description.slice(0, 50) + "..."
-                              : item.description}
+                            {stripHtmlTags(item.description).length > 50
+                              ? stripHtmlTags(item.description).slice(0, 50) +
+                                "..."
+                              : stripHtmlTags(item.description)}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">

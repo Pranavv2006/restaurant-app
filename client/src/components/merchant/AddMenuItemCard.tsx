@@ -195,7 +195,14 @@ const AddMenuItem = ({
                   <label className="block text-sm mb-1 dark:text-white">
                     Description *
                   </label>
-                  <div className="dark:bg-neutral-900 border rounded-lg overflow-hidden">
+                  <div
+                    className="dark:bg-neutral-900 border rounded-lg overflow-hidden"
+                    onMouseDown={(e) => e.preventDefault()} // Prevent form submission
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
                     <RichTextEditor
                       initialContent={formData.description}
                       onContentChange={handleDescriptionChange}
