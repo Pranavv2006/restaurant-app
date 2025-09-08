@@ -47,7 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "../uploads"))); // Corrected path
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/test-image/:filename", (req, res) => {
   const { filename } = req.params;

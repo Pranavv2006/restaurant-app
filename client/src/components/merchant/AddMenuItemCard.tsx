@@ -131,34 +131,34 @@ const AddMenuItem = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white border border-gray-200 rounded-xl shadow-2xl max-w-lg w-full m-3 dark:bg-neutral-900 dark:border-neutral-800">
-        <div className="p-4 sm:p-7">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-2xl max-w-lg w-full max-h-screen overflow-hidden m-3 dark:bg-neutral-900 dark:border-neutral-800">
+        <div className="p-4 sm:p-6">
           <div className="text-center">
-            <h3 className="block text-2xl font-bold text-gray-800 dark:text-neutral-200">
+            <h3 className="block text-xl font-bold text-gray-800 dark:text-neutral-200">
               Add Menu Item
             </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
+            <p className="mt-1 text-sm text-gray-600 dark:text-neutral-400">
               Create a new menu item for your restaurant
             </p>
           </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
               <strong>Error:</strong> {error}
             </div>
           )}
 
           {success && (
-            <div className="mt-4 p-3 bg-green-100 border border-green-300 text-green-700 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-green-100 border border-green-300 text-green-700 rounded-lg text-sm">
               <strong>Success:</strong> {success}
             </div>
           )}
 
-          <div className="mt-5">
+          <div className="mt-4">
             <form onSubmit={handleSubmit}>
-              <div className="grid gap-y-4">
+              <div className="grid gap-y-3">
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">
+                  <label className="block text-sm mb-1 dark:text-white">
                     Item Name *
                   </label>
                   <input
@@ -166,7 +166,7 @@ const AddMenuItem = ({
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                     required
                     placeholder="Enter item name"
                     disabled={loading}
@@ -174,7 +174,25 @@ const AddMenuItem = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">
+                  <label className="block text-sm mb-1 dark:text-white">
+                    Price ₹ *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                    required
+                    placeholder="0.00"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1 dark:text-white">
                     Description *
                   </label>
                   <div className="dark:bg-neutral-900 border rounded-lg overflow-hidden">
@@ -186,30 +204,12 @@ const AddMenuItem = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">
-                    Price ₹ *
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    step="0.01"
-                    min="0"
-                    className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                    required
-                    placeholder="0.00"
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2 dark:text-white">
+                  <label className="block text-sm mb-1 dark:text-white">
                     Image Upload *
                   </label>
                   <div
                     {...getRootProps()}
-                    className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                    className={`flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
                       isDragActive
                         ? "border-violet-500 bg-violet-50"
                         : "border-gray-300 hover:border-violet-500"
@@ -219,7 +219,7 @@ const AddMenuItem = ({
                     {formData.imageFile ? (
                       <div className="text-center">
                         <svg
-                          className="mx-auto h-8 w-8 text-green-500"
+                          className="mx-auto h-6 w-6 text-green-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -231,7 +231,7 @@ const AddMenuItem = ({
                             d="M5 13l4 4L19 7"
                           ></path>
                         </svg>
-                        <p className="text-sm text-green-600 font-medium mt-1">
+                        <p className="text-xs text-green-600 font-medium mt-1">
                           {formData.imageFile.name}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -242,7 +242,7 @@ const AddMenuItem = ({
                     ) : (
                       <div className="text-center">
                         <svg
-                          className="mx-auto h-8 w-8 text-gray-400"
+                          className="mx-auto h-6 w-6 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -254,7 +254,7 @@ const AddMenuItem = ({
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                           ></path>
                         </svg>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           {isDragActive
                             ? "Drop the image here"
                             : "Drag & drop an image, or click to select"}
@@ -274,7 +274,7 @@ const AddMenuItem = ({
                           imageFile: undefined,
                         }))
                       }
-                      className="mt-2 text-xs text-red-600 hover:text-red-800"
+                      className="mt-1 text-xs text-red-600 hover:text-red-800"
                       disabled={loading}
                     >
                       Remove image
@@ -285,7 +285,7 @@ const AddMenuItem = ({
                 <button
                   type="submit"
                   disabled={loading || success !== ""}
-                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {loading ? (
                     <>
@@ -323,7 +323,7 @@ const AddMenuItem = ({
             <button
               onClick={onClose}
               disabled={loading}
-              className="mt-4 w-full py-2 px-4 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="mt-3 w-full py-2 px-3 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

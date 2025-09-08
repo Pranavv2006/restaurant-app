@@ -201,10 +201,22 @@ const Merchant = () => {
 
       case "menu":
         return (
-          <MenuBoard
-            restaurantId={restaurantId}
-            restaurantData={restaurantData}
-          />
+          <div className="min-h-screen bg-white">
+            {/* Add Restaurant Button */}
+            <div className="flex justify-end py-4 px-6">
+              <button
+                className="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition"
+                onClick={handleCreateRestaurant}
+              >
+                + Add Restaurant
+              </button>
+            </div>
+            {/* Full-size MenuBoard */}
+            <MenuBoard
+              restaurantId={restaurantId}
+              restaurantData={restaurantData}
+            />
+          </div>
         );
 
       case "add-menu":
@@ -317,7 +329,10 @@ const Merchant = () => {
       <NavbarMerchant handleLogout={handleLogout} />
 
       {/* Use MerchantSidebar component with navigation props */}
-      <MerchantSidebar onNavigate={handleNavigation} activePage={activePage}>
+      <MerchantSidebar
+        onNavigate={handleNavigation}
+        activePage={activePage} // Pass the handler
+      >
         {/* Toast notifications */}
         {hasRestaurant === false && (
           <div className="fixed top-4 right-4 z-50">
