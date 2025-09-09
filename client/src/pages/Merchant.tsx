@@ -219,15 +219,15 @@ const Merchant = () => {
           </div>
         );
 
-      case "add-menu":
+      case "add-restaurant":
         return (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                Add Menu Item
+                Add Restaurant
               </h1>
               <p className="text-gray-600">
-                Add menu item functionality coming soon...
+                Add restaurant functionality coming soon...
               </p>
             </div>
           </div>

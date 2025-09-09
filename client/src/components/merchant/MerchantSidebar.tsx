@@ -96,7 +96,7 @@ const MerchantSidebar = ({
                       <line x1="3" x2="21" y1="6" y2="6" />
                       <path d="M16 10a4 4 0 0 1-8 0" />
                     </svg>
-                    Menu Management
+                    Manage
                     <svg
                       className={`ms-auto size-4 transition-transform ${
                         activeAccordion === "menu" ? "rotate-180" : ""
@@ -123,22 +123,22 @@ const MerchantSidebar = ({
                     <ul className="ps-8 pt-1 space-y-1">
                       <li>
                         <button
+                          onClick={() => handleNavigation("add-restaurant")}
+                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
+                            activePage === "add-restaurant" ? "bg-white/10" : ""
+                          }`}
+                        >
+                          Restaurants
+                        </button>
+                      </li>
+                      <li>
+                        <button
                           onClick={() => handleNavigation("menu")}
                           className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
                             activePage === "menu" ? "bg-white/10" : ""
                           }`}
                         >
-                          View Menu Items
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => handleNavigation("add-menu")}
-                          className={`w-full text-left flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white rounded-lg hover:bg-white/10 focus:outline-hidden focus:bg-white/10 ${
-                            activePage === "add-menu" ? "bg-white/10" : ""
-                          }`}
-                        >
-                          Add Menu Item
+                          MenuBoard
                         </button>
                       </li>
                       <li>
