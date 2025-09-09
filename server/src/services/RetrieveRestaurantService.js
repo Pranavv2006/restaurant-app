@@ -48,4 +48,4 @@ const retrieveRestaurantService = async (merchantId) => {
   }
 };
 
-module.exports = retrieveRestaurantService;
+module.exports = { retrieveRestaurantService };
