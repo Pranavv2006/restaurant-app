@@ -1,5 +1,15 @@
 import axiosInstance from "../api/axiosConfig";
 
+export interface RetrieveRestaurantsData {
+  merchantId: number;
+}
+
+export interface RetrieveRestaurantsResponse {
+  success: boolean;
+  message?: string;
+  data?: RestaurantData[];
+  error?: string;
+}
 export interface WeeklyOrdersData {
   restaurantId: number;
 }
@@ -162,6 +172,24 @@ export interface MerchantProfileResponse {
       cuisine: string;
       imageUrl: string; // Ensure imageUrl is included
     }[];
+  };
+  error?: string;
+}
+
+export interface RemoveRestaurantData {
+  restaurantId: number;
+}
+
+export interface RemoveRestaurantResponse {
+  success: boolean;
+  data?: {
+    id: number;
+    name: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    imageUrl?: string;
+    merchantId: number;
   };
   error?: string;
 }
@@ -543,6 +571,97 @@ const merchantService = {
 
       if (error?.response?.data) {
         return error.response.data as WeeklyOrdersResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  getMerchantRestaurants: async (
+    merchantId: number
+  ): Promise<RetrieveRestaurantsResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.get<RetrieveRestaurantsResponse>(
+        `/Merchant/retrieve-restaurant/${merchantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("getMerchantRestaurants error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RetrieveRestaurantsResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  removeRestaurant: async (
+    removeRestaurantData: RemoveRestaurantData
+  ): Promise<RemoveRestaurantResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.post<RemoveRestaurantResponse>(
+        "/Merchant/remove-restaurant",
+        removeRestaurantData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("removeRestaurant error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RemoveRestaurantResponse;
       }
 
       return {

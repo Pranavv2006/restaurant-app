@@ -6,7 +6,7 @@ const retrieveRestaurantService = async (merchantId) => {
       return {
         success: false,
         message: "Merchant ID is required",
-        restaurants: [],
+        data: [],
       };
     }
     const merchantIdNum = Number(merchantId);
@@ -14,7 +14,7 @@ const retrieveRestaurantService = async (merchantId) => {
       return {
         success: false,
         message: "Invalid merchant ID format",
-        restaurants: [],
+        data: [],
       };
     }
     const restaurants = await prisma.restaurant.findMany({
@@ -28,8 +28,8 @@ const retrieveRestaurantService = async (merchantId) => {
     if (!restaurants || restaurants.length === 0) {
       return {
         success: false,
-        message: "Restaurant not found",
-        restaurants: [],
+        message: "No restaurants found",
+        data: [],
       };
     }
 
@@ -43,7 +43,7 @@ const retrieveRestaurantService = async (merchantId) => {
     return {
       success: false,
       message: "Error retrieving restaurant",
-      restaurant: null,
+      data: [],
     };
   }
 };

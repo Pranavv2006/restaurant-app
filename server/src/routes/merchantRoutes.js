@@ -13,6 +13,8 @@ const editItem = require("../controllers/editItem");
 const weeklyOrders = require("../controllers/WeeklyOrders");
 const retrieveRestaurant = require("../controllers/retrieveRestaurant");
 const retrieveImage = require("../controllers/retrieveImage");
+const removeRestaurant = require("../controllers/removeRestaurant");
+const editRestaurant = require("../controllers/editRestaurant");
 
 // Import the middleware array
 const addMenuMiddleware = require("../middlewares/add-menu");
@@ -38,6 +40,11 @@ router.delete("/remove-menu-item/:menuItemId", remove.removeMenuController);
 router.get("/merchant-profile/:merchantId", profile.merchantProfileController);
 router.put("/edit-menu-item/:menuItemId", editItem.EditMenuItemController);
 router.get("/weekly-orders/:restaurantId", weeklyOrders.WeeklyOrdersController);
+router.post("/edit-restaurant", editRestaurant.editRestaurantController);
+router.delete(
+  "/remove-restaurant/:restaurantId",
+  removeRestaurant.removeRestaurantController
+);
 
 router.get("/test-image/:filename", (req, res) => {
   const { filename } = req.params;

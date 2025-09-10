@@ -12,7 +12,11 @@ interface Restaurant {
   imageUrl?: string;
 }
 
-const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
+interface RestaurantBoardProps {
+  merchantId: number;
+}
+
+const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,8 +37,8 @@ const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
     setError("");
     try {
       const result = await merchantService.getMerchantRestaurants(merchantId);
-      if (result.success && result.restaurants) {
-        setRestaurants(result.restaurants);
+      if (result.success && result.data) {
+        setRestaurants(result.data);
       } else {
         setError(result.message || "No restaurants found.");
       }
@@ -58,7 +62,7 @@ const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
   };
 
   const handleDeleteRestaurant = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this restaurant?")) {
+    if (!window.confirm("Are you sure you want to delete this restaurant?")) {
       return;
     }
     try {
@@ -100,7 +104,7 @@ const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
     setEditingRestaurant(null);
   };
 
-  const getImageUrl = (imageUrl: string) => {
+  const getImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return "/placeholder-image.jpg";
     if (imageUrl.startsWith("http")) return imageUrl;
     const baseUrl = "http://localhost:3000";
@@ -257,6 +261,7 @@ const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
                                 handleEditRestaurant(restaurant.id)
                               }
                               className="inline-flex items-center gap-x-1 text-sm text-blue-600 hover:underline"
+                              type="button"
                             >
                               <svg
                                 className="w-4 h-4"
@@ -279,6 +284,7 @@ const RestaurantBoard = ({ merchantId }: { merchantId: number }) => {
                               }
                               disabled={deleteLoading === restaurant.id}
                               className="inline-flex items-center gap-x-1 text-sm text-red-600 hover:underline disabled:opacity-50"
+                              type="button"
                             >
                               {deleteLoading === restaurant.id ? (
                                 <>
