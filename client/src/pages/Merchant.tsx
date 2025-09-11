@@ -8,6 +8,7 @@ import merchantService from "../services/MerchantService";
 import axiosInstance from "../api/axiosConfig";
 import MenuBoard from "../components/merchant/MenuBoard";
 import VisitorsCard from "../components/merchant/WeeklyOrders";
+import RestaurantBoard from "../components/merchant/RestaurantBoard";
 
 const Merchant = () => {
   const navigate = useNavigate();
@@ -219,17 +220,10 @@ const Merchant = () => {
           </div>
         );
 
-      case "add-restaurant":
+      case "restaurants":
         return (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                Add Restaurant
-              </h1>
-              <p className="text-gray-600">
-                Add restaurant functionality coming soon...
-              </p>
-            </div>
+          <div className="min-h-screen bg-white">
+            <RestaurantBoard merchantId={merchantId!} />
           </div>
         );
 

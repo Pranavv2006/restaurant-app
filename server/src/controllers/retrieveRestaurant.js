@@ -1,9 +1,11 @@
-const retrieveRestaurant = require("../services/RetrieveRestaurantService");
+const {
+  retrieveRestaurantService,
+} = require("../services/RetrieveRestaurantService");
 
 const retrieveRestaurantController = async (req, res) => {
   try {
     const { merchantId } = req.params;
-    const result = await retrieveRestaurant(merchantId);
+    const result = await retrieveRestaurantService(merchantId);
 
     if (result.success) {
       res.status(200).json(result);
