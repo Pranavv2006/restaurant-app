@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import merchantService from "../../services/MerchantService";
-// import AddRestaurantModal from "./AddRestaurantModal";
-// import EditRestaurantModal from "./EditRestaurantModal";
+import CreateRestaurant from "./CreateRestaurant";
+import EditRestaurantCard from "./EditRestaurantCard";
 
 interface Restaurant {
   id: number;
@@ -61,6 +61,7 @@ const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
     }
   };
 
+  // Remove restaurant
   const handleDeleteRestaurant = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this restaurant?")) {
       return;
@@ -72,8 +73,11 @@ const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
       });
       if (result.success) {
         setRestaurants((prev) => prev.filter((r) => r.id !== id));
+        setError("");
       } else {
-        setError(result.error || "Failed to delete restaurant");
+        setError(
+          result.error || result.message || "Failed to delete restaurant"
+        );
       }
     } catch (error: any) {
       setError("Failed to delete restaurant");
@@ -82,17 +86,20 @@ const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
     }
   };
 
-  const handleRestaurantSuccess = (newRestaurant: Restaurant) => {
-    setRestaurants((prev) => [...prev, newRestaurant]);
+  // Add restaurant (modal success callback)
+  const handleRestaurantSuccess = () => {
     setShowAddModal(false);
+    fetchRestaurants();
   };
 
+  // Edit restaurant (modal success callback)
   const handleEditSuccess = (updatedRestaurant: Restaurant) => {
     setRestaurants((prev) =>
       prev.map((r) => (r.id === updatedRestaurant.id ? updatedRestaurant : r))
     );
     setShowEditModal(false);
     setEditingRestaurant(null);
+    setError("");
   };
 
   const handleCloseAddModal = () => {
@@ -341,23 +348,27 @@ const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
       </div>
 
       {/* Add Modal */}
-      {/* {showAddModal && (
-        <AddRestaurantModal
+      {showAddModal && (
+        <CreateRestaurant
           onClose={handleCloseAddModal}
           onSuccess={handleRestaurantSuccess}
-          merchantId={merchantId}
         />
-      )} */}
+      )}
 
       {/* Edit Modal */}
-      {/* {showEditModal && editingRestaurant && (
-        <EditRestaurantModal
+      {showEditModal && editingRestaurant && (
+        <EditRestaurantCard
+          restaurant={{
+            ...editingRestaurant,
+            location: editingRestaurant.location ?? "",
+            phone: editingRestaurant.phone ?? "",
+            cuisine: editingRestaurant.cuisine ?? "",
+            imageUrl: editingRestaurant.imageUrl,
+          }}
           onClose={handleCloseEditModal}
           onSuccess={handleEditSuccess}
-          merchantId={merchantId}
-          restaurant={editingRestaurant}
         />
-      )} */}
+      )}
     </div>
   );
 };
