@@ -18,6 +18,7 @@ const editRestaurant = require("../controllers/editRestaurant");
 
 // Import the middleware array
 const addMenuMiddleware = require("../middlewares/add-menu");
+const upload = require("../middlewares/upload");
 
 router.use((req, res, next) => {
   console.log(`🛒 Merchant route: ${req.method} ${req.path}`);
@@ -40,7 +41,11 @@ router.delete("/remove-menu-item/:menuItemId", remove.removeMenuController);
 router.get("/merchant-profile/:merchantId", profile.merchantProfileController);
 router.put("/edit-menu-item/:menuItemId", editItem.EditMenuItemController);
 router.get("/weekly-orders/:restaurantId", weeklyOrders.WeeklyOrdersController);
-router.post("/edit-restaurant", editRestaurant.editRestaurantController);
+router.put(
+  "/edit-restaurant",
+  upload.single("image"),
+  editRestaurant.editRestaurantController
+);
 router.delete(
   "/remove-restaurant/:restaurantId",
   removeRestaurant.removeRestaurantController

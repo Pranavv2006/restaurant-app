@@ -2,14 +2,10 @@ const { EditRestaurantService } = require("../services/EditRestaurantService");
 
 const editRestaurantController = async (req, res) => {
   try {
-    const { restaurantId, name, location, phone, cuisine, imageUrl } = req.body;
-
-    if (!restaurantId) {
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant ID is required",
-        data: null,
-      });
+    const { restaurantId, name, location, phone, cuisine } = req.body;
+    let imageUrl = req.body.imageUrl;
+    if (req.file) {
+      imageUrl = "uploads/restaurants/" + req.file.filename;
     }
 
     const updateData = { name, location, phone, cuisine, imageUrl };

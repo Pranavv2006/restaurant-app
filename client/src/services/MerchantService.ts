@@ -711,7 +711,7 @@ const merchantService = {
         };
       }
 
-      const response = await axiosInstance.post<EditRestaurantResponse>(
+      const response = await axiosInstance.put<EditRestaurantResponse>(
         "/Merchant/edit-restaurant",
         editRestaurantData,
         {
