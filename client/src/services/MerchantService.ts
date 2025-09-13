@@ -664,9 +664,8 @@ const merchantService = {
         };
       }
 
-      const response = await axiosInstance.post<RemoveRestaurantResponse>(
-        "/Merchant/remove-restaurant",
-        removeRestaurantData,
+      const response = await axiosInstance.delete<RemoveRestaurantResponse>(
+        `/Merchant/remove-restaurant/${removeRestaurantData.restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

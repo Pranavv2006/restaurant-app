@@ -4,7 +4,7 @@ const {
 
 const removeRestaurantController = async (req, res) => {
   try {
-    const { restaurantId } = req.body;
+    const { restaurantId } = req.params;
     if (!restaurantId) {
       return res.status(400).json({
         success: false,

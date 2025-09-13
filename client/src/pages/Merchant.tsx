@@ -221,13 +221,6 @@ const Merchant = () => {
           </div>
         );
 
-      case "restaurants":
-        return (
-          <div className="min-h-screen bg-white">
-            <RestaurantBoard merchantId={merchantId!} />
-          </div>
-        );
-
       case "categories":
         return (
           <div className="flex items-center justify-center min-h-[60vh]">

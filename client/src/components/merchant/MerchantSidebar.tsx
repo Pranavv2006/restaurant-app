@@ -36,7 +36,7 @@ const MerchantSidebar = ({
       >
         {/* Sidebar Header */}
         <div className="p-4 bg-gray-800 text-white text-center">
-          <h1 className="text-2xl font-bold">DoorDash</h1>
+          <h1 className="text-2xl font-bold">DineDash</h1>
         </div>
 
         {/* Sidebar Content */}
