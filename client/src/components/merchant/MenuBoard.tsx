@@ -11,12 +11,26 @@ interface MenuItem {
   imageUrl?: string;
 }
 
+interface Restaurant {
+  id: number;
+  name: string;
+  location?: string;
+  phone?: string;
+  cuisine?: string;
+  imageUrl?: string;
+}
+
 interface MenuBoardProps {
   restaurantId: number;
   restaurantData?: any;
+  merchantId: number;
 }
 
-const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
+const MenuBoard = ({
+  restaurantId,
+  restaurantData,
+  merchantId,
+}: MenuBoardProps) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -24,6 +38,50 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      const result = await merchantService.getMerchantRestaurants(merchantId);
+      if (result.success && result.data) {
+        setRestaurants(result.data);
+        if (result.data.length > 0) {
+          setSelectedRestaurantId(result.data[0].id);
+        }
+      }
+    };
+    fetchRestaurants();
+  }, [merchantId]);
+
+  useEffect(() => {
+    if (!selectedRestaurantId) return;
+    const fetchMenuItems = async () => {
+      setLoading(true);
+      setError("");
+      const result = await merchantService.retrieveMenu({
+        restaurantId: selectedRestaurantId,
+      });
+      if (result.success && result.data) {
+        setMenuItems(
+          result.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: Number(item.price),
+            imageUrl: item.imageUrl,
+          }))
+        );
+      } else {
+        setMenuItems([]);
+        if (result.error) setError(result.error);
+      }
+      setLoading(false);
+    };
+    fetchMenuItems();
+  }, [selectedRestaurantId]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -159,6 +217,22 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
 
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">
+          Select Restaurant:
+        </label>
+        <select
+          value={selectedRestaurantId ?? ""}
+          onChange={(e) => setSelectedRestaurantId(Number(e.target.value))}
+          className="py-2 px-3 rounded-lg border border-gray-300"
+        >
+          {restaurants.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex flex-col">
         <div className="overflow-x-auto">
           <div className="min-w-full inline-block align-middle">
@@ -369,19 +443,19 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
         </div>
       </div>
 
-      {showAddModal && (
+      {showAddModal && selectedRestaurantId !== null && (
         <AddMenuItem
           onClose={handleCloseAddModal}
           onSuccess={handleMenuItemSuccess}
-          restaurantId={restaurantId}
+          restaurantId={selectedRestaurantId}
         />
       )}
 
-      {showEditModal && editingItem && (
+      {showEditModal && editingItem && selectedRestaurantId !== null && (
         <EditMenuItem
           onClose={handleCloseEditModal}
           onSuccess={handleEditSuccess}
-          restaurantId={restaurantId}
+          restaurantId={selectedRestaurantId}
           menuItem={editingItem}
         />
       )}

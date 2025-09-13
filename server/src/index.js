@@ -49,13 +49,11 @@ app.use((req, res, next) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Serve /uploads/menu-items
 app.use(
   "/uploads/menu-items",
   express.static(path.join(__dirname, "../uploads/menu-items"))
 );
 
-// Serve /uploads/restaurants
 app.use(
   "/uploads/restaurants",
   express.static(path.join(__dirname, "../uploads/restaurants"))

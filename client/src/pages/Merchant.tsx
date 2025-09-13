@@ -203,20 +203,21 @@ const Merchant = () => {
       case "menu":
         return (
           <div className="min-h-screen bg-white">
-            {/* Add Restaurant Button */}
-            <div className="flex justify-end py-4 px-6">
-              <button
-                className="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition"
-                onClick={handleCreateRestaurant}
-              >
-                + Add Restaurant
-              </button>
-            </div>
             {/* Full-size MenuBoard */}
-            <MenuBoard
-              restaurantId={restaurantId}
-              restaurantData={restaurantData}
-            />
+            {merchantId !== null && (
+              <MenuBoard
+                restaurantId={restaurantId}
+                restaurantData={restaurantData}
+                merchantId={merchantId}
+              />
+            )}
+          </div>
+        );
+
+      case "restaurants":
+        return (
+          <div className="min-h-screen bg-white">
+            <RestaurantBoard merchantId={merchantId!} />
           </div>
         );
 

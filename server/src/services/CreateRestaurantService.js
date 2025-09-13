@@ -55,19 +55,6 @@ const createRestaurant = async (restaurantData) => {
       };
     }
 
-    // Check if merchant already has a restaurant
-    const existingRestaurant = await prisma.restaurant.findFirst({
-      where: { merchantId: merchantIdNum },
-    });
-
-    if (existingRestaurant) {
-      return {
-        success: false,
-        message: "Merchant already has a restaurant",
-        error: "Each merchant can only have one restaurant",
-      };
-    }
-
     // ✅ Create restaurant according to your schema
     const restaurant = await prisma.restaurant.create({
       data: {
