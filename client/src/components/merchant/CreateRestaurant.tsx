@@ -183,7 +183,9 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -455,16 +457,25 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
                 <label className="block mb-2 text-sm text-gray-700 font-medium">
                   Cuisine Type
                 </label>
-                <textarea
+                <select
                   name="cuisine"
                   value={form.cuisine}
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  rows={3}
-                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
-                  placeholder="Describe your cuisine type (e.g., Italian, Chinese, etc.)"
-                />
+                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-white text-gray-900 focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  <option value="" disabled>
+                    Select cuisine type
+                  </option>
+                  <option value="Indian">Indian</option>
+                  <option value="Mexican">Mexican</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Thai">Thai</option>
+                  <option value="Italian">Italian</option>
+                </select>
               </div>
 
               {/* Move the image upload field here */}
@@ -473,14 +484,14 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
                   Restaurant Image (Optional)
                 </label>
                 <div
-                  {...getRootProps()} // Use getRootProps here
+                  {...getRootProps()}
                   className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
                     isDragActive
                       ? "border-violet-500 bg-violet-50"
                       : "border-gray-300 hover:border-violet-500"
                   } ${loading ? "opacity-50 pointer-events-none" : ""}`}
                 >
-                  <input {...getInputProps()} /> {/* Use getInputProps here */}
+                  <input {...getInputProps()} />
                   {form.imageFile ? (
                     <div className="text-center">
                       <svg
