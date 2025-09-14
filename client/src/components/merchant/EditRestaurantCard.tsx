@@ -25,6 +25,16 @@ interface EditRestaurantCardProps {
   onSuccess: (updatedRestaurant: any) => void;
 }
 
+const CUISINE_OPTIONS = [
+  "Indian",
+  "Mexican",
+  "Chinese",
+  "Japanese",
+  "Korean",
+  "Thai",
+  "Italian",
+];
+
 const EditRestaurantCard = ({
   restaurant,
   onClose,
@@ -63,7 +73,9 @@ const EditRestaurantCard = ({
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -171,6 +183,7 @@ const EditRestaurantCard = ({
           <div className="mt-4">
             <form onSubmit={handleSubmit}>
               <div className="grid gap-y-3">
+                {/* Name */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
                     Name *
@@ -187,6 +200,7 @@ const EditRestaurantCard = ({
                   />
                 </div>
 
+                {/* Location */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
                     Location *
@@ -203,6 +217,7 @@ const EditRestaurantCard = ({
                   />
                 </div>
 
+                {/* Phone */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
                     Phone *
@@ -219,22 +234,31 @@ const EditRestaurantCard = ({
                   />
                 </div>
 
+                {/* Cuisine Dropdown */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
                     Cuisine *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="cuisine"
                     value={formData.cuisine}
                     onChange={handleChange}
-                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                     required
-                    placeholder="Enter cuisine"
                     disabled={loading}
-                  />
+                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm bg-white text-gray-900 focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-neutral-200"
+                  >
+                    <option value="" disabled>
+                      Select cuisine type
+                    </option>
+                    {CUISINE_OPTIONS.map((cuisine) => (
+                      <option key={cuisine} value={cuisine}>
+                        {cuisine}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* Dropzone for Image Upload */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
                     Image Upload
