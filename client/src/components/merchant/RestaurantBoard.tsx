@@ -14,9 +14,13 @@ interface Restaurant {
 
 interface RestaurantBoardProps {
   merchantId: number;
+  onRestaurantUpdated: () => void;
 }
 
-const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
+const RestaurantBoard = ({
+  merchantId,
+  onRestaurantUpdated,
+}: RestaurantBoardProps) => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -93,13 +97,15 @@ const RestaurantBoard = ({ merchantId }: RestaurantBoardProps) => {
   };
 
   // Edit restaurant (modal success callback)
-  const handleEditSuccess = (updatedRestaurant: Restaurant) => {
-    setRestaurants((prev) =>
-      prev.map((r) => (r.id === updatedRestaurant.id ? updatedRestaurant : r))
-    );
+  const handleEditSuccess = () => {
+    // Instead of updating local state, re-fetch from backend:
+    fetchRestaurants();
     setShowEditModal(false);
     setEditingRestaurant(null);
     setError("");
+    if (onRestaurantUpdated) {
+      onRestaurantUpdated();
+    }
   };
 
   const handleCloseAddModal = () => {

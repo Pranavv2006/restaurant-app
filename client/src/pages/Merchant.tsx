@@ -217,7 +217,10 @@ const Merchant = () => {
       case "restaurants":
         return (
           <div className="min-h-screen bg-white">
-            <RestaurantBoard merchantId={merchantId!} />
+            <RestaurantBoard
+              merchantId={merchantId!}
+              onRestaurantUpdated={checkRestaurant}
+            />
           </div>
         );
 
