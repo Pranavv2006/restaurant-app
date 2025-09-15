@@ -1,32 +1,52 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import merchantService from "../../services/MerchantService";
-import type { AddMenuItemData as ServiceAddMenuItemData } from "../../services/MerchantService";
-import RichTextEditor from "../common/RichTextEditor";
+import type { EditRestaurantData } from "../../services/MerchantService";
 
-interface AddMenuItemFormData {
+interface EditRestaurantFormData {
   name: string;
-  description: string;
-  price: string;
+  location: string;
+  phone: string;
+  cuisine: string;
   imageFile?: File;
+  imageUrl?: string;
 }
 
-interface AddMenuItemProps {
+interface EditRestaurantCardProps {
+  restaurant: {
+    id: number;
+    name: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    imageUrl?: string;
+  };
   onClose: () => void;
-  onSuccess: (newItem: any) => void;
-  restaurantId: number;
+  onSuccess: (updatedRestaurant: any) => void;
 }
 
-const AddMenuItem = ({
+const CUISINE_OPTIONS = [
+  "Indian",
+  "Mexican",
+  "Chinese",
+  "Japanese",
+  "Korean",
+  "Thai",
+  "Italian",
+];
+
+const EditRestaurantCard = ({
+  restaurant,
   onClose,
   onSuccess,
-  restaurantId,
-}: AddMenuItemProps) => {
-  const [formData, setFormData] = useState<AddMenuItemFormData>({
-    name: "",
-    description: "",
-    price: "",
+}: EditRestaurantCardProps) => {
+  const [formData, setFormData] = useState<EditRestaurantFormData>({
+    name: restaurant.name || "",
+    location: restaurant.location || "",
+    phone: restaurant.phone || "",
+    cuisine: restaurant.cuisine || "",
     imageFile: undefined,
+    imageUrl: restaurant.imageUrl || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,6 +57,7 @@ const AddMenuItem = ({
       setFormData((prev) => ({
         ...prev,
         imageFile: acceptedFiles[0],
+        imageUrl: "", // Clear old imageUrl if new file is selected
       }));
       setError("");
     }
@@ -52,7 +73,9 @@ const AddMenuItem = ({
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -62,14 +85,6 @@ const AddMenuItem = ({
     if (error) setError("");
   };
 
-  const handleDescriptionChange = (html: string) => {
-    console.log("Description updated:", html);
-    setFormData((prev) => ({
-      ...prev,
-      description: html,
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -77,52 +92,63 @@ const AddMenuItem = ({
     setSuccess("");
 
     try {
-      const priceNum = parseFloat(formData.price);
-      if (isNaN(priceNum) || priceNum <= 0) {
-        setError("Please enter a valid price");
-        setLoading(false);
-        return;
-      }
-
-      if (!formData.imageFile) {
-        setError("Please select an image file");
-        setLoading(false);
-        return;
-      }
-
-      const requestData: ServiceAddMenuItemData = {
-        restaurantId: restaurantId,
+      // Prepare request data
+      let requestData: EditRestaurantData = {
+        restaurantId: restaurant.id,
         name: formData.name,
-        description: formData.description,
-        price: priceNum,
-        imageFile: formData.imageFile,
+        location: formData.location,
+        phone: formData.phone,
+        cuisine: formData.cuisine,
+        ...(formData.imageUrl ? { imageUrl: formData.imageUrl } : {}),
       };
 
-      console.log("Submitting form data:", {
-        ...requestData,
-        imageFile: formData.imageFile.name,
-      });
+      // Handle image upload if a new file is selected
+      if (formData.imageFile) {
+        const imageFormData = new FormData();
+        imageFormData.append("restaurantId", restaurant.id.toString());
+        imageFormData.append("name", formData.name);
+        imageFormData.append("location", formData.location);
+        imageFormData.append("phone", formData.phone);
+        imageFormData.append("cuisine", formData.cuisine);
+        imageFormData.append("image", formData.imageFile);
 
-      const response = await merchantService.addMenuItem(requestData);
-
-      if (response.success) {
-        setSuccess(response.message || "Menu item added successfully");
-
-        setTimeout(() => {
-          if (response.data?.menuItem) {
-            onSuccess(response.data.menuItem);
-          }
-          onClose();
-        }, 1000);
+        const response = await merchantService.editRestaurant(
+          imageFormData as any
+        );
+        if (response.success && response.data) {
+          setSuccess(response.message || "Restaurant updated successfully");
+          setTimeout(() => {
+            onSuccess(response.data);
+            onClose();
+          }, 1000);
+        } else {
+          setError(
+            response.error || response.message || "Failed to update restaurant"
+          );
+        }
       } else {
-        setError(response.error || "Failed to add menu item");
+        // No new image, send normal data
+        if (formData.imageUrl) {
+          requestData.imageUrl = formData.imageUrl;
+        }
+        const response = await merchantService.editRestaurant(requestData);
+        if (response.success && response.data) {
+          setSuccess(response.message || "Restaurant updated successfully");
+          setTimeout(() => {
+            onSuccess(response.data);
+            onClose();
+          }, 1000);
+        } else {
+          setError(
+            response.error || response.message || "Failed to update restaurant"
+          );
+        }
       }
     } catch (error: any) {
-      console.error("Add menu item error:", error);
       setError(
         error?.response?.data?.error ||
           error?.message ||
-          "An error occurred while adding the menu item"
+          "An error occurred while updating the restaurant"
       );
     } finally {
       setLoading(false);
@@ -135,10 +161,10 @@ const AddMenuItem = ({
         <div className="p-4 sm:p-6">
           <div className="text-center">
             <h3 className="block text-xl font-bold text-gray-800 dark:text-neutral-200">
-              Add Menu Item
+              Edit Restaurant
             </h3>
             <p className="mt-1 text-sm text-gray-600 dark:text-neutral-400">
-              Create a new menu item for your restaurant
+              Update your restaurant details
             </p>
           </div>
 
@@ -157,9 +183,10 @@ const AddMenuItem = ({
           <div className="mt-4">
             <form onSubmit={handleSubmit}>
               <div className="grid gap-y-3">
+                {/* Name */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
-                    Item Name *
+                    Name *
                   </label>
                   <input
                     type="text"
@@ -168,51 +195,73 @@ const AddMenuItem = ({
                     onChange={handleChange}
                     className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                     required
-                    placeholder="Enter item name"
+                    placeholder="Enter restaurant name"
                     disabled={loading}
                   />
                 </div>
 
+                {/* Location */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
-                    Price ₹ *
+                    Location *
                   </label>
                   <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
+                    type="text"
+                    name="location"
+                    value={formData.location}
                     onChange={handleChange}
-                    step="0.01"
-                    min="0"
                     className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                     required
-                    placeholder="0.00"
+                    placeholder="Enter location"
                     disabled={loading}
                   />
                 </div>
 
+                {/* Phone */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
-                    Description *
+                    Phone *
                   </label>
-                  <div
-                    className="dark:bg-neutral-900 border rounded-lg overflow-hidden"
-                    onMouseDown={(e) => e.preventDefault()} // Prevent form submission
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                  >
-                    <RichTextEditor
-                      initialContent={formData.description}
-                      onContentChange={handleDescriptionChange}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                    required
+                    placeholder="Enter phone number"
+                    disabled={loading}
+                  />
                 </div>
 
+                {/* Cuisine Dropdown */}
                 <div>
                   <label className="block text-sm mb-1 dark:text-white">
-                    Image Upload *
+                    Cuisine *
+                  </label>
+                  <select
+                    name="cuisine"
+                    value={formData.cuisine}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="py-2 px-3 block w-full border-gray-200 rounded-lg sm:text-sm bg-white text-gray-900 focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-neutral-200"
+                  >
+                    <option value="" disabled>
+                      Select cuisine type
+                    </option>
+                    {CUISINE_OPTIONS.map((cuisine) => (
+                      <option key={cuisine} value={cuisine}>
+                        {cuisine}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dropzone for Image Upload */}
+                <div>
+                  <label className="block text-sm mb-1 dark:text-white">
+                    Image Upload
                   </label>
                   <div
                     {...getRootProps()}
@@ -244,6 +293,17 @@ const AddMenuItem = ({
                         <p className="text-xs text-gray-500">
                           {(formData.imageFile.size / 1024 / 1024).toFixed(2)}{" "}
                           MB
+                        </p>
+                      </div>
+                    ) : formData.imageUrl ? (
+                      <div className="text-center">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Restaurant"
+                          className="mx-auto h-12 w-12 rounded-lg object-cover"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Current Image
                         </p>
                       </div>
                     ) : (
@@ -316,12 +376,12 @@ const AddMenuItem = ({
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Adding Item...
+                      Updating...
                     </>
                   ) : success ? (
-                    "Item Added!"
+                    "Updated!"
                   ) : (
-                    "Add Menu Item"
+                    "Update Restaurant"
                   )}
                 </button>
               </div>
@@ -341,4 +401,4 @@ const AddMenuItem = ({
   );
 };
 
-export default AddMenuItem;
+export default EditRestaurantCard;

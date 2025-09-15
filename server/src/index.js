@@ -30,7 +30,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const uploadsDir = path.join(__dirname, "uploads");
+const uploadsDir = path.join(__dirname, "../uploads"); // Corrected path
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log("✅ Created uploads directory:", uploadsDir);
@@ -48,14 +48,20 @@ app.use((req, res, next) => {
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-console.log(
-  "✅ Static file serving enabled for:",
-  path.join(__dirname, "uploads")
+
+app.use(
+  "/uploads/menu-items",
+  express.static(path.join(__dirname, "../uploads/menu-items"))
+);
+
+app.use(
+  "/uploads/restaurants",
+  express.static(path.join(__dirname, "../uploads/restaurants"))
 );
 
 app.get("/test-image/:filename", (req, res) => {
   const { filename } = req.params;
-  const filePath = path.join(__dirname, "uploads", "menu-items", filename);
+  const filePath = path.join(__dirname, "../uploads/menu-items", filename); // Corrected path
 
   console.log("Looking for file:", filePath);
 
@@ -63,7 +69,7 @@ app.get("/test-image/:filename", (req, res) => {
     if (fs.existsSync(filePath)) {
       const stats = fs.statSync(filePath);
       const allFiles = fs.readdirSync(
-        path.join(__dirname, "uploads", "menu-items")
+        path.join(__dirname, "../uploads/menu-items")
       );
       res.json({
         exists: true,
@@ -73,7 +79,7 @@ app.get("/test-image/:filename", (req, res) => {
       });
     } else {
       const allFiles = fs.readdirSync(
-        path.join(__dirname, "uploads", "menu-items")
+        path.join(__dirname, "../uploads/menu-items")
       );
       res.status(404).json({
         exists: false,
@@ -83,6 +89,19 @@ app.get("/test-image/:filename", (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/debug-image/:filename", (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(__dirname, "../uploads/restaurants", filename); // Corrected path
+
+  console.log("Looking for file:", filePath);
+
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found", path: filePath });
   }
 });
 
@@ -110,7 +129,7 @@ app.get("/", async (req, res) => {
 
 app.get("/debug-uploads", (req, res) => {
   try {
-    const uploadsPath = path.join(__dirname, "uploads");
+    const uploadsPath = path.join(__dirname, "../uploads"); // Corrected path
 
     function getDirectoryContents(dirPath, relativePath = "") {
       const items = [];

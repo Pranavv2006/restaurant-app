@@ -1,56 +1,46 @@
-const prisma = require('../models/prismaClient');
+const prisma = require("../models/prismaClient");
 
 const getMerchantProfile = async (merchantId) => {
-    try {
-        const id = Number(merchantId);
-        if (!Number.isInteger(id)) {
-            return { success: false, error: 'Invalid merchant id' };
-        }
+  try {
+    const merchant = await prisma.user.findUnique({
+      where: { id: parseInt(merchantId, 10) }, // Convert merchantId to an integer
+      include: {
+        restaurants: true, // Include related restaurants
+      },
+    });
 
-        const profile = await prisma.user.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                restaurants: {
-                    select: {
-                        id: true,
-                        name: true,
-                        location: true,
-                        phone: true,
-                        cuisine: true
-                    }
-                }
-            }
-        });
-        
-        if (!profile) {
-            return {
-                success: false,
-                message: 'Merchant profile not found'
-            };
-        }
-
-        return {
-            success: true,
-            message: 'Merchant profile retrieved successfully',
-            data: {
-                id: profile.id,
-                email: profile.email,
-                firstName: profile.firstName,
-                lastName: profile.lastName,
-                restaurants: profile.restaurants
-            }
-        };
-    } catch (error) {
-        console.error(`Error retrieving merchant profile: ${error.message}`);
-        return {
-            success: false,
-            error: error.message
-        };
+    if (!merchant) {
+      return {
+        success: false,
+        message: "Merchant not found",
+      };
     }
+
+    return {
+      success: true,
+      data: {
+        id: merchant.id,
+        email: merchant.email,
+        firstName: merchant.firstName,
+        lastName: merchant.lastName,
+        restaurants: merchant.restaurants.map((restaurant) => ({
+          id: restaurant.id,
+          name: restaurant.name,
+          location: restaurant.location,
+          phone: restaurant.phone,
+          cuisine: restaurant.cuisine,
+          imageUrl: restaurant.imageUrl, // Include imageUrl
+        })),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching merchant profile:", error);
+    return {
+      success: false,
+      message: "Failed to fetch merchant profile",
+      error: error.message,
+    };
+  }
 };
 
 module.exports = { getMerchantProfile };

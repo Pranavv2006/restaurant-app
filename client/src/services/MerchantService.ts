@@ -1,5 +1,15 @@
 import axiosInstance from "../api/axiosConfig";
 
+export interface RetrieveRestaurantsData {
+  merchantId: number;
+}
+
+export interface RetrieveRestaurantsResponse {
+  success: boolean;
+  message?: string;
+  data?: RestaurantData[];
+  error?: string;
+}
 export interface WeeklyOrdersData {
   restaurantId: number;
 }
@@ -130,6 +140,7 @@ export interface CreateRestaurantData {
   location: string;
   phone: string;
   cuisine: string;
+  imageFile?: File; // Add this field
 }
 
 export interface CreateRestaurantResponse {
@@ -153,8 +164,58 @@ export interface MerchantProfileResponse {
     email: string;
     firstName: string;
     lastName: string;
-    restaurants: RestaurantData[];
+    restaurants: {
+      id: number;
+      name: string;
+      location: string;
+      phone: string;
+      cuisine: string;
+      imageUrl: string; // Ensure imageUrl is included
+    }[];
   };
+  error?: string;
+}
+
+export interface RemoveRestaurantData {
+  restaurantId: number;
+}
+
+export interface RemoveRestaurantResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    id: number;
+    name: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    imageUrl?: string;
+    merchantId: number;
+  };
+  error?: string;
+}
+
+export interface EditRestaurantData {
+  restaurantId: number;
+  name?: string;
+  location?: string;
+  phone?: string;
+  cuisine?: string;
+  imageUrl?: string;
+}
+
+export interface EditRestaurantResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    id: number;
+    name: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    imageUrl?: string;
+    merchantId: number;
+  } | null;
   error?: string;
 }
 
@@ -203,7 +264,7 @@ const merchantService = {
   },
 
   createRestaurant: async (
-    restaurantData: CreateRestaurantData
+    formData: FormData
   ): Promise<CreateRestaurantResponse> => {
     try {
       const token = localStorage.getItem("authToken");
@@ -218,13 +279,15 @@ const merchantService = {
 
       const response = await axiosInstance.post<CreateRestaurantResponse>(
         "/Merchant/create-restaurant",
-        restaurantData,
+        formData, // Pass FormData directly
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data", // Ensure correct content type
           },
         }
       );
+
       return response.data;
     } catch (error: any) {
       console.error("createRestaurant error:", error);
@@ -537,6 +600,146 @@ const merchantService = {
 
       return {
         success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  getMerchantRestaurants: async (
+    merchantId: number
+  ): Promise<RetrieveRestaurantsResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.get<RetrieveRestaurantsResponse>(
+        `/Merchant/retrieve-restaurant/${merchantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("getMerchantRestaurants error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RetrieveRestaurantsResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  removeRestaurant: async (
+    removeRestaurantData: RemoveRestaurantData
+  ): Promise<RemoveRestaurantResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          message: "No authentication token found. Please login again.",
+          error: "No authentication token found. Please login again.",
+        };
+      }
+
+      const response = await axiosInstance.delete<RemoveRestaurantResponse>(
+        `/Merchant/remove-restaurant/${removeRestaurantData.restaurantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("removeRestaurant error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          error: "Authentication expired. Please login again.",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as RemoveRestaurantResponse;
+      }
+
+      return {
+        success: false,
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  editRestaurant: async (
+    editRestaurantData: EditRestaurantData
+  ): Promise<EditRestaurantResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          message: "No authentication token found. Please login again.",
+          error: "Authentication required",
+        };
+      }
+
+      const response = await axiosInstance.put<EditRestaurantResponse>(
+        "/Merchant/edit-restaurant",
+        editRestaurantData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("editRestaurant error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          message: "Authentication expired. Please login again.",
+          error: "Authentication expired",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as EditRestaurantResponse;
+      }
+
+      return {
+        success: false,
+        message: "Failed to edit restaurant",
         error: error?.message || "Network error",
       };
     }

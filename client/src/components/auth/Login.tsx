@@ -65,6 +65,9 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
             if (userRole === "Merchant") {
               navigate("/merchant");
             }
+            if (userRole === "Customer") {
+              navigate("/customer");
+            }
           } catch (error) {
             console.error("Post-login navigation error:", error);
             navigate("/merchant");

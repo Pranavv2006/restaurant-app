@@ -18,6 +18,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
   return (
     <div className="flex flex-wrap gap-1 p-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`w-8 h-8 flex items-center justify-center rounded ${
           editor.isActive("bold")
@@ -30,6 +31,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       </button>
 
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`w-8 h-8 flex items-center justify-center rounded ${
           editor.isActive("italic")
@@ -42,6 +44,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       </button>
 
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`w-8 h-8 flex items-center justify-center rounded ${
           editor.isActive("strike")
@@ -54,6 +57,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       </button>
 
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={`px-2 h-8 flex items-center justify-center rounded ${
           editor.isActive("bulletList")
@@ -66,6 +70,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       </button>
 
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={`px-2 h-8 flex items-center justify-center rounded ${
           editor.isActive("orderedList")

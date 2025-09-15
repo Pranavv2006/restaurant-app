@@ -11,6 +11,14 @@ const retrieveItems = require("../controllers/retrieveMenu");
 const remove = require("../controllers/removeMenu");
 const editItem = require("../controllers/editItem");
 const weeklyOrders = require("../controllers/WeeklyOrders");
+const retrieveRestaurant = require("../controllers/retrieveRestaurant");
+const retrieveImage = require("../controllers/retrieveImage");
+const removeRestaurant = require("../controllers/removeRestaurant");
+const editRestaurant = require("../controllers/editRestaurant");
+
+// Import the middleware array
+const addMenuMiddleware = require("../middlewares/add-menu");
+const upload = require("../middlewares/upload");
 
 router.use((req, res, next) => {
   console.log(`🛒 Merchant route: ${req.method} ${req.path}`);
@@ -26,38 +34,22 @@ router.use((req, res, next) => {
 router.post("/create-restaurant", create.createRestaurantController);
 router.post("/check-restaurant", check.checkRestaurantController);
 
-router.post(
-  "/add-menu-item",
-  (req, res, next) => {
-    console.log("🔍 BEFORE upload middleware:");
-    console.log("- Content-Type:", req.headers["content-type"]);
-    console.log("- Body exists:", !!req.body);
-    console.log(
-      "- Body keys:",
-      req.body ? Object.keys(req.body) : "Body is null/undefined"
-    );
-    next();
-  },
-  item.uploadMiddleware,
-  (req, res, next) => {
-    console.log("🔍 AFTER upload middleware:");
-    console.log("- req.file:", req.file);
-    console.log("- req.body:", req.body);
-    console.log("- File path:", req.file?.path);
-    console.log(
-      "- File exists:",
-      req.file ? fs.existsSync(req.file.path) : false
-    );
-    next();
-  },
-  item.addItemController
-);
+router.post("/add-menu-item", ...addMenuMiddleware);
 
 router.get("/retrieve-menu", retrieveItems.retrieveMenuController);
 router.delete("/remove-menu-item/:menuItemId", remove.removeMenuController);
 router.get("/merchant-profile/:merchantId", profile.merchantProfileController);
 router.put("/edit-menu-item/:menuItemId", editItem.EditMenuItemController);
 router.get("/weekly-orders/:restaurantId", weeklyOrders.WeeklyOrdersController);
+router.put(
+  "/edit-restaurant",
+  upload.single("image"),
+  editRestaurant.editRestaurantController
+);
+router.delete(
+  "/remove-restaurant/:restaurantId",
+  removeRestaurant.removeRestaurantController
+);
 
 router.get("/test-image/:filename", (req, res) => {
   const { filename } = req.params;
@@ -73,15 +65,11 @@ router.get("/test-image/:filename", (req, res) => {
   }
 });
 
-router.get("/image/:filename", (req, res) => {
-  const { filename } = req.params;
-  const filePath = path.join(__dirname, "../uploads/menu-items", filename);
+router.get("/image/:filename", retrieveImage.retrieveImageController);
 
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).json({ error: "Image not found" });
-  }
-});
+router.get(
+  "/retrieve-restaurant/:merchantId",
+  retrieveRestaurant.retrieveRestaurantController
+);
 
 module.exports = router;

@@ -11,12 +11,26 @@ interface MenuItem {
   imageUrl?: string;
 }
 
+interface Restaurant {
+  id: number;
+  name: string;
+  location?: string;
+  phone?: string;
+  cuisine?: string;
+  imageUrl?: string;
+}
+
 interface MenuBoardProps {
   restaurantId: number;
   restaurantData?: any;
+  merchantId: number;
 }
 
-const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
+const MenuBoard = ({
+  restaurantId,
+  restaurantData,
+  merchantId,
+}: MenuBoardProps) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -24,6 +38,50 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [error, setError] = useState("");
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      const result = await merchantService.getMerchantRestaurants(merchantId);
+      if (result.success && result.data) {
+        setRestaurants(result.data);
+        if (result.data.length > 0) {
+          setSelectedRestaurantId(result.data[0].id);
+        }
+      }
+    };
+    fetchRestaurants();
+  }, [merchantId]);
+
+  useEffect(() => {
+    if (!selectedRestaurantId) return;
+    const fetchMenuItems = async () => {
+      setLoading(true);
+      setError("");
+      const result = await merchantService.retrieveMenu({
+        restaurantId: selectedRestaurantId,
+      });
+      if (result.success && result.data) {
+        setMenuItems(
+          result.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: Number(item.price),
+            imageUrl: item.imageUrl,
+          }))
+        );
+      } else {
+        setMenuItems([]);
+        if (result.error) setError(result.error);
+      }
+      setLoading(false);
+    };
+    fetchMenuItems();
+  }, [selectedRestaurantId]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -140,6 +198,12 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
     return `${baseUrl}/${cleanImageUrl}`;
   };
 
+  const stripHtmlTags = (html: string): string => {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    return div.textContent || div.innerText || "";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -153,6 +217,67 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
 
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:gap-x-6">
+        <label
+          htmlFor="restaurant-select"
+          className="block text-sm font-semibold text-gray-800 mb-2 sm:mb-0"
+        >
+          Select Restaurant:
+        </label>
+
+        <div className="relative w-full sm:w-80 mt-0 sm:mt-0">
+          {/* left plus icon */}
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-white opacity-90"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </div>
+
+          <select
+            id="restaurant-select"
+            aria-label="Select restaurant"
+            value={selectedRestaurantId ?? ""}
+            onChange={(e) => setSelectedRestaurantId(Number(e.target.value))}
+            className="block w-full pl-11 pr-10 py-2 rounded-full bg-violet-500 text-white font-medium shadow-md border border-transparent hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all appearance-none"
+          >
+            <option value="" disabled>
+              {restaurants.length === 0
+                ? "No restaurants available"
+                : "Select a restaurant"}
+            </option>
+            {restaurants.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+
+          {/* custom caret */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+            <svg
+              className="h-4 w-4 text-white opacity-85"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
       <div className="flex flex-col">
         <div className="overflow-x-auto">
           <div className="min-w-full inline-block align-middle">
@@ -162,9 +287,7 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                   <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200">
                     Menu Items
                     {restaurantData && (
-                      <span className="text-sm font-normal text-gray-500 ml-2">
-                        - {restaurantData.name}
-                      </span>
+                      <span className="text-sm font-normal text-gray-500 ml-2"></span>
                     )}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-neutral-400">
@@ -269,9 +392,10 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
                         </td>
                         <td className="px-6 py-4 w-1/3">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {item.description.length > 50
-                              ? item.description.slice(0, 50) + "..."
-                              : item.description}
+                            {stripHtmlTags(item.description).length > 50
+                              ? stripHtmlTags(item.description).slice(0, 50) +
+                                "..."
+                              : stripHtmlTags(item.description)}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">
@@ -362,19 +486,19 @@ const MenuBoard = ({ restaurantId, restaurantData }: MenuBoardProps) => {
         </div>
       </div>
 
-      {showAddModal && (
+      {showAddModal && selectedRestaurantId !== null && (
         <AddMenuItem
           onClose={handleCloseAddModal}
           onSuccess={handleMenuItemSuccess}
-          restaurantId={restaurantId}
+          restaurantId={selectedRestaurantId}
         />
       )}
 
-      {showEditModal && editingItem && (
+      {showEditModal && editingItem && selectedRestaurantId !== null && (
         <EditMenuItem
           onClose={handleCloseEditModal}
           onSuccess={handleEditSuccess}
-          restaurantId={restaurantId}
+          restaurantId={selectedRestaurantId}
           menuItem={editingItem}
         />
       )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useDropzone } from "react-dropzone"; // Import Dropzone.js
 import merchantService from "../../services/MerchantService";
 
 interface FormData {
@@ -6,6 +7,7 @@ interface FormData {
   location: string;
   phone: string;
   cuisine: string;
+  imageFile?: File; // Add image file field
 }
 
 interface CreateRestaurantProps {
@@ -19,6 +21,7 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
     location: "",
     phone: "",
     cuisine: "",
+    imageFile: undefined, // Initialize image file
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [merchantId, setMerchantId] = useState<number | null>(null);
@@ -28,6 +31,23 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles.length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          imageFile: acceptedFiles[0], // Store the uploaded file
+        }));
+        setError("");
+      }
+    },
+    accept: {
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
+    },
+    multiple: false,
+    maxSize: 5 * 1024 * 1024, // Limit file size to 5MB
+  });
 
   const totalSteps = 3;
 
@@ -163,7 +183,9 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -194,22 +216,20 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
     setError("");
     setSuccess("");
 
-    const raw = localStorage.getItem("user");
-    const user = raw ? JSON.parse(raw) : null;
-    const userId = user?.id ?? null;
-
     try {
-      const requestData = {
-        merchantId: userId,
-        name: form.name.trim(),
-        location: form.location.trim(),
-        phone: form.phone.trim(),
-        cuisine: form.cuisine.trim(),
-      };
+      const formData = new FormData();
+      formData.append("merchantId", merchantId.toString());
+      formData.append("name", form.name.trim());
+      formData.append("location", form.location.trim());
+      formData.append("phone", form.phone.trim());
+      formData.append("cuisine", form.cuisine.trim());
+      if (form.imageFile) {
+        formData.append("image", form.imageFile); // Append image file
+      }
 
-      console.log("Creating restaurant with data:", requestData);
+      console.log("Creating restaurant with data:", formData);
 
-      const result = await merchantService.createRestaurant(requestData);
+      const result = await merchantService.createRestaurant(formData); // Pass FormData directly
       console.log("Create restaurant result:", result);
 
       if (result.success) {
@@ -437,16 +457,87 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
                 <label className="block mb-2 text-sm text-gray-700 font-medium">
                   Cuisine Type
                 </label>
-                <textarea
+                <select
                   name="cuisine"
                   value={form.cuisine}
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  rows={3}
-                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
-                  placeholder="Describe your cuisine type (e.g., Italian, Chinese, etc.)"
-                />
+                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-white text-gray-900 focus:border-violet-500 focus:ring-violet-500 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  <option value="" disabled>
+                    Select cuisine type
+                  </option>
+                  <option value="Indian">Indian</option>
+                  <option value="Mexican">Mexican</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Thai">Thai</option>
+                  <option value="Italian">Italian</option>
+                </select>
+              </div>
+
+              {/* Move the image upload field here */}
+              <div>
+                <label className="block mb-2 text-sm text-gray-700 font-medium">
+                  Restaurant Image (Optional)
+                </label>
+                <div
+                  {...getRootProps()}
+                  className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                    isDragActive
+                      ? "border-violet-500 bg-violet-50"
+                      : "border-gray-300 hover:border-violet-500"
+                  } ${loading ? "opacity-50 pointer-events-none" : ""}`}
+                >
+                  <input {...getInputProps()} />
+                  {form.imageFile ? (
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-8 w-8 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      <p className="text-sm text-green-600 font-medium mt-1">
+                        {form.imageFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(form.imageFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-8 w-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        ></path>
+                      </svg>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Drag & drop an image, or click to select
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

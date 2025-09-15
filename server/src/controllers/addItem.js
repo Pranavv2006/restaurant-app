@@ -63,7 +63,7 @@ const addItemController = async (req, res) => {
       });
     }
 
-    const imageUrl = `uploads/menu-items/${imageFile.filename}`;
+    const imageUrl = `/uploads/menu-items/${imageFile.filename}`; // Save relative path
 
     console.log(
       "💾 Image will be accessible at:",
