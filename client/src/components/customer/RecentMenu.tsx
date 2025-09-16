@@ -7,7 +7,8 @@ const RecentMenu: React.FC = () => {
       title: "Margherita Pizza",
       subtitle: "Italian Classic",
       description: "Fresh mozzarella, basil, and tomato sauce.",
-      imageUrl: "https://source.unsplash.com/400x300/?pizza",
+      imageUrl:
+        "https://simplyhomecooked.com/wp-content/uploads/2023/04/Margherita-Pizza-3.jpg",
       primaryAction: { label: "Order Now", href: "#" },
       secondaryAction: { label: "View Details", href: "#" },
     },
@@ -15,7 +16,8 @@ const RecentMenu: React.FC = () => {
       title: "Chicken Biryani",
       subtitle: "Spicy & Flavorful",
       description: "Authentic Hyderabadi chicken biryani with raita.",
-      imageUrl: "https://source.unsplash.com/400x300/?biryani",
+      imageUrl:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPcdlgGqTXb-qtbAK_WgscTy2TimgPjzn9fw&s",
       primaryAction: { label: "Order Now", href: "#" },
       secondaryAction: { label: "View Details", href: "#" },
     },
@@ -23,7 +25,8 @@ const RecentMenu: React.FC = () => {
       title: "Sushi Platter",
       subtitle: "Japanese Delight",
       description: "Assorted sushi with fresh salmon and tuna.",
-      imageUrl: "https://source.unsplash.com/400x300/?sushi",
+      imageUrl:
+        "https://media.istockphoto.com/id/1224916255/photo/sushi-maki-with-salmon-shrimp-cucumber.jpg?s=612x612&w=0&k=20&c=qIu0V_qKpP1R2xWMxID0tRGPDhOivHQ9CJFiZLcXpI8=",
       primaryAction: { label: "Order Now", href: "#" },
       secondaryAction: { label: "View Details", href: "#" },
     },
