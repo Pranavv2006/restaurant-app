@@ -43,10 +43,10 @@ const addItemController = async (req, res) => {
     console.log("📄 Request body:", req.body);
     console.log("📁 Uploaded file:", req.file);
 
-    const { restaurantId, name, description, price } = req.body;
+    const { restaurantId, name, description, price, category } = req.body;
     const imageFile = req.file;
 
-    if (!restaurantId || !name || !description || !price) {
+    if (!restaurantId || !name || !description || !price || !category) {
       console.log("❌ Missing required fields");
       return res.status(400).json({
         success: false,
@@ -75,7 +75,8 @@ const addItemController = async (req, res) => {
       name,
       description,
       parseFloat(price),
-      imageUrl
+      imageUrl,
+      category
     );
 
     if (result.success) {

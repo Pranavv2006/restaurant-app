@@ -1,6 +1,13 @@
 const prisma = require("../models/prismaClient");
 
-const editMenuItem = async (menuItemId, name, description, price, imageUrl) => {
+const editMenuItem = async (
+  menuItemId,
+  name,
+  description,
+  price,
+  imageUrl,
+  category
+) => {
   try {
     const menuItem = await prisma.menu.findUnique({
       where: {
@@ -40,6 +47,7 @@ const editMenuItem = async (menuItemId, name, description, price, imageUrl) => {
         description: updatedMenuItem.description,
         price: updatedMenuItem.price,
         imageUrl: updatedMenuItem.imageUrl,
+        category: updatedMenuItem.category,
       },
     };
   } catch (error) {

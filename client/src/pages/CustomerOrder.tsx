@@ -1,17 +1,17 @@
 import React from "react";
 import CustomerNav from "../components/customer/CustomerNav";
-import CustomerHero from "../components/customer/CustomerHero";
+import OrderHero from "../components/customer/OrderHero";
 
-const CustomerHome: React.FC = () => {
+const CustomerOrder: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900">
       {/* Navbar */}
       <CustomerNav />
 
       {/* Hero Section */}
-      <CustomerHero />
+      <OrderHero />
     </div>
   );
 };
 
-export default CustomerHome;
+export default CustomerOrder;

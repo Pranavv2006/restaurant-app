@@ -2,8 +2,16 @@ const prisma = require("../models/prismaClient");
 
 const createRestaurant = async (restaurantData) => {
   try {
-    const { name, location, phone, cuisine, merchantId, imageUrl } =
-      restaurantData;
+    const {
+      name,
+      location,
+      phone,
+      cuisine,
+      merchantId,
+      imageUrl,
+      latitude,
+      longitude,
+    } = restaurantData;
 
     if (!name || !location || !phone || !cuisine || !merchantId) {
       return {
@@ -64,6 +72,8 @@ const createRestaurant = async (restaurantData) => {
         cuisine,
         merchantId: merchantIdNum,
         imageUrl, // Save image URL
+        latitude: latitude !== undefined ? latitude : null,
+        longitude: longitude !== undefined ? longitude : null,
       },
       include: {
         user: {
@@ -89,6 +99,8 @@ const createRestaurant = async (restaurantData) => {
           cuisine: restaurant.cuisine,
           merchantId: restaurant.merchantId,
           merchant: restaurant.user,
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
         },
       },
     };

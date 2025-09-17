@@ -11,7 +11,15 @@ const createRestaurantController = async (req, res) => {
     }
 
     try {
-      const { merchantId, name, location, phone, cuisine } = req.body;
+      const {
+        merchantId,
+        name,
+        location,
+        phone,
+        cuisine,
+        latitude,
+        longitude,
+      } = req.body;
       const imageUrl = req.file
         ? `uploads/restaurants/${req.file.filename}`
         : null;
@@ -23,6 +31,8 @@ const createRestaurantController = async (req, res) => {
         phone,
         cuisine,
         imageUrl, // Include image URL
+        latitude: latitude !== undefined ? Number(latitude) : null,
+        longitude: longitude !== undefined ? Number(longitude) : null,
       };
 
       console.log("Creating restaurant with data:", restaurantData);
