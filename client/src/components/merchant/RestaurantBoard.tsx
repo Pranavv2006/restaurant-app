@@ -17,6 +17,20 @@ interface RestaurantBoardProps {
   onRestaurantUpdated: () => void;
 }
 
+function extractCityState(address?: string): string {
+  if (!address) return "-";
+  // Split by comma and trim parts
+  const parts = address.split(",").map((s) => s.trim());
+  // Heuristic: city is usually the second last, state is last or third last
+  if (parts.length >= 2) {
+    // Try to get city and state from the end
+    const state = parts[parts.length - 2];
+    const city = parts[parts.length - 3] || "";
+    return `${city ? city + ", " : ""}${state}`;
+  }
+  return address;
+}
+
 const RestaurantBoard = ({
   merchantId,
   onRestaurantUpdated,
@@ -236,7 +250,7 @@ const RestaurantBoard = ({
                         </td>
                         <td className="px-6 py-4 w-1/4">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {restaurant.location || "-"}
+                            {extractCityState(restaurant.location) || "-"}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">
