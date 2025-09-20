@@ -1,22 +1,89 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { searchRestaurants } from "../../services/CustomerService";
+import SearchBoard from "./SearchBoard";
 
 const OrderHero: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setSearching(true);
+    const res = await searchRestaurants({ query });
+    setSearching(false);
+    console.log("Search API response:", res); // <-- Add this line
+    if (res.success) {
+      setResults(res.data ?? []);
+    } else {
+      setResults([]);
+      console.log(res.message);
+    }
+  };
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Optional: allow Enter key to trigger search
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const getImageUrl = (imageUrl?: string) => {
+    if (!imageUrl) return "/Images/restaurant-placeholder.png";
+    if (imageUrl.startsWith("http")) return imageUrl;
+    // Prepend your backend URL for local images
+    return `http://localhost:3000/${
+      imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl
+    }`;
+  };
+
   return (
     <div className="relative overflow-hidden">
       <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-24">
         <div className="text-center">
-          <h1 className="text-4xl sm:text-6xl font-bold text-gray-800 dark:text-neutral-200">
-            Welcome to FlavorTown
+          {/* Animated main heading */}
+          <h1
+            className={`text-4xl sm:text-6xl font-bold text-gray-800 dark:text-neutral-200 transition-all duration-1000 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            From Restaurant to Home
           </h1>
 
-          <p className="mt-3 text-gray-600 dark:text-neutral-400">
-            Discover flavors from top chefs & restaurants near you.
-          </p>
+          {/* Animated subheading with bounce */}
+          <h2
+            className={`text-3xl mt-3 text-gray-800 dark:text-neutral-200 transition-all duration-1000 delay-300 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0 animate-pulse"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            Fucking-Fast
+          </h2>
 
-          <div className="mt-7 sm:mt-12 mx-auto max-w-xl relative">
-            {/* Search Form */}
-            <form>
-              <div className="relative z-10 flex gap-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-100 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-gray-900/20">
+          {/* Animated search form */}
+          <div
+            className={`mt-7 sm:mt-12 mx-auto max-w-xl relative transition-all duration-1000 delay-500 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            {/* Search Form with hover and focus animations */}
+            <div>
+              <div
+                className={`relative z-10 flex gap-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-100 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-gray-900/20 transition-all duration-300 ${
+                  searchFocused
+                    ? "scale-105 shadow-xl shadow-violet-100 border-violet-300"
+                    : "hover:scale-102 hover:shadow-xl"
+                }`}
+              >
                 <div className="w-full">
                   <label
                     htmlFor="restaurant-search"
@@ -28,17 +95,23 @@ const OrderHero: React.FC = () => {
                     type="text"
                     name="restaurant-search"
                     id="restaurant-search"
-                    className="py-2.5 px-4 block w-full border-transparent rounded-lg focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-transparent dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                    className="py-2.5 px-4 block w-full border-transparent rounded-lg focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-transparent dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600 transition-all duration-300"
                     placeholder="Search for dishes, cuisines..."
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
                 <div>
                   <button
-                    type="submit"
-                    className="size-11 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"
+                    type="button"
+                    onClick={handleSearch}
+                    className="size-11 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none transition-all duration-300 hover:scale-110 active:scale-95"
                   >
                     <svg
-                      className="shrink-0 size-5"
+                      className="shrink-0 size-5 transition-transform duration-300 hover:rotate-12"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
                       height="24"
@@ -55,13 +128,17 @@ const OrderHero: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </form>
-            {/* End Search Form */}
+            </div>
+            {/* End Search Section */}
 
-            {/* Decorative SVGs */}
-            <div className="hidden md:block absolute top-0 end-0 -translate-y-12 translate-x-20">
+            {/* Animated Decorative SVGs */}
+            <div
+              className={`hidden md:block absolute top-0 end-0 -translate-y-12 translate-x-20 transition-all duration-1000 delay-700 ${
+                isVisible ? "opacity-100 rotate-0" : "opacity-0 rotate-12"
+              }`}
+            >
               <svg
-                className="w-16 h-auto text-yellow-500"
+                className="w-16 h-auto text-yellow-500 animate-bounce"
                 width="121"
                 height="135"
                 viewBox="0 0 121 135"
@@ -89,9 +166,13 @@ const OrderHero: React.FC = () => {
               </svg>
             </div>
 
-            <div className="hidden md:block absolute bottom-0 start-0 translate-y-10 -translate-x-32">
+            <div
+              className={`hidden md:block absolute bottom-0 start-0 translate-y-10 -translate-x-32 transition-all duration-1000 delay-900 ${
+                isVisible ? "opacity-100 -rotate-3" : "opacity-0 rotate-6"
+              }`}
+            >
               <svg
-                className="w-40 h-auto text-green-500"
+                className="w-40 h-auto text-green-500 hover:scale-110 transition-transform duration-500"
                 width="347"
                 height="188"
                 viewBox="0 0 347 188"
@@ -103,32 +184,31 @@ const OrderHero: React.FC = () => {
                   stroke="currentColor"
                   strokeWidth="7"
                   strokeLinecap="round"
+                  className="animate-pulse"
                 />
               </svg>
             </div>
           </div>
 
-          {/* Categories */}
-          <div className="mt-10 sm:mt-20">
-            {[
-              { label: "Starters", icon: "🥗" },
-              { label: "Main Course", icon: "🍛" },
-              { label: "Desserts", icon: "🍰" },
-              { label: "Drinks", icon: "🍹" },
-              { label: "Vegan", icon: "🥑" },
-              { label: "Specials", icon: "🍽️" },
-            ].map((cat) => (
-              <a
-                key={cat.label}
-                className="m-1 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                href="#"
-              >
-                <span>{cat.icon}</span>
-                {cat.label}
-              </a>
-            ))}
-          </div>
+          {/* Use SearchBoard here */}
+          <SearchBoard
+            results={results}
+            getImageUrl={getImageUrl}
+            searching={searching}
+            query={query}
+          />
         </div>
+      </div>
+
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+        <div className="absolute top-40 right-20 w-3 h-3 bg-green-400 rounded-full animate-pulse opacity-60"></div>
+        <div className="absolute bottom-32 left-1/4 w-1 h-1 bg-violet-400 rounded-full animate-bounce opacity-50"></div>
+        <div
+          className="absolute top-1/3 right-1/3 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-40"
+          style={{ animationDelay: "1s" }}
+        ></div>
       </div>
     </div>
   );
