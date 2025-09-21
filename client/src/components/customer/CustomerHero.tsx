@@ -10,28 +10,6 @@ const CustomerHero = () => {
           </h1>
 
           {/* Buttons */}
-          <div className="mt-7 grid gap-3 w-full sm:inline-flex">
-            <a
-              href="#"
-              className="inline-flex justify-center items-center gap-x-3 text-center bg-violet-600 hover:bg-violet-700 border border-transparent text-white text-sm font-medium rounded-lg focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none px-4 py-3"
-            >
-              Start Ordering
-              <svg
-                className="shrink-0 size-4"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-                />
-              </svg>
-            </a>
-          </div>
         </div>
 
         {/* Right Side Video */}

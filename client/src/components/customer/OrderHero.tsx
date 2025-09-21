@@ -8,34 +8,38 @@ const OrderHero: React.FC = () => {
   const [results, setResults] = useState<any[]>([]);
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
-    setSearching(true);
-    const res = await searchRestaurants({ query });
-    setSearching(false);
-    console.log("Search API response:", res); // <-- Add this line
-    if (res.success) {
-      setResults(res.data ?? []);
-    } else {
+  // Debounce search
+  useEffect(() => {
+    if (!query.trim()) {
       setResults([]);
-      console.log(res.message);
+      setHasSearched(false);
+      return;
     }
-  };
+    setHasSearched(true);
+    setSearching(true);
+    const timeout = setTimeout(async () => {
+      const res = await searchRestaurants({ query });
+      setSearching(false);
+      if (res.success) {
+        setResults(res.data ?? []);
+      } else {
+        setResults([]);
+        console.log(res.message);
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Optional: allow Enter key to trigger search
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSearch();
-  };
-
   const getImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return "/Images/restaurant-placeholder.png";
     if (imageUrl.startsWith("http")) return imageUrl;
-    // Prepend your backend URL for local images
     return `http://localhost:3000/${
       imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl
     }`;
@@ -75,7 +79,6 @@ const OrderHero: React.FC = () => {
                 : "opacity-0 translate-y-8"
             }`}
           >
-            {/* Search Form with hover and focus animations */}
             <div>
               <div
                 className={`relative z-10 flex gap-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-100 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-gray-900/20 transition-all duration-300 ${
@@ -101,32 +104,9 @@ const OrderHero: React.FC = () => {
                     onBlur={() => setSearchFocused(false)}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={handleKeyDown}
                   />
                 </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="size-11 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none transition-all duration-300 hover:scale-110 active:scale-95"
-                  >
-                    <svg
-                      className="shrink-0 size-5 transition-transform duration-300 hover:rotate-12"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="m21 21-4.3-4.3" />
-                    </svg>
-                  </button>
-                </div>
+                {/* Removed the search button */}
               </div>
             </div>
             {/* End Search Section */}
@@ -196,6 +176,7 @@ const OrderHero: React.FC = () => {
             getImageUrl={getImageUrl}
             searching={searching}
             query={query}
+            hasSearched={hasSearched}
           />
         </div>
       </div>

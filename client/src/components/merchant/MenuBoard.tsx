@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import merchantService from "../../services/MerchantService";
 import AddMenuItem from "./AddMenuItemCard";
 import EditMenuItem from "./EditMenuItemCard";
+import RestaurantSelector, { type RestaurantOption } from "./ReactSelector";
 
 interface MenuItem {
   id: number;
@@ -42,6 +43,11 @@ const MenuBoard = ({
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<
     number | null
   >(null);
+
+  const restaurantOptions: RestaurantOption[] = restaurants.map((r) => ({
+    value: r.id,
+    label: r.name,
+  }));
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -241,24 +247,11 @@ const MenuBoard = ({
             </svg>
           </div>
 
-          <select
-            id="restaurant-select"
-            aria-label="Select restaurant"
-            value={selectedRestaurantId ?? ""}
-            onChange={(e) => setSelectedRestaurantId(Number(e.target.value))}
-            className="block w-full pl-11 pr-10 py-2 rounded-full bg-violet-500 text-white font-medium shadow-md border border-transparent hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all appearance-none"
-          >
-            <option value="" disabled>
-              {restaurants.length === 0
-                ? "No restaurants available"
-                : "Select a restaurant"}
-            </option>
-            {restaurants.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+          <RestaurantSelector
+            options={restaurantOptions}
+            value={selectedRestaurantId}
+            onChange={setSelectedRestaurantId}
+          />
 
           {/* custom caret */}
           <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -400,7 +393,7 @@ const MenuBoard = ({
                         </td>
                         <td className="px-6 py-4 w-1/6">
                           <span className="text-sm font-semibold text-gray-800 dark:text-neutral-200">
-                            $
+                            ₹
                             {typeof item.price === "number"
                               ? item.price.toFixed(2)
                               : parseFloat(item.price || 0).toFixed(2)}

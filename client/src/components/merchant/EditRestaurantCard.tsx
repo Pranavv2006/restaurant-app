@@ -52,6 +52,14 @@ const EditRestaurantCard = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const getImageUrl = (imageUrl?: string) => {
+    if (!imageUrl) return "/Images/restaurant-placeholder.png";
+    if (imageUrl.startsWith("http")) return imageUrl;
+    // Remove leading slash if present
+    const cleanUrl = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
+    return `http://localhost:3000/${cleanUrl}`;
+  };
+
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setFormData((prev) => ({
@@ -298,9 +306,13 @@ const EditRestaurantCard = ({
                     ) : formData.imageUrl ? (
                       <div className="text-center">
                         <img
-                          src={formData.imageUrl}
+                          src={getImageUrl(formData.imageUrl)}
                           alt="Restaurant"
                           className="mx-auto h-12 w-12 rounded-lg object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "/Images/restaurant-placeholder.png";
+                          }}
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           Current Image

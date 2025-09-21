@@ -6,6 +6,7 @@ interface SearchBoardProps {
   getImageUrl: (url?: string) => string;
   searching: boolean;
   query: string;
+  hasSearched: boolean;
 }
 
 const SearchBoard: React.FC<SearchBoardProps> = ({
@@ -22,7 +23,7 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
           : "opacity-0 translate-y-10"
       }`}
     >
-      {searching && (
+      {searching && query.trim() && (
         <div className="text-center text-gray-500 dark:text-gray-400">
           Searching...
         </div>
