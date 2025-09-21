@@ -5,6 +5,7 @@ const fs = require("fs");
 
 const loginRegisterRoutes = require("./routes/loginRegisterRoutes");
 const merchantRoutes = require("./routes/merchantRoutes");
+const customerRoutes = require("./routes/customerRoutes");
 const { authenticate } = require("./middlewares/authenticate");
 const prisma = require("./models/prismaClient");
 const rateLimit = require("express-rate-limit");
@@ -121,6 +122,7 @@ const jwtGuard = (req, res, next) => {
 
 app.use("/Restaurant", limiter, jwtGuard, loginRegisterRoutes);
 app.use("/Restaurant/Merchant", authenticate, merchantRoutes);
+app.use("/Restaurant/Customer", authenticate, customerRoutes);
 
 app.get("/", async (req, res) => {
   const result = await prisma.$queryRaw`SELECT current_database()`;

@@ -1,0 +1,198 @@
+import React, { useState, useEffect } from "react";
+import { searchRestaurants } from "../../services/CustomerService";
+import SearchBoard from "./SearchBoard";
+
+const OrderHero: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setHasSearched(false);
+      return;
+    }
+    setHasSearched(true);
+    setSearching(true);
+    const timeout = setTimeout(async () => {
+      const res = await searchRestaurants({ query });
+      setSearching(false);
+      if (res.success) {
+        setResults(res.data ?? []);
+      } else {
+        setResults([]);
+        console.log(res.message);
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  const getImageUrl = (imageUrl?: string) => {
+    if (!imageUrl) return "/Images/restaurant-placeholder.png";
+    if (imageUrl.startsWith("http")) return imageUrl;
+    return `http://localhost:3000/${
+      imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl
+    }`;
+  };
+
+  return (
+    <div className="relative overflow-hidden">
+      <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-24">
+        <div className="text-center">
+          {/* Animated main heading */}
+          <h1
+            className={`text-4xl sm:text-6xl font-bold text-gray-800 dark:text-neutral-200 transition-all duration-1000 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            From Restaurant to Home
+          </h1>
+
+          {/* Animated subheading with bounce */}
+          <h2
+            className={`text-3xl mt-3 text-gray-800 dark:text-neutral-200 transition-all duration-1000 delay-300 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0 animate-pulse"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            Fucking-Fast
+          </h2>
+
+          {/* Animated search form */}
+          <div
+            className={`mt-7 sm:mt-12 mx-auto max-w-xl relative transition-all duration-1000 delay-500 ease-out ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <div>
+              <div
+                className={`relative z-10 flex gap-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-100 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-gray-900/20 transition-all duration-300 ${
+                  searchFocused
+                    ? "scale-105 shadow-xl shadow-violet-100 border-violet-300"
+                    : "hover:scale-102 hover:shadow-xl"
+                }`}
+              >
+                <div className="w-full">
+                  <label
+                    htmlFor="restaurant-search"
+                    className="block text-sm text-gray-700 font-medium dark:text-white"
+                  >
+                    <span className="sr-only">Search dishes</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="restaurant-search"
+                    id="restaurant-search"
+                    className="py-2.5 px-4 block w-full border-transparent rounded-lg focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-transparent dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600 transition-all duration-300"
+                    placeholder="Search for dishes, cuisines..."
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                {/* Removed the search button */}
+              </div>
+            </div>
+            {/* End Search Section */}
+
+            {/* Animated Decorative SVGs */}
+            <div
+              className={`hidden md:block absolute top-0 end-0 -translate-y-12 translate-x-20 transition-all duration-1000 delay-700 ${
+                isVisible ? "opacity-100 rotate-0" : "opacity-0 rotate-12"
+              }`}
+            >
+              <svg
+                className="w-16 h-auto text-yellow-500 animate-bounce"
+                width="121"
+                height="135"
+                viewBox="0 0 121 135"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 16.4754C11.7688 27.4499 21.2452 57.3224 5 89.0164"
+                  stroke="currentColor"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M33.6761 112.104C44.6984 98.1239 74.2618 57.6776 83.4821 5"
+                  stroke="currentColor"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M50.5525 130C68.2064 127.495 110.731 117.541 116 78.0874"
+                  stroke="currentColor"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            <div
+              className={`hidden md:block absolute bottom-0 start-0 translate-y-10 -translate-x-32 transition-all duration-1000 delay-900 ${
+                isVisible ? "opacity-100 -rotate-3" : "opacity-0 rotate-6"
+              }`}
+            >
+              <svg
+                className="w-40 h-auto text-green-500 hover:scale-110 transition-transform duration-500"
+                width="347"
+                height="188"
+                viewBox="0 0 347 188"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 82.4591C54.7956 92.8751 30.9771 162.782 68.2065 181.385C112.642 203.59 127.943 78.57 122.161 25.5053C120.504 2.2376 93.4028 -8.11128 89.7468 25.5053C85.8633 61.2125 130.186 199.678 180.982 146.248L214.898 107.02C224.322 95.4118 242.9 79.2851 258.6 107.02C274.299 134.754 299.315 125.589 309.861 117.539L343 93.4426"
+                  stroke="currentColor"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  className="animate-pulse"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Use SearchBoard here */}
+          <SearchBoard
+            results={results}
+            getImageUrl={getImageUrl}
+            searching={searching}
+            query={query}
+            hasSearched={hasSearched}
+          />
+        </div>
+      </div>
+
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+        <div className="absolute top-40 right-20 w-3 h-3 bg-green-400 rounded-full animate-pulse opacity-60"></div>
+        <div className="absolute bottom-32 left-1/4 w-1 h-1 bg-violet-400 rounded-full animate-bounce opacity-50"></div>
+        <div
+          className="absolute top-1/3 right-1/3 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-40"
+          style={{ animationDelay: "1s" }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+export default OrderHero;

@@ -7,7 +7,9 @@ interface FormData {
   location: string;
   phone: string;
   cuisine: string;
-  imageFile?: File; // Add image file field
+  imageFile?: File;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface CreateRestaurantProps {
@@ -22,6 +24,8 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
     phone: "",
     cuisine: "",
     imageFile: undefined, // Initialize image file
+    latitude: undefined,
+    longitude: undefined,
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [merchantId, setMerchantId] = useState<number | null>(null);
@@ -134,6 +138,8 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
             setForm((prev) => ({
               ...prev,
               location: place.formatted_address as string,
+              latitude: place.geometry?.location?.lat(),
+              longitude: place.geometry?.location?.lng(),
             }));
           }
         });
@@ -225,6 +231,12 @@ const CreateRestaurant = ({ onClose, onSuccess }: CreateRestaurantProps) => {
       formData.append("cuisine", form.cuisine.trim());
       if (form.imageFile) {
         formData.append("image", form.imageFile); // Append image file
+      }
+      if (form.latitude !== undefined) {
+        formData.append("latitude", form.latitude.toString());
+      }
+      if (form.longitude !== undefined) {
+        formData.append("longitude", form.longitude.toString());
       }
 
       console.log("Creating restaurant with data:", formData);

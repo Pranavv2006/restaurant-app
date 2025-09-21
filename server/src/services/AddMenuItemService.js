@@ -5,7 +5,8 @@ const addMenuItem = async (
   name,
   description,
   price,
-  imageUrl
+  imageUrl,
+  category
 ) => {
   try {
     console.log("💾 Adding menu item with params:", {
@@ -14,6 +15,7 @@ const addMenuItem = async (
       description,
       price,
       imageUrl,
+      category,
     });
 
     if (
@@ -21,7 +23,8 @@ const addMenuItem = async (
       !name ||
       !description ||
       price === undefined ||
-      price === null
+      price === null ||
+      !category
     ) {
       return {
         success: false,
@@ -57,6 +60,7 @@ const addMenuItem = async (
         description: description,
         price: price,
         imageUrl: imageUrl,
+        category: category,
       },
     });
 

@@ -3,9 +3,9 @@ const prisma = require("../models/prismaClient");
 const getMerchantProfile = async (merchantId) => {
   try {
     const merchant = await prisma.user.findUnique({
-      where: { id: parseInt(merchantId, 10) }, // Convert merchantId to an integer
+      where: { id: parseInt(merchantId, 10) },
       include: {
-        restaurants: true, // Include related restaurants
+        restaurants: true,
       },
     });
 

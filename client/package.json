@@ -26,6 +26,7 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.8.0",
     "react-scroll": "^1.9.3",
+    "react-select": "^5.10.2",
     "summernote": "^0.9.1"
   },
   "devDependencies": {
@@ -34,6 +35,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "@types/react-router-dom": "^5.3.3",
+    "@types/react-select": "^5.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.32.0",

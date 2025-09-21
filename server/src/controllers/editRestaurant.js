@@ -2,13 +2,29 @@ const { EditRestaurantService } = require("../services/EditRestaurantService");
 
 const editRestaurantController = async (req, res) => {
   try {
-    const { restaurantId, name, location, phone, cuisine } = req.body;
+    const {
+      restaurantId,
+      name,
+      location,
+      phone,
+      cuisine,
+      latitude,
+      longitude,
+    } = req.body;
     let imageUrl = req.body.imageUrl;
     if (req.file) {
       imageUrl = "uploads/restaurants/" + req.file.filename;
     }
 
-    const updateData = { name, location, phone, cuisine, imageUrl };
+    const updateData = {
+      name,
+      location,
+      phone,
+      cuisine,
+      imageUrl,
+      latitude: latitude !== undefined ? Number(latitude) : undefined,
+      longitude: longitude !== undefined ? Number(longitude) : undefined,
+    };
     const result = await EditRestaurantService(restaurantId, updateData);
 
     if (result.success) {

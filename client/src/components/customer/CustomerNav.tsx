@@ -1,3 +1,5 @@
+import { NavLink } from "react-router-dom";
+
 const CustomerNav = () => {
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800">
@@ -61,9 +63,9 @@ const CustomerNav = () => {
           {/* Example Button */}
           <button
             type="button"
-            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-violet-800 dark:border-violet-700 dark:text-white dark:hover:bg-violet-700 dark:focus:bg-violet-700"
           >
-            Button
+            Logout
           </button>
         </div>
 
@@ -74,31 +76,32 @@ const CustomerNav = () => {
           aria-labelledby="hs-navbar-alignment-collapse"
         >
           <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5">
-            <a
-              className="font-medium text-blue-500 focus:outline-hidden"
-              href="#"
-              aria-current="page"
-            >
-              Landing
-            </a>
-            <a
-              className="font-medium text-gray-600 hover:text-gray-400 focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500"
-              href="#"
-            >
-              Account
-            </a>
-            <a
-              className="font-medium text-gray-600 hover:text-gray-400 focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500"
-              href="#"
-            >
-              Work
-            </a>
-            <a
-              className="font-medium text-gray-600 hover:text-gray-400 focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500"
-              href="#"
-            >
-              Blog
-            </a>
+            <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5">
+              <NavLink
+                to="/customer"
+                className={({ isActive }) =>
+                  `font-medium focus:outline-hidden ${
+                    isActive
+                      ? "text-violet-500"
+                      : "text-gray-600 hover:text-gray-400 focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500"
+                  }`
+                }
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/order"
+                className={({ isActive }) =>
+                  `font-medium focus:outline-hidden ${
+                    isActive
+                      ? "text-violet-500"
+                      : "text-gray-600 hover:text-gray-400 focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500"
+                  }`
+                }
+              >
+                Order
+              </NavLink>
+            </div>
           </div>
         </div>
       </nav>

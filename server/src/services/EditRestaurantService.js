@@ -11,7 +11,16 @@ const EditRestaurantService = async (restaurantId, updateData) => {
       };
     }
 
-    const allowedFields = ["name", "location", "phone", "cuisine", "imageUrl"];
+    // Add latitude and longitude to allowed fields
+    const allowedFields = [
+      "name",
+      "location",
+      "phone",
+      "cuisine",
+      "imageUrl",
+      "latitude",
+      "longitude",
+    ];
     const data = {};
     for (const key of allowedFields) {
       if (updateData[key] !== undefined) {
@@ -33,6 +42,8 @@ const EditRestaurantService = async (restaurantId, updateData) => {
         phone: updatedRestaurant.phone,
         cuisine: updatedRestaurant.cuisine,
         imageUrl: updatedRestaurant.imageUrl,
+        latitude: updatedRestaurant.latitude,
+        longitude: updatedRestaurant.longitude,
       },
     };
   } catch (error) {

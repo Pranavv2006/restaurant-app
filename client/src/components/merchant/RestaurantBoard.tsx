@@ -17,6 +17,19 @@ interface RestaurantBoardProps {
   onRestaurantUpdated: () => void;
 }
 
+function extractCityState(address?: string): string {
+  if (!address) return "-";
+  const parts = address.split(",").map((s) => s.trim());
+  if (parts.length >= 2) {
+    const state = parts[parts.length - 2];
+    const city = parts[parts.length - 3] || "";
+    return `${city ? city + ", " : ""}${state}`;
+  }
+  return address;
+}
+
+const ITEMS_PER_PAGE = 10;
+
 const RestaurantBoard = ({
   merchantId,
   onRestaurantUpdated,
@@ -31,8 +44,12 @@ const RestaurantBoard = ({
   );
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
 
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     fetchRestaurants();
+    setCurrentPage(1);
     // eslint-disable-next-line
   }, [merchantId]);
 
@@ -53,6 +70,26 @@ const RestaurantBoard = ({
     }
   };
 
+  // compute pagination
+  const totalRestaurants = restaurants.length;
+  const totalPages = Math.ceil(totalRestaurants / ITEMS_PER_PAGE);
+
+  const indexOfFirst = (currentPage - 1) * ITEMS_PER_PAGE;
+  const indexOfLast = indexOfFirst + ITEMS_PER_PAGE;
+  const currentRestaurants = restaurants.slice(indexOfFirst, indexOfLast);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   const handleAddRestaurant = () => {
     setShowAddModal(true);
   };
@@ -65,7 +102,6 @@ const RestaurantBoard = ({
     }
   };
 
-  // Remove restaurant
   const handleDeleteRestaurant = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this restaurant?")) {
       return;
@@ -78,6 +114,9 @@ const RestaurantBoard = ({
       if (result.success) {
         setRestaurants((prev) => prev.filter((r) => r.id !== id));
         setError("");
+        if (restaurants.length - 1 <= indexOfFirst && currentPage > 1) {
+          setCurrentPage((prev) => prev - 1);
+        }
       } else {
         setError(
           result.error || result.message || "Failed to delete restaurant"
@@ -90,15 +129,12 @@ const RestaurantBoard = ({
     }
   };
 
-  // Add restaurant (modal success callback)
   const handleRestaurantSuccess = () => {
     setShowAddModal(false);
     fetchRestaurants();
   };
 
-  // Edit restaurant (modal success callback)
   const handleEditSuccess = () => {
-    // Instead of updating local state, re-fetch from backend:
     fetchRestaurants();
     setShowEditModal(false);
     setEditingRestaurant(null);
@@ -106,15 +142,6 @@ const RestaurantBoard = ({
     if (onRestaurantUpdated) {
       onRestaurantUpdated();
     }
-  };
-
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-  };
-
-  const handleCloseEditModal = () => {
-    setShowEditModal(false);
-    setEditingRestaurant(null);
   };
 
   const getImageUrl = (imageUrl?: string) => {
@@ -184,7 +211,7 @@ const RestaurantBoard = ({
                 </div>
               </div>
 
-              {restaurants.length === 0 ? (
+              {currentRestaurants.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <p className="text-gray-500">
                     No restaurants found. Add your first restaurant!
@@ -227,7 +254,7 @@ const RestaurantBoard = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                    {restaurants.map((restaurant) => (
+                    {currentRestaurants.map((restaurant) => (
                       <tr key={restaurant.id}>
                         <td className="px-6 py-4 w-1/4">
                           <span className="block text-sm font-semibold text-gray-800 dark:text-neutral-200 break-words">
@@ -236,7 +263,7 @@ const RestaurantBoard = ({
                         </td>
                         <td className="px-6 py-4 w-1/4">
                           <span className="text-sm text-gray-800 dark:text-neutral-200 break-words">
-                            {restaurant.location || "-"}
+                            {extractCityState(restaurant.location) || "-"}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">
@@ -348,6 +375,23 @@ const RestaurantBoard = ({
                   </tbody>
                 </table>
               )}
+              {/* Pagination controls */}
+              <div className="mt-4 flex justify-center items-center gap-2">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 mb-3 bg-violet-600 rounded disabled:opacity-50 text-white"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 mb-3 bg-violet-600 rounded disabled:opacity-50 text-white"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -356,7 +400,7 @@ const RestaurantBoard = ({
       {/* Add Modal */}
       {showAddModal && (
         <CreateRestaurant
-          onClose={handleCloseAddModal}
+          onClose={() => setShowAddModal(false)}
           onSuccess={handleRestaurantSuccess}
         />
       )}
@@ -371,7 +415,7 @@ const RestaurantBoard = ({
             cuisine: editingRestaurant.cuisine ?? "",
             imageUrl: editingRestaurant.imageUrl,
           }}
-          onClose={handleCloseEditModal}
+          onClose={() => setShowEditModal(false)}
           onSuccess={handleEditSuccess}
         />
       )}
