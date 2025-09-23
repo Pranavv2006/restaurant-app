@@ -68,7 +68,7 @@ const OrderHero: React.FC = () => {
                 : "opacity-0 translate-y-8"
             }`}
           >
-            Fucking-Fast
+            Faster than Fast
           </h2>
 
           {/* Animated search form */}
