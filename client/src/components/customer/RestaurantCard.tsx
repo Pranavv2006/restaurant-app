@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // <-- Add this import
 
 interface RestaurantCardProps {
   id: number;
@@ -11,16 +12,29 @@ interface RestaurantCardProps {
 }
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({
+  id,
   name,
   location,
   cuisine,
   imageUrl,
   index = 0,
 }) => {
+  const navigate = useNavigate(); // <-- Initialize navigate
+
+  const handleClick = () => {
+    navigate(`/customer/RestaurantPage`); // <-- Navigate to restaurant page
+  };
+
   return (
     <div
-      className="bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden transform transition-all duration-700 ease-out opacity-0 animate-fadeInUp"
+      className="bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden transform transition-all duration-700 ease-out opacity-0 animate-fadeInUp cursor-pointer hover:shadow-lg"
       style={{ animationDelay: `${index * 150}ms` }}
+      onClick={handleClick} // <-- Add onClick handler
+      tabIndex={0}
+      role="button"
+      onKeyPress={(e) => {
+        if (e.key === "Enter" || e.key === " ") handleClick();
+      }}
     >
       <img
         src={imageUrl}

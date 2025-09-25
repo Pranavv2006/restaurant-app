@@ -4,6 +4,7 @@ import Merchant from "./pages/Merchant";
 import MerchantProfile from "./components/merchant/MerchantProfile";
 import Customer from "./pages/Customer";
 import CustomerOrder from "./pages/CustomerOrder";
+import RestaurantPage from "./pages/RestaurantPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/customer" element={<Customer />} />
         <Route path="/merchant/profile" element={<MerchantProfile />} />
         <Route path="/order" element={<CustomerOrder />} />
+        <Route path="/customer/RestaurantPage" element={<RestaurantPage />} />
       </Routes>
     </Router>
   );
