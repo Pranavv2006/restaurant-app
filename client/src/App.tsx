@@ -15,7 +15,10 @@ function App() {
         <Route path="/customer" element={<Customer />} />
         <Route path="/merchant/profile" element={<MerchantProfile />} />
         <Route path="/order" element={<CustomerOrder />} />
-        <Route path="/customer/RestaurantPage" element={<RestaurantPage />} />
+        <Route
+          path="/customer/RestaurantPage/:restaurantId"
+          element={<RestaurantPage />}
+        />
       </Routes>
     </Router>
   );

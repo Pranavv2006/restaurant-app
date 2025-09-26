@@ -22,7 +22,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
   const navigate = useNavigate(); // <-- Initialize navigate
 
   const handleClick = () => {
-    navigate(`/customer/RestaurantPage`); // <-- Navigate to restaurant page
+    navigate(`/customer/RestaurantPage/${id}`); // <-- Navigate to restaurant page
   };
 
   return (
