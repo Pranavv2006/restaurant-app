@@ -146,10 +146,12 @@ model Payment {
 }
 
 model Customer {
-  id      Int     @id @default(autoincrement())
-  userId  Int     @unique @map("user_id")
-  address String?
-  phone   String?
+  id        Int     @id @default(autoincrement())
+  userId    Int     @unique @map("user_id")
+  address   String?
+  phone     String?
+  latitude  Decimal? @db.Decimal(10, 8)
+  longitude Decimal? @db.Decimal(11, 8)
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   cart Cart?

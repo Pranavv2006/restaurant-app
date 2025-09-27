@@ -1,39 +1,40 @@
 import React from "react";
 
-// Define the props for the Toast component
-interface ToastProps {
+interface ProfileToastProps {
   message: string;
-  onUndo: () => void;
+  onCreateProfile: () => void;
   onClose: () => void;
 }
 
-const AddToCartToast: React.FC<ToastProps> = ({ message, onUndo, onClose }) => {
+const ProfileToast: React.FC<ProfileToastProps> = ({
+  message,
+  onCreateProfile,
+  onClose,
+}) => {
   return (
-    // Outer container, note the 'data-hs-toast' attribute is often used by
-    // utility libraries like Preline UI (which seems to be the source of the original classes)
     <div
       className="hs-removing:translate-x-5 hs-removing:opacity-0 transition duration-300 max-w-xs bg-white border border-gray-200 rounded-xl shadow-lg dark:bg-neutral-800 dark:border-neutral-700"
       role="alert"
       tabIndex={-1}
-      aria-labelledby="hs-toast-condensed-label"
+      aria-labelledby="hs-toast-profile-label"
     >
       <div className="flex p-4">
         {/* Message label */}
         <p
-          id="hs-toast-condensed-label"
+          id="hs-toast-profile-label"
           className="text-sm text-gray-700 dark:text-neutral-400"
         >
           {message}
         </p>
 
         <div className="ms-auto flex items-center space-x-3">
-          {/* Undo Button */}
+          {/* Create Profile Button */}
           <button
             type="button"
             className="text-violet-600 decoration-2 hover:underline font-medium text-sm focus:outline-hidden focus:underline dark:text-violet-500"
-            onClick={onUndo}
+            onClick={onCreateProfile}
           >
-            Undo
+            Create Profile
           </button>
 
           {/* Close Button */}
@@ -67,4 +68,4 @@ const AddToCartToast: React.FC<ToastProps> = ({ message, onUndo, onClose }) => {
   );
 };
 
-export default AddToCartToast;
+export default ProfileToast;

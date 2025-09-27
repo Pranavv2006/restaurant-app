@@ -5,9 +5,15 @@ import {
   FaArrowLeft,
   FaUtensils,
 } from "react-icons/fa";
-import { selectRestaurants, addToCart } from "../services/CustomerService";
+import {
+  selectRestaurants,
+  addToCart,
+  checkCustomerProfile,
+} from "../services/CustomerService";
 import { useParams } from "react-router-dom";
 import AddToCartToast from "../components/customer/AddToCartToast";
+import ProfileErrorToast from "../components/customer/ProfileErrorToast";
+import CreateCustomerProfileModal from "../components/customer/CreateCustomerProfileModal";
 
 interface MenuItem {
   id: number;
@@ -40,6 +46,12 @@ const RestaurantPage: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
+  // Customer profile state
+  const [hasProfile, setHasProfile] = useState(false);
+  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [showProfileError, setShowProfileError] = useState(false);
+  const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+
   // Animation entrance effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,6 +59,39 @@ const RestaurantPage: React.FC = () => {
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Check customer profile on component mount
+  useEffect(() => {
+    const checkProfile = async () => {
+      // Get userId from localStorage
+      const userStr = localStorage.getItem("user");
+      if (!userStr) {
+        console.error("No user found in localStorage");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      const userId = user.id;
+
+      const result = await checkCustomerProfile(userId);
+      if (result.success && result.hasProfile) {
+        setHasProfile(true);
+        setCustomerId(result.data.id);
+      } else {
+        setHasProfile(false);
+        setCustomerId(null);
+      }
+    };
+    checkProfile();
+  }, []);
+
+  // Handle profile creation success
+  const handleProfileSuccess = (data: any) => {
+    setHasProfile(true);
+    setCustomerId(data.id);
+    setShowCreateProfileModal(false);
+    setShowProfileError(false);
+  };
 
   // --- useMemo to group items by the string category ("Veg" or "Non-Veg") ---
   const groupedMenu = useMemo(() => {
@@ -61,8 +106,11 @@ const RestaurantPage: React.FC = () => {
   // Add to cart handler
   const handleAddToCart = async (item: MenuItem) => {
     try {
-      // Get customerId from localStorage or user context
-      const customerId = 1; // Replace with actual customer ID from authentication
+      // Check if customer profile exists
+      if (!hasProfile || !customerId) {
+        setShowProfileError(true);
+        return;
+      }
 
       const result = await addToCart({
         customerId,
@@ -105,7 +153,7 @@ const RestaurantPage: React.FC = () => {
       }`}
       style={{
         animationDelay: `${index * 150}ms`,
-        background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+        background: "linear-gradient(135deg, #ffffff 0%, #fafbff 100%)",
       }}
     >
       <div className="relative overflow-hidden">
@@ -153,7 +201,7 @@ const RestaurantPage: React.FC = () => {
                 setSelectedItem(item);
                 setShowModal(true);
               }}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-3 py-2 rounded-lg hover:from-violet-600 hover:to-violet-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <FaInfoCircle className="inline mr-1" /> Details
             </button>
@@ -293,13 +341,15 @@ const RestaurantPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="flex flex-col items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-violet-500 border-t-transparent mb-4"></div>
-          <p className="text-xl font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
-            Loading {restaurantName} Menu...
-          </p>
-          <FaUtensils className="text-4xl text-violet-400 animate-bounce mt-2" />
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+        <div className="container mx-auto px-4 py-8 text-center">
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-violet-500 border-t-transparent mb-4"></div>
+            <p className="text-xl font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+              Loading {restaurantName} Menu...
+            </p>
+            <FaUtensils className="text-4xl text-violet-500 animate-bounce mt-2" />
+          </div>
         </div>
       </div>
     );
@@ -307,16 +357,18 @@ const RestaurantPage: React.FC = () => {
 
   if (error && menu.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-8 animate-shake">
-          <p className="text-red-600 text-xl font-semibold">{error}</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+        <div className="container mx-auto px-4 py-8 text-center">
+          <div className="bg-white border border-violet-200 rounded-xl p-8 animate-shake shadow-sm">
+            <p className="text-violet-600 text-xl font-semibold">{error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div
@@ -326,11 +378,11 @@ const RestaurantPage: React.FC = () => {
         >
           <button
             onClick={() => window.history.back()}
-            className="text-gray-600 hover:text-violet-600 transition-all duration-300 transform hover:scale-110 hover:-translate-x-1 mr-4"
+            className="text-gray-700 hover:text-violet-600 transition-all duration-300 transform hover:scale-110 hover:-translate-x-1 mr-4"
           >
             <FaArrowLeft className="text-2xl" />
           </button>
-          <h1 className="text-4xl md:text-5xl font-bold text-center flex-1 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
+          <h1 className="text-4xl md:text-5xl font-bold text-center flex-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-800 bg-clip-text text-transparent animate-gradient">
             {restaurantName}
           </h1>
         </div>
@@ -360,7 +412,7 @@ const RestaurantPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
+              <p className="text-gray-600 text-lg">
                 No vegetarian items available at the moment.
               </p>
             </div>
@@ -392,7 +444,7 @@ const RestaurantPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
+              <p className="text-gray-600 text-lg">
                 No non-vegetarian items available at the moment.
               </p>
             </div>
@@ -402,8 +454,8 @@ const RestaurantPage: React.FC = () => {
         {/* Empty State */}
         {menu.length === 0 && !loading && !error && (
           <div className="text-center py-16 animate-fade-in">
-            <FaUtensils className="text-6xl text-gray-300 mx-auto mb-4" />
-            <p className="text-xl text-gray-500">
+            <FaUtensils className="text-6xl text-gray-400 mx-auto mb-4" />
+            <p className="text-xl text-gray-600">
               No menu items found for this restaurant.
             </p>
           </div>
@@ -425,6 +477,28 @@ const RestaurantPage: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Profile Error Toast */}
+        {showProfileError && (
+          <div className="fixed top-4 right-4 z-50 animate-slide-in">
+            <ProfileErrorToast
+              message="Please complete your customer profile before adding items to cart."
+              onCreateProfile={() => {
+                setShowProfileError(false);
+                setShowCreateProfileModal(true);
+              }}
+              onClose={() => setShowProfileError(false)}
+            />
+          </div>
+        )}
+
+        {/* Create Customer Profile Modal */}
+        <CreateCustomerProfileModal
+          isOpen={showCreateProfileModal}
+          onClose={() => setShowCreateProfileModal(false)}
+          userId={JSON.parse(localStorage.getItem("user") || "{}").id || 1}
+          onSuccess={handleProfileSuccess}
+        />
       </div>
 
       <style>{`

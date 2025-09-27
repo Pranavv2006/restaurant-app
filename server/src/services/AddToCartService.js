@@ -6,6 +6,19 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
       return { success: false, message: "customerId and menuId are required." };
     }
 
+    // Check if customer exists first
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+
+    if (!customer) {
+      return {
+        success: false,
+        message:
+          "Customer profile not found. Please complete your customer profile before adding items to cart.",
+      };
+    }
+
     // Find or create cart for customer
     let cart = await prisma.cart.findUnique({
       where: { customerId: customerId },
