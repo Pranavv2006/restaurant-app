@@ -4,12 +4,18 @@ import {
   FaInfoCircle,
   FaArrowLeft,
   FaUtensils,
+  FaPlus,
+  FaMinus,
 } from "react-icons/fa";
 import {
   selectRestaurants,
   addToCart,
   checkCustomerProfile,
+  retrieveCart,
+  updateCartItem,
+  removeCartItem,
 } from "../services/CustomerService";
+import CartModal from "../components/customer/CartModal";
 import { useParams } from "react-router-dom";
 import AddToCartToast from "../components/customer/AddToCartToast";
 import ProfileErrorToast from "../components/customer/ProfileErrorToast";
@@ -52,6 +58,11 @@ const RestaurantPage: React.FC = () => {
   const [showProfileError, setShowProfileError] = useState(false);
   const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
 
+  // Cart state
+  const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+
   // Animation entrance effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,12 +96,39 @@ const RestaurantPage: React.FC = () => {
     checkProfile();
   }, []);
 
+  // Fetch cart items when customer ID is available
+  useEffect(() => {
+    if (customerId) {
+      fetchCartItems();
+    }
+  }, [customerId]);
+
   // Handle profile creation success
   const handleProfileSuccess = (data: any) => {
     setHasProfile(true);
     setCustomerId(data.id);
     setShowCreateProfileModal(false);
     setShowProfileError(false);
+    fetchCartItems(data.id);
+  };
+
+  // Fetch cart items to populate counter
+  const fetchCartItems = async (customerIdToUse?: number) => {
+    const idToUse = customerIdToUse || customerId;
+    if (!idToUse) return;
+
+    try {
+      const result = await retrieveCart(idToUse);
+      if (result.success && result.data?.cartItems) {
+        const itemCounts: { [key: number]: number } = {};
+        result.data.cartItems.forEach((item: any) => {
+          itemCounts[item.menuId] = item.quantity;
+        });
+        setCartItems(itemCounts);
+      }
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
   };
 
   // --- useMemo to group items by the string category ("Veg" or "Non-Veg") ---
@@ -122,6 +160,12 @@ const RestaurantPage: React.FC = () => {
         setToastMessage(`${item.name} added to cart!`);
         setShowToast(true);
 
+        // Update local cart state
+        setCartItems((prev) => ({
+          ...prev,
+          [item.id]: (prev[item.id] || 0) + 1,
+        }));
+
         // Auto-hide toast after 3 seconds
         setTimeout(() => {
           setShowToast(false);
@@ -140,6 +184,49 @@ const RestaurantPage: React.FC = () => {
       setTimeout(() => {
         setShowToast(false);
       }, 3000);
+    }
+  };
+
+  // Handle quantity changes
+  const handleQuantityChange = async (item: MenuItem, newQuantity: number) => {
+    if (!customerId) return;
+
+    try {
+      // Find cart item ID from cart data
+      const cartResult = await retrieveCart(customerId);
+      if (cartResult.success && cartResult.data?.cartItems) {
+        const cartItem = cartResult.data.cartItems.find(
+          (ci: any) => ci.menuId === item.id
+        );
+
+        if (cartItem) {
+          if (newQuantity === 0) {
+            // Remove item
+            const removeResult = await removeCartItem(cartItem.id);
+            if (removeResult.success) {
+              setCartItems((prev) => {
+                const newItems = { ...prev };
+                delete newItems[item.id];
+                return newItems;
+              });
+            }
+          } else {
+            // Update quantity
+            const updateResult = await updateCartItem({
+              cartItemId: cartItem.id,
+              quantity: newQuantity,
+            });
+            if (updateResult.success) {
+              setCartItems((prev) => ({
+                ...prev,
+                [item.id]: newQuantity,
+              }));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating cart:", error);
     }
   };
 
@@ -205,15 +292,44 @@ const RestaurantPage: React.FC = () => {
             >
               <FaInfoCircle className="inline mr-1" /> Details
             </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart(item);
-              }}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <FaShoppingCart className="inline mr-1" /> Add
-            </button>
+
+            {cartItems[item.id] ? (
+              // Show counter when item is in cart
+              <div className="flex items-center bg-white border-2 border-green-500 rounded-lg">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item, cartItems[item.id] - 1);
+                  }}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors"
+                >
+                  <FaMinus className="text-xs" />
+                </button>
+                <span className="px-3 py-2 text-sm font-semibold text-green-600 bg-green-50">
+                  {cartItems[item.id]}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item, cartItems[item.id] + 1);
+                  }}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-r-lg transition-colors"
+                >
+                  <FaPlus className="text-xs" />
+                </button>
+              </div>
+            ) : (
+              // Show add button when item is not in cart
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(item);
+                }}
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <FaShoppingCart className="inline mr-1" /> Add
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -385,6 +501,25 @@ const RestaurantPage: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-center flex-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-800 bg-clip-text text-transparent animate-gradient">
             {restaurantName}
           </h1>
+
+          {/* Cart Button */}
+          {hasProfile && customerId && (
+            <button
+              onClick={() => setShowCartModal(true)}
+              className="relative text-gray-700 hover:text-violet-600 transition-all duration-300 transform hover:scale-110 ml-4"
+            >
+              <FaShoppingCart className="text-2xl" />
+              {Object.values(cartItems).reduce((sum, count) => sum + count, 0) >
+                0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {Object.values(cartItems).reduce(
+                    (sum, count) => sum + count,
+                    0
+                  )}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Vegetarian Section */}
@@ -499,6 +634,16 @@ const RestaurantPage: React.FC = () => {
           userId={JSON.parse(localStorage.getItem("user") || "{}").id || 1}
           onSuccess={handleProfileSuccess}
         />
+
+        {/* Cart Modal */}
+        {customerId && (
+          <CartModal
+            isOpen={showCartModal}
+            onClose={() => setShowCartModal(false)}
+            customerId={customerId}
+            onCartUpdate={fetchCartItems}
+          />
+        )}
       </div>
 
       <style>{`

@@ -6,7 +6,11 @@ import {
   FaMinus,
   FaTrash,
 } from "react-icons/fa";
-import { retrieveCart } from "../../services/CustomerService";
+import {
+  retrieveCart,
+  updateCartItem,
+  removeCartItem,
+} from "../../services/CustomerService";
 
 interface CartItem {
   id: number;
@@ -33,12 +37,14 @@ interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   customerId: number;
+  onCartUpdate?: () => void;
 }
 
 const CartModal: React.FC<CartModalProps> = ({
   isOpen,
   onClose,
   customerId,
+  onCartUpdate,
 }) => {
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,14 +84,66 @@ const CartModal: React.FC<CartModalProps> = ({
     }, 0);
   };
 
-  const handleUpdateQuantity = (itemId: number, newQuantity: number) => {
-    // TODO: Implement update quantity API call
-    console.log(`Update item ${itemId} to quantity ${newQuantity}`);
+  const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
+    if (newQuantity < 1) {
+      handleRemoveItem(itemId);
+      return;
+    }
+
+    try {
+      const result = await updateCartItem({
+        cartItemId: itemId,
+        quantity: newQuantity,
+      });
+
+      if (result.success) {
+        // Update local cart state
+        setCartData((prevData) => {
+          if (!prevData) return null;
+          return {
+            ...prevData,
+            cartItems: prevData.cartItems.map((item) =>
+              item.id === itemId ? { ...item, quantity: newQuantity } : item
+            ),
+          };
+        });
+
+        // Notify parent component to update cart counter
+        if (onCartUpdate) {
+          onCartUpdate();
+        }
+      } else {
+        setError(result.message || "Failed to update item quantity");
+      }
+    } catch (err) {
+      setError("An error occurred while updating item quantity");
+    }
   };
 
-  const handleRemoveItem = (itemId: number) => {
-    // TODO: Implement remove item API call
-    console.log(`Remove item ${itemId}`);
+  const handleRemoveItem = async (itemId: number) => {
+    try {
+      const result = await removeCartItem(itemId);
+
+      if (result.success) {
+        // Update local cart state
+        setCartData((prevData) => {
+          if (!prevData) return null;
+          return {
+            ...prevData,
+            cartItems: prevData.cartItems.filter((item) => item.id !== itemId),
+          };
+        });
+
+        // Notify parent component to update cart counter
+        if (onCartUpdate) {
+          onCartUpdate();
+        }
+      } else {
+        setError(result.message || "Failed to remove item");
+      }
+    } catch (err) {
+      setError("An error occurred while removing item");
+    }
   };
 
   if (!isOpen) return null;
