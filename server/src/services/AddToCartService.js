@@ -8,13 +8,13 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
 
     // Find or create cart for customer
     let cart = await prisma.cart.findUnique({
-      where: { customer_id: customerId },
+      where: { customerId: customerId },
       include: { cartItems: true },
     });
 
     if (!cart) {
       cart = await prisma.cart.create({
-        data: { customer_id: customerId },
+        data: { customerId: customerId },
       });
     }
 
@@ -28,7 +28,7 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
 
     // Check if item already in cart
     let cartItem = await prisma.cartItem.findFirst({
-      where: { cart_id: cart.id, menu_id: menuId },
+      where: { cartId: cart.id, menuId: menuId },
     });
 
     if (cartItem) {
@@ -37,17 +37,17 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
         where: { id: cartItem.id },
         data: {
           quantity: cartItem.quantity + quantity,
-          unit_price: menuItem.price,
+          unitPrice: menuItem.price,
         },
       });
     } else {
       // Add new item
       cartItem = await prisma.cartItem.create({
         data: {
-          cart_id: cart.id,
-          menu_id: menuId,
+          cartId: cart.id,
+          menuId: menuId,
           quantity,
-          unit_price: menuItem.price,
+          unitPrice: menuItem.price,
         },
       });
     }

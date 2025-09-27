@@ -8,7 +8,7 @@ const RetrieveCartService = async (customerId) => {
 
     // Find cart for customer
     const cart = await prisma.cart.findUnique({
-      where: { customer_id: customerId },
+      where: { customerId: customerId },
       include: {
         cartItems: {
           include: {

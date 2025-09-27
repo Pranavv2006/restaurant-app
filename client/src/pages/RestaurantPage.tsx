@@ -5,8 +5,9 @@ import {
   FaArrowLeft,
   FaUtensils,
 } from "react-icons/fa";
-import { selectRestaurants } from "../services/CustomerService";
+import { selectRestaurants, addToCart } from "../services/CustomerService";
 import { useParams } from "react-router-dom";
+import AddToCartToast from "../components/customer/AddToCartToast";
 
 interface MenuItem {
   id: number;
@@ -35,6 +36,10 @@ const RestaurantPage: React.FC = () => {
   const [restaurantName, setRestaurantName] =
     useState<string>("Restaurant Menu");
 
+  // Toast states
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
   // Animation entrance effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,6 +57,43 @@ const RestaurantPage: React.FC = () => {
 
     return { veg, nonVeg };
   }, [menu]);
+
+  // Add to cart handler
+  const handleAddToCart = async (item: MenuItem) => {
+    try {
+      // Get customerId from localStorage or user context
+      const customerId = 1; // Replace with actual customer ID from authentication
+
+      const result = await addToCart({
+        customerId,
+        menuId: item.id,
+        quantity: 1,
+      });
+
+      if (result.success) {
+        setToastMessage(`${item.name} added to cart!`);
+        setShowToast(true);
+
+        // Auto-hide toast after 3 seconds
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      } else {
+        setToastMessage(result.message || "Failed to add item to cart");
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      setToastMessage("An error occurred while adding to cart");
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    }
+  };
 
   const MenuCard: React.FC<{ item: MenuItem; index: number }> = ({
     item,
@@ -115,7 +157,13 @@ const RestaurantPage: React.FC = () => {
             >
               <FaInfoCircle className="inline mr-1" /> Details
             </button>
-            <button className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart(item);
+              }}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
               <FaShoppingCart className="inline mr-1" /> Add
             </button>
           </div>
@@ -363,6 +411,20 @@ const RestaurantPage: React.FC = () => {
 
         {/* Modal */}
         {showModal && selectedItem && <Modal item={selectedItem} />}
+
+        {/* Toast */}
+        {showToast && (
+          <div className="fixed top-4 right-4 z-50 animate-slide-in">
+            <AddToCartToast
+              message={toastMessage}
+              onUndo={() => {
+                // Handle undo logic here if needed
+                setShowToast(false);
+              }}
+              onClose={() => setShowToast(false)}
+            />
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -440,6 +502,21 @@ const RestaurantPage: React.FC = () => {
 
         .animate-shake {
           animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes slide-in {
+          0% {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
         }
 
         .line-clamp-2 {

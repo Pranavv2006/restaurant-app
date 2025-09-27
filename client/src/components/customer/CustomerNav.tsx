@@ -1,6 +1,11 @@
 import { NavLink } from "react-router-dom";
+import { FaShoppingCart } from "react-icons/fa";
+import { useState } from "react";
+import CartModal from "./CartModal";
 
 const CustomerNav = () => {
+  const [showCartModal, setShowCartModal] = useState(false);
+  const customerId = 1; // Replace with actual customer ID from authentication context
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800">
       <nav className="max-w-[85rem] w-full mx-auto px-4 flex flex-wrap basis-full items-center justify-between">
@@ -101,10 +106,23 @@ const CustomerNav = () => {
               >
                 Order
               </NavLink>
+              <button
+                onClick={() => setShowCartModal(true)}
+                className="font-medium focus:outline-hidden flex items-center gap-1 text-gray-600 hover:text-violet-500 focus:text-violet-500 dark:text-neutral-400 dark:hover:text-violet-400 dark:focus:text-violet-400 transition-colors duration-200"
+              >
+                <FaShoppingCart className="text-sm" /> Cart
+              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Cart Modal */}
+      <CartModal
+        isOpen={showCartModal}
+        onClose={() => setShowCartModal(false)}
+        customerId={customerId}
+      />
     </header>
   );
 };

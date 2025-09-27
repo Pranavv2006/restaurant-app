@@ -14,7 +14,6 @@ interface RestaurantDetails {
   menu: MenuItem[];
 }
 
-// Add to Cart
 export interface AddToCartData {
   customerId: number;
   menuId: number;
@@ -178,6 +177,87 @@ export const retrieveCart = async (
     return response.data;
   } catch (error: any) {
     console.error("Error calling retrieveCart API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+// Update Cart Item
+export interface UpdateCartItemData {
+  cartItemId: number;
+  quantity: number;
+}
+
+export interface UpdateCartItemResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+export const updateCartItem = async (
+  payload: UpdateCartItemData
+): Promise<UpdateCartItemResponse> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.put<UpdateCartItemResponse>(
+      "/Customer/cart/update",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling updateCartItem API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+// Remove Cart Item
+export interface RemoveCartItemResponse {
+  success: boolean;
+  message?: string;
+}
+
+export const removeCartItem = async (
+  cartItemId: number
+): Promise<RemoveCartItemResponse> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.delete<RemoveCartItemResponse>(
+      `/Customer/cart/remove/${cartItemId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling removeCartItem API:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",
