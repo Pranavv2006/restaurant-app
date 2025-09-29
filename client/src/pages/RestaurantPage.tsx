@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FaShoppingCart,
   FaInfoCircle,
@@ -61,14 +61,22 @@ const RestaurantPage: React.FC = () => {
   // Cart state
   const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
   const [showCartModal, setShowCartModal] = useState(false);
-  const [cartLoading, setCartLoading] = useState(false);
 
-  // Animation entrance effect
+  // Animation entrance effect - only play once per page visit
+  const hasAnimated = useRef(false);
+  const animatedCards = useRef(new Set<number>());
+
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!hasAnimated.current) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        hasAnimated.current = true;
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      // If animation has already played, set visible immediately
       setIsVisible(true);
-    }, 100);
-    return () => clearTimeout(timer);
+    }
   }, []);
 
   // Check customer profile on component mount
@@ -233,108 +241,120 @@ const RestaurantPage: React.FC = () => {
   const MenuCard: React.FC<{ item: MenuItem; index: number }> = ({
     item,
     index,
-  }) => (
-    <div
-      className={`bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:rotate-1 group cursor-pointer animate-bounce-in ${
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-      }`}
-      style={{
-        animationDelay: `${index * 150}ms`,
-        background: "linear-gradient(135deg, #ffffff 0%, #fafbff 100%)",
-      }}
-    >
-      <div className="relative overflow-hidden">
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src =
-              "https://images.unsplash.com/photo-1495195134817-aeb325a55b65";
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              item.category === "Vegetarian"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {item.category === "Vegetarian" ? "🟢 Veg" : "🔴 Non-Veg"}
-          </span>
-        </div>
-      </div>
+  }) => {
+    // Check if this card has already been animated
+    const cardKey = item.id;
+    const shouldAnimate = isVisible && !animatedCards.current.has(cardKey);
 
-      <div className="p-5">
-        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-violet-600 transition-colors duration-300">
-          {item.name}
-        </h3>
+    // Mark this card as animated when it becomes visible
+    if (isVisible && !animatedCards.current.has(cardKey)) {
+      animatedCards.current.add(cardKey);
+    }
 
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2 group-hover:text-gray-700 transition-colors duration-300">
-          {item.description}
-        </p>
-
-        <div className="flex justify-between items-center">
-          <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-            ${item.price.toFixed(2)}
-          </span>
-
-          <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-            <button
-              onClick={() => {
-                setSelectedItem(item);
-                setShowModal(true);
-              }}
-              className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-3 py-2 rounded-lg hover:from-violet-600 hover:to-violet-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+    return (
+      <div
+        className={`bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-lg hover:rotate-1 group cursor-pointer ${
+          shouldAnimate ? "animate-bounce-in" : ""
+        } ${
+          isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+        }`}
+        style={{
+          animationDelay: shouldAnimate ? `${index * 150}ms` : "0ms",
+        }}
+      >
+        <div className="relative overflow-hidden">
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                "https://images.unsplash.com/photo-1495195134817-aeb325a55b65";
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span
+              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                item.category === "Vegetarian"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
             >
-              <FaInfoCircle className="inline mr-1" /> Details
-            </button>
+              {item.category === "Vegetarian" ? "🟢 Veg" : "🔴 Non-Veg"}
+            </span>
+          </div>
+        </div>
 
-            {cartItems[item.id] ? (
-              // Show counter when item is in cart
-              <div className="flex items-center bg-white border-2 border-green-500 rounded-lg">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuantityChange(item, cartItems[item.id] - 1);
-                  }}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors"
-                >
-                  <FaMinus className="text-xs" />
-                </button>
-                <span className="px-3 py-2 text-sm font-semibold text-green-600 bg-green-50">
-                  {cartItems[item.id]}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuantityChange(item, cartItems[item.id] + 1);
-                  }}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-r-lg transition-colors"
-                >
-                  <FaPlus className="text-xs" />
-                </button>
-              </div>
-            ) : (
-              // Show add button when item is not in cart
+        <div className="p-5">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-violet-600 transition-colors duration-300">
+            {item.name}
+          </h3>
+
+          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors duration-300">
+            {item.description}
+          </p>
+
+          <div className="flex justify-between items-center">
+            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+              ${item.price.toFixed(2)}
+            </span>
+
+            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(item);
+                onClick={() => {
+                  setSelectedItem(item);
+                  setShowModal(true);
                 }}
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-3 py-2 rounded-lg hover:from-violet-600 hover:to-violet-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <FaShoppingCart className="inline mr-1" /> Add
+                <FaInfoCircle className="inline mr-1" /> Details
               </button>
-            )}
+
+              {cartItems[item.id] ? (
+                // Show counter when item is in cart
+                <div className="flex items-center bg-white dark:bg-neutral-700 border-2 border-green-500 rounded-lg">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuantityChange(item, cartItems[item.id] - 1);
+                    }}
+                    className="p-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors"
+                  >
+                    <FaMinus className="text-xs" />
+                  </button>
+                  <span className="px-3 py-2 text-sm font-semibold text-green-600 bg-green-50">
+                    {cartItems[item.id]}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuantityChange(item, cartItems[item.id] + 1);
+                    }}
+                    className="p-2 text-green-600 hover:bg-green-50 rounded-r-lg transition-colors"
+                  >
+                    <FaPlus className="text-xs" />
+                  </button>
+                </div>
+              ) : (
+                // Show add button when item is not in cart
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(item);
+                  }}
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <FaShoppingCart className="inline mr-1" /> Add
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const Modal: React.FC<{ item: MenuItem }> = ({ item }) => (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
@@ -494,9 +514,9 @@ const RestaurantPage: React.FC = () => {
         >
           <button
             onClick={() => window.history.back()}
-            className="text-gray-700 hover:text-violet-600 transition-all duration-300 transform hover:scale-110 hover:-translate-x-1 mr-4"
+            className="bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 hover:-translate-x-1 mr-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
           >
-            <FaArrowLeft className="text-2xl" />
+            <FaArrowLeft className="text-xl" />
           </button>
           <h1 className="text-4xl md:text-5xl font-bold text-center flex-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-800 bg-clip-text text-transparent animate-gradient">
             {restaurantName}
@@ -506,12 +526,12 @@ const RestaurantPage: React.FC = () => {
           {hasProfile && customerId && (
             <button
               onClick={() => setShowCartModal(true)}
-              className="relative text-gray-700 hover:text-violet-600 transition-all duration-300 transform hover:scale-110 ml-4"
+              className="relative bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 ml-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
             >
-              <FaShoppingCart className="text-2xl" />
+              <FaShoppingCart className="text-xl" />
               {Object.values(cartItems).reduce((sum, count) => sum + count, 0) >
                 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse shadow-md border-2 border-white dark:border-neutral-800">
                   {Object.values(cartItems).reduce(
                     (sum, count) => sum + count,
                     0
