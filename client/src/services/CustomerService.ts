@@ -1,5 +1,8 @@
 import axiosInstance from "../api/axiosConfig";
 
+// ==================== INTERFACES ====================
+
+// Basic Data Models
 interface MenuItem {
   id: number;
   name: string;
@@ -14,6 +17,7 @@ interface RestaurantDetails {
   menu: MenuItem[];
 }
 
+// Add to Cart
 export interface AddToCartData {
   customerId: number;
   menuId: number;
@@ -26,6 +30,7 @@ export interface AddToCartResponse {
   message?: string;
 }
 
+// Search Restaurants
 export interface SearchRestaurantData {
   query: string;
 }
@@ -37,6 +42,7 @@ export interface SearchRestaurantResponse {
   error?: string;
 }
 
+// Select Restaurant
 export interface SelectRestaurantData {
   restaurantId: number;
 }
@@ -54,6 +60,109 @@ export interface RetrieveCartResponse {
   data?: any;
   message?: string;
 }
+
+// Update Cart Item
+export interface UpdateCartItemData {
+  cartItemId: number;
+  quantity: number;
+}
+
+export interface UpdateCartItemResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+// Remove Cart Item
+export interface RemoveCartItemResponse {
+  success: boolean;
+  message?: string;
+}
+
+// Customer Profile
+export interface CheckCustomerProfileResponse {
+  success: boolean;
+  hasProfile: boolean;
+  data?: any;
+  message?: string;
+}
+
+export interface CreateCustomerProfileData {
+  userId: number;
+  address?: string;
+  phone?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface CreateCustomerProfileResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+export interface EditCustomerProfileData {
+  customerId: number;
+  address?: string;
+  phone?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface EditCustomerProfileResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+// Nearby Restaurants
+export interface NearbyRestaurantsData {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+}
+
+export interface NearbyRestaurant {
+  id: number;
+  name: string;
+  location: string;
+  cuisine: string;
+  imageUrl: string;
+  distanceKm: number;
+}
+
+export interface NearbyRestaurantsResponse {
+  success: boolean;
+  data?: NearbyRestaurant[];
+  message?: string;
+}
+
+// Place Order
+export interface PlaceOrderItem {
+  id: number;
+  quantity: number;
+}
+
+export interface PlaceOrderData {
+  customerId: number;
+  restaurantId: number;
+  items: PlaceOrderItem[];
+}
+
+export interface PlaceOrderResponse {
+  success: boolean;
+  data?: {
+    orderId: number;
+    total: number;
+    deliveryFee: number;
+    status: string;
+    orderDate: string;
+    address: string;
+  };
+  message?: string;
+}
+
+// ==================== API FUNCTIONS ====================
 
 export const addToCart = async (
   payload: AddToCartData
@@ -185,17 +294,6 @@ export const retrieveCart = async (
 };
 
 // Update Cart Item
-export interface UpdateCartItemData {
-  cartItemId: number;
-  quantity: number;
-}
-
-export interface UpdateCartItemResponse {
-  success: boolean;
-  data?: any;
-  message?: string;
-}
-
 export const updateCartItem = async (
   payload: UpdateCartItemData
 ): Promise<UpdateCartItemResponse> => {
@@ -227,12 +325,6 @@ export const updateCartItem = async (
     };
   }
 };
-
-// Remove Cart Item
-export interface RemoveCartItemResponse {
-  success: boolean;
-  message?: string;
-}
 
 export const removeCartItem = async (
   cartItemId: number
@@ -266,40 +358,6 @@ export const removeCartItem = async (
 };
 
 // Customer Profile Services
-export interface CheckCustomerProfileResponse {
-  success: boolean;
-  hasProfile: boolean;
-  data?: any;
-  message?: string;
-}
-
-export interface CreateCustomerProfileData {
-  userId: number;
-  address?: string;
-  phone?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface CreateCustomerProfileResponse {
-  success: boolean;
-  data?: any;
-  message?: string;
-}
-
-export interface EditCustomerProfileData {
-  customerId: number;
-  address?: string;
-  phone?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface EditCustomerProfileResponse {
-  success: boolean;
-  data?: any;
-  message?: string;
-}
 
 export const checkCustomerProfile = async (
   userId: number
@@ -391,6 +449,79 @@ export const editCustomerProfile = async (
     return response.data;
   } catch (error: any) {
     console.error("Error calling editCustomerProfile API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+export const getNearbyRestaurants = async (
+  payload: NearbyRestaurantsData
+): Promise<NearbyRestaurantsResponse> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const { latitude, longitude, radiusKm } = payload;
+    const queryParams = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    });
+
+    if (radiusKm) {
+      queryParams.append("radiusKm", radiusKm.toString());
+    }
+
+    const response = await axiosInstance.get<NearbyRestaurantsResponse>(
+      `/Customer/restaurants/nearby?${queryParams.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling getNearbyRestaurants API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+export const placeOrder = async (
+  payload: PlaceOrderData
+): Promise<PlaceOrderResponse> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.post<PlaceOrderResponse>(
+      "/Customer/orders",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling placeOrder API:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",

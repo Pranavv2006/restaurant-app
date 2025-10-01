@@ -226,7 +226,7 @@ const CartModal: React.FC<CartModalProps> = ({
                       {item.menu.description}
                     </p>
                     <p className="text-sm font-medium text-violet-600 dark:text-violet-400">
-                      ${parseFloat(item.unitPrice.toString()).toFixed(2)} each
+                      ₹{parseFloat(item.unitPrice.toString()).toFixed(2)} each
                     </p>
                   </div>
 
@@ -259,7 +259,7 @@ const CartModal: React.FC<CartModalProps> = ({
                   {/* Item Total */}
                   <div className="text-right">
                     <p className="font-bold text-gray-800 dark:text-white">
-                      $
+                      ₹
                       {(
                         item.quantity * parseFloat(item.unitPrice.toString())
                       ).toFixed(2)}
@@ -285,7 +285,7 @@ const CartModal: React.FC<CartModalProps> = ({
                 Total:
               </span>
               <span className="text-2xl font-bold text-violet-600 dark:text-violet-400">
-                ${calculateTotal().toFixed(2)}
+                ₹{calculateTotal().toFixed(2)}
               </span>
             </div>
             <div className="flex gap-3">

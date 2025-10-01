@@ -26,6 +26,48 @@ export interface WeeklyOrdersResponse {
   error?: string;
 }
 
+export interface PendingOrderItem {
+  itemId: number;
+  menuId: number;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
+export interface PendingOrderCustomer {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  defaultAddress?: string;
+}
+
+export interface PendingOrderRestaurant {
+  id: number;
+  name: string;
+  location: string;
+}
+
+export interface PendingOrder {
+  orderId: number;
+  status: string;
+  total: number;
+  deliveryFee: number;
+  orderDate: string;
+  deliveryAddress: string;
+  customer: PendingOrderCustomer;
+  restaurant: PendingOrderRestaurant;
+  items: PendingOrderItem[];
+}
+
+export interface PendingOrdersResponse {
+  success: boolean;
+  data?: PendingOrder[];
+  message?: string;
+  error?: string;
+}
+
 export interface EditMenuItemData {
   menuItemId: number;
   name?: string;
@@ -740,6 +782,56 @@ const merchantService = {
       return {
         success: false,
         message: "Failed to edit restaurant",
+        error: error?.message || "Network error",
+      };
+    }
+  },
+
+  // Get Pending Orders for Restaurant
+  getPendingOrders: async (
+    restaurantId: number
+  ): Promise<PendingOrdersResponse> => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        return {
+          success: false,
+          message: "Authentication token not found. Please login again.",
+          error: "No authentication token",
+        };
+      }
+
+      const response = await axiosInstance.get<PendingOrdersResponse>(
+        `/Merchant/restaurants/${restaurantId}/pending-orders`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error("getPendingOrders error:", error);
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        return {
+          success: false,
+          message: "Authentication expired. Please login again.",
+          error: "Authentication expired",
+        };
+      }
+
+      if (error?.response?.data) {
+        return error.response.data as PendingOrdersResponse;
+      }
+
+      return {
+        success: false,
+        message: "Failed to retrieve pending orders",
         error: error?.message || "Network error",
       };
     }

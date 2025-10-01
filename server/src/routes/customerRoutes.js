@@ -10,6 +10,8 @@ const removeCartItem = require("../controllers/removeCartItem");
 const checkCustomerProfile = require("../controllers/checkCustomerProfile");
 const createCustomerProfile = require("../controllers/createCustomerProfile");
 const editCustomerProfile = require("../controllers/editCustomerProfile");
+const closeByRestaurants = require("../controllers/closeByRestaurants");
+const placeOrder = require("../controllers/placeOrder");
 
 router.use((req, res, next) => {
   console.log(`🍽️ Customer route: ${req.method} ${req.path}`);
@@ -30,5 +32,11 @@ router.delete("/cart/remove/:cartItemId", removeCartItem);
 router.get("/profile/check/:userId", checkCustomerProfile);
 router.post("/profile/create", createCustomerProfile);
 router.put("/profile/edit", editCustomerProfile);
+
+// Location-based restaurant search
+router.get("/restaurants/nearby", closeByRestaurants);
+
+// Order management
+router.post("/orders", placeOrder);
 
 module.exports = router;

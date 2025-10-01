@@ -242,11 +242,8 @@ const RestaurantPage: React.FC = () => {
     item,
     index,
   }) => {
-    // Check if this card has already been animated
     const cardKey = item.id;
     const shouldAnimate = isVisible && !animatedCards.current.has(cardKey);
-
-    // Mark this card as animated when it becomes visible
     if (isVisible && !animatedCards.current.has(cardKey)) {
       animatedCards.current.add(cardKey);
     }
@@ -298,7 +295,7 @@ const RestaurantPage: React.FC = () => {
 
           <div className="flex justify-between items-center">
             <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              ${item.price.toFixed(2)}
+              ₹{item.price.toFixed(2)}
             </span>
 
             <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
@@ -403,7 +400,7 @@ const RestaurantPage: React.FC = () => {
 
           <div className="flex justify-between items-center">
             <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              ${item.price.toFixed(2)}
+              ₹{item.price.toFixed(2)}
             </p>
             <button
               onClick={() => setShowModal(false)}
