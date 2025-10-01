@@ -15,6 +15,7 @@ const retrieveRestaurant = require("../controllers/retrieveRestaurant");
 const retrieveImage = require("../controllers/retrieveImage");
 const removeRestaurant = require("../controllers/removeRestaurant");
 const editRestaurant = require("../controllers/editRestaurant");
+const pendingOrdersForRestaurant = require("../controllers/pendingOrdersForRestaurant");
 
 // Import the middleware array
 const addMenuMiddleware = require("../middlewares/add-menu");
@@ -70,6 +71,12 @@ router.get("/image/:filename", retrieveImage.retrieveImageController);
 router.get(
   "/retrieve-restaurant/:merchantId",
   retrieveRestaurant.retrieveRestaurantController
+);
+
+// Order management for restaurants
+router.get(
+  "/restaurants/:restaurantId/pending-orders",
+  pendingOrdersForRestaurant
 );
 
 module.exports = router;
