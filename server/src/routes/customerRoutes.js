@@ -23,20 +23,32 @@ router.get(
   "/select-restaurant/:restaurantId",
   selectRestaurant.selectRestaurantController
 );
-router.post("/cart/add", addToCart);
-router.get("/cart/:customerId", retrieveCart);
-router.put("/cart/update", updateCartItem);
-router.delete("/cart/remove/:cartItemId", removeCartItem);
+router.post("/cart/add", addToCart.addToCartController);
+router.get("/cart/:customerId", retrieveCart.retrieveCartController);
+router.put("/cart/update", updateCartItem.updateCartItemController);
+router.delete(
+  "/cart/remove/:cartItemId",
+  removeCartItem.removeCartItemController
+);
 
 // Customer profile routes
-router.get("/profile/check/:userId", checkCustomerProfile);
-router.post("/profile/create", createCustomerProfile);
-router.put("/profile/edit", editCustomerProfile);
+router.get(
+  "/profile/check/:userId",
+  checkCustomerProfile.checkCustomerProfileController
+);
+router.post(
+  "/profile/create",
+  createCustomerProfile.createCustomerProfileController
+);
+router.put("/profile/edit", editCustomerProfile.editCustomerProfileController);
 
 // Location-based restaurant search
-router.get("/restaurants/nearby", closeByRestaurants);
+router.get(
+  "/restaurants/nearby",
+  closeByRestaurants.closeByRestaurantsController
+);
 
 // Order management
-router.post("/orders", placeOrder);
+router.post("/orders", placeOrder.placeOrderController);
 
 module.exports = router;

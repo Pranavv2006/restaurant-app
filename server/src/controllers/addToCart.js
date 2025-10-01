@@ -1,6 +1,6 @@
 const AddToCartService = require("../services/AddToCartService");
 
-const addToCart = async (req, res) => {
+const addToCartController = async (req, res) => {
   const { customerId, menuId, quantity } = req.body;
 
   const result = await AddToCartService({ customerId, menuId, quantity });
@@ -12,4 +12,4 @@ const addToCart = async (req, res) => {
   }
 };
 
-module.exports = addToCart;
+module.exports = { addToCartController };

@@ -1,6 +1,6 @@
 const RetrieveCartService = require("../services/RetrieveCartService");
 
-const retrieveCart = async (req, res) => {
+const retrieveCartController = async (req, res) => {
   const { customerId } = req.params;
 
   const result = await RetrieveCartService(Number(customerId));
@@ -12,4 +12,4 @@ const retrieveCart = async (req, res) => {
   }
 };
 
-module.exports = retrieveCart;
+module.exports = { retrieveCartController };

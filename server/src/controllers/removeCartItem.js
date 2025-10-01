@@ -1,6 +1,6 @@
 const RemoveCartItemService = require("../services/RemoveCartItemService");
 
-const removeCartItem = async (req, res) => {
+const removeCartItemController = async (req, res) => {
   const { cartItemId } = req.params;
 
   const result = await RemoveCartItemService(Number(cartItemId));
@@ -12,4 +12,4 @@ const removeCartItem = async (req, res) => {
   }
 };
 
-module.exports = removeCartItem;
+module.exports = { removeCartItemController };

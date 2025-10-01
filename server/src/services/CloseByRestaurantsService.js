@@ -117,4 +117,4 @@ const CloseByRestaurantsService = async ({
   }
 };
 
-module.exports = { GetNearbyRestaurantsService, calculateDistance };
+module.exports = { CloseByRestaurantsService, calculateDistance };

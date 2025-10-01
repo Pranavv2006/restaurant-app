@@ -1,8 +1,8 @@
 const {
-  GetNearbyRestaurantsService,
+  CloseByRestaurantsService,
 } = require("../services/CloseByRestaurantsService");
 
-const closeByRestaurants = async (req, res) => {
+const closeByRestaurantsController = async (req, res) => {
   const { latitude, longitude, radiusKm } = req.query;
 
   // Validate required parameters
@@ -40,7 +40,7 @@ const closeByRestaurants = async (req, res) => {
   }
 
   try {
-    const result = await GetNearbyRestaurantsService({
+    const result = await CloseByRestaurantsService({
       latitude: lat,
       longitude: lon,
       radiusKm: radius,
@@ -67,4 +67,4 @@ const closeByRestaurants = async (req, res) => {
   }
 };
 
-module.exports = closeByRestaurants;
+module.exports = { closeByRestaurantsController };

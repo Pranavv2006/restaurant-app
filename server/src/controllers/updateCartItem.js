@@ -1,6 +1,6 @@
 const UpdateCartItemService = require("../services/UpdateCartItemService");
 
-const updateCartItem = async (req, res) => {
+const updateCartItemController = async (req, res) => {
   const { cartItemId, quantity } = req.body;
 
   const result = await UpdateCartItemService({ cartItemId, quantity });
@@ -12,4 +12,4 @@ const updateCartItem = async (req, res) => {
   }
 };
 
-module.exports = updateCartItem;
+module.exports = { updateCartItemController };

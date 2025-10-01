@@ -1,6 +1,6 @@
 const CheckCustomerProfileService = require("../services/CheckCustomerProfileService");
 
-const checkCustomerProfile = async (req, res) => {
+const checkCustomerProfileController = async (req, res) => {
   const { userId } = req.params;
 
   const result = await CheckCustomerProfileService(Number(userId));
@@ -20,4 +20,4 @@ const checkCustomerProfile = async (req, res) => {
   }
 };
 
-module.exports = checkCustomerProfile;
+module.exports = { checkCustomerProfileController };

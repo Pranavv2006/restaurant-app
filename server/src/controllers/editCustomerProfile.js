@@ -1,6 +1,6 @@
 const EditCustomerProfileService = require("../services/EditCustomerProfileService");
 
-const editCustomerProfile = async (req, res) => {
+const editCustomerProfileController = async (req, res) => {
   const { customerId, address, phone, latitude, longitude } = req.body;
 
   const result = await EditCustomerProfileService({
@@ -18,4 +18,4 @@ const editCustomerProfile = async (req, res) => {
   }
 };
 
-module.exports = editCustomerProfile;
+module.exports = { editCustomerProfileController };

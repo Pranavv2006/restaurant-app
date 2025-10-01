@@ -1,6 +1,6 @@
 const CreateCustomerProfileService = require("../services/CreateCustomerProfileService");
 
-const createCustomerProfile = async (req, res) => {
+const createCustomerProfileController = async (req, res) => {
   const { userId, address, phone, latitude, longitude } = req.body;
 
   const result = await CreateCustomerProfileService({
@@ -18,4 +18,4 @@ const createCustomerProfile = async (req, res) => {
   }
 };
 
-module.exports = createCustomerProfile;
+module.exports = { createCustomerProfileController };
