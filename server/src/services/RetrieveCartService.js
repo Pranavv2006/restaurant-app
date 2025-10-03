@@ -29,4 +29,4 @@ const RetrieveCartService = async (customerId) => {
   }
 };
 
-module.exports = RetrieveCartService;
+module.exports = { RetrieveCartService };

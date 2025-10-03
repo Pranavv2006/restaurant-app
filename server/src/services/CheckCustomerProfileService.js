@@ -44,4 +44,4 @@ const CheckCustomerProfileService = async (userId) => {
   }
 };
 
-module.exports = CheckCustomerProfileService;
+module.exports = { CheckCustomerProfileService };

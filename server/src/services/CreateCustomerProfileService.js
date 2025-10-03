@@ -58,4 +58,4 @@ const CreateCustomerProfileService = async ({
   }
 };
 
-module.exports = CreateCustomerProfileService;
+module.exports = { CreateCustomerProfileService };

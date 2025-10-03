@@ -35,4 +35,4 @@ const UpdateCartItemService = async ({ cartItemId, quantity }) => {
   }
 };
 
-module.exports = UpdateCartItemService;
+module.exports = { UpdateCartItemService };

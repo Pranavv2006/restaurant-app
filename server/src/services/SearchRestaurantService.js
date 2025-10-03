@@ -1,9 +1,5 @@
 const prisma = require("../models/prismaClient");
 
-/**
- * @param {string} query - The search string
- * @returns {Promise<{success: boolean, data?: any[], message?: string}>}
- */
 const searchRestaurants = async (query) => {
   try {
     if (!query || !query.trim()) {

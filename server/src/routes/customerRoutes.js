@@ -12,12 +12,18 @@ const createCustomerProfile = require("../controllers/createCustomerProfile");
 const editCustomerProfile = require("../controllers/editCustomerProfile");
 const closeByRestaurants = require("../controllers/closeByRestaurants");
 const placeOrder = require("../controllers/placeOrder");
+const retrieveAddress = require("../controllers/retrieveCustomerAddress");
+const getCustomerOrders = require("../controllers/getCustomerOrders");
 
 router.use((req, res, next) => {
   console.log(`🍽️ Customer route: ${req.method} ${req.path}`);
   next();
 });
 
+router.get(
+  "/address/:customerId",
+  retrieveAddress.retrieveCustomerAddressController
+);
 router.get("/search-restaurants", searchRestaurant.searchRestaurantController);
 router.get(
   "/select-restaurant/:restaurantId",
@@ -50,5 +56,6 @@ router.get(
 
 // Order management
 router.post("/orders", placeOrder.placeOrderController);
+router.get("/orders/:userId", getCustomerOrders.getCustomerOrdersController);
 
 module.exports = router;

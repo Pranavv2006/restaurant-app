@@ -1,4 +1,4 @@
-const RemoveMenuItemService = require("../services/RemoveMenuItemService");
+const { RemoveMenuItemService } = require("../services/RemoveMenuItemService");
 
 const removeMenuController = async (req, res) => {
   try {

@@ -75,4 +75,4 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
   }
 };
 
-module.exports = AddToCartService;
+module.exports = { AddToCartService };

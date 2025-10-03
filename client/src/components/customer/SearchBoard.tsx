@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from "react";
 import RestaurantCard from "./RestaurantCard";
-import { getNearbyRestaurants } from "../../services/CustomerService"; // adjust path
+import {
+  getNearbyRestaurants,
+  retrieveCustomerAddress,
+  checkCustomerProfile,
+} from "../../services/CustomerService";
 import type { NearbyRestaurant } from "../../services/CustomerService";
+
+type CustomerAddress = {
+  latitude: number;
+  longitude: number;
+} | null;
 
 interface SearchBoardProps {
   results: any[];
@@ -21,40 +30,120 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
     NearbyRestaurant[]
   >([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const [customerAddress, setCustomerAddress] = useState<CustomerAddress>(null);
+
+  useEffect(() => {
+    const fetchAddress = async () => {
+      // First get the customer ID from the user profile
+      const userData = localStorage.getItem("user");
+      if (!userData) {
+        console.warn("No user data available");
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user.id;
+
+      if (!userId) {
+        console.warn("No user ID available");
+        return;
+      }
+
+      setLoadingAddress(true);
+      try {
+        // Get customer profile first to get customer ID
+        const profileResponse = await checkCustomerProfile(userId);
+
+        if (
+          !profileResponse.success ||
+          !profileResponse.hasProfile ||
+          !profileResponse.data
+        ) {
+          console.warn("Customer profile not found");
+          setCustomerAddress(null);
+          setLoadingAddress(false);
+          return;
+        }
+
+        const customerId = profileResponse.data.id;
+
+        // Now get the address using customer ID
+        const addressData = await retrieveCustomerAddress(customerId);
+
+        if (addressData && addressData.latitude && addressData.longitude) {
+          setCustomerAddress({
+            latitude: addressData.latitude,
+            longitude: addressData.longitude,
+          });
+          console.log("Customer Address retrieved successfully:", addressData);
+        } else {
+          setCustomerAddress(null);
+          console.warn(
+            "Could not retrieve customer address with coordinates. Using default location."
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch customer address:", error);
+        setCustomerAddress(null);
+      } finally {
+        setLoadingAddress(false);
+      }
+    };
+
+    fetchAddress();
+  }, []); // Run once on component mount
 
   useEffect(() => {
     const fetchNearbyRestaurants = async () => {
+      const latitude = customerAddress?.latitude || 28.6139;
+      const longitude = customerAddress?.longitude || 77.209;
+
       try {
         setLoadingNearby(true);
 
         const response = await getNearbyRestaurants({
-          latitude: 12.9716,
-          longitude: 77.5946,
-          radiusKm: 5,
+          latitude: latitude,
+          longitude: longitude,
+          radiusKm: 20,
         });
 
         if (response.success && response.data) {
           setNearbyRestaurants(response.data);
+          console.log(
+            `Found ${response.data.length} nearby restaurants using ${
+              customerAddress ? "customer location" : "default location"
+            }`
+          );
+        } else {
+          setNearbyRestaurants([]);
         }
       } catch (err) {
         console.error("Failed to fetch nearby restaurants", err);
+        setNearbyRestaurants([]);
       } finally {
         setLoadingNearby(false);
       }
     };
 
-    // 🔑 Trigger when typing field is empty
     if (!query.trim()) {
-      fetchNearbyRestaurants();
+      if (!loadingAddress) {
+        fetchNearbyRestaurants();
+      }
     } else {
-      setNearbyRestaurants([]); // clear nearby if user starts typing
+      setNearbyRestaurants([]);
     }
-  }, [query]);
+  }, [query, customerAddress, loadingAddress]);
 
   return (
     <div
       className={`mt-12 transition-all duration-700 ease-out transform ${
-        results.length > 0 || searching || query
+        results.length > 0 ||
+        searching ||
+        query ||
+        nearbyRestaurants.length > 0 ||
+        loadingNearby ||
+        loadingAddress
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-10"
       }`}
@@ -65,7 +154,6 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
         </div>
       )}
 
-      {/* Search Results */}
       {!searching && query.trim() && results.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-fadeInUp">
           {results.map((restaurant, idx) => (
@@ -82,12 +170,13 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
         </div>
       )}
 
-      {/* Nearby Restaurants (when typing field is empty) */}
       {!searching && !query.trim() && (
         <div>
-          {loadingNearby ? (
+          {loadingAddress || loadingNearby ? (
             <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-              Loading nearby restaurants...
+              {loadingAddress
+                ? "Finding your address..."
+                : "Loading nearby restaurants..."}
             </div>
           ) : nearbyRestaurants.length > 0 ? (
             <>
@@ -116,10 +205,9 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
         </div>
       )}
 
-      {/* No Results for Search */}
       {!searching && query.trim() && results.length === 0 && (
         <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-          No restaurants found.
+          No restaurants found for your search.
         </div>
       )}
     </div>

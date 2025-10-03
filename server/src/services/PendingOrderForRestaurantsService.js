@@ -1,10 +1,5 @@
 const prisma = require("../models/prismaClient");
 
-/**
- * @param {object} params - The parameters object.
- * @param {number} params.restaurantId - The ID of the restaurant to filter orders by.
- * @returns {object} { success: boolean, message: string, data: Order[] }
- */
 const PendingOrdersForRestaurantsService = async ({ restaurantId }) => {
   try {
     if (!restaurantId) {

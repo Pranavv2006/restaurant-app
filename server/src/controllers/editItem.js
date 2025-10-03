@@ -1,4 +1,4 @@
-const EditMenuItemService = require("../services/EditMenuItemService");
+const { EditMenuItemService } = require("../services/EditMenuItemService");
 
 const EditMenuItemController = async (req, res) => {
   try {

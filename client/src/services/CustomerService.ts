@@ -162,7 +162,38 @@ export interface PlaceOrderResponse {
   message?: string;
 }
 
-// ==================== API FUNCTIONS ====================
+export interface CustomerAddressResponse {
+  address: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+// Orders Data
+export interface OrdersData {
+  id: number;
+  total: number;
+  deliveryFee: number;
+  status: string;
+  orderDate: string;
+  address: string;
+  restaurant: {
+    id: number;
+    name: string;
+    address: string;
+  };
+  orderItems: {
+    id: number;
+    quantity: number;
+    price: number;
+    menu: {
+      id: number;
+      name: string;
+      description: string;
+      price: number;
+      imageUrl: string;
+    };
+  }[];
+}
 
 export const addToCart = async (
   payload: AddToCartData
@@ -357,8 +388,6 @@ export const removeCartItem = async (
   }
 };
 
-// Customer Profile Services
-
 export const checkCustomerProfile = async (
   userId: number
 ): Promise<CheckCustomerProfileResponse> => {
@@ -526,5 +555,70 @@ export const placeOrder = async (
       success: false,
       message: error.response?.data?.message || "Something went wrong",
     };
+  }
+};
+
+export const retrieveCustomerAddress = async (
+  customerId: number
+): Promise<CustomerAddressResponse | null> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.error("No authentication token found. Please login again.");
+      return null;
+    }
+
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: CustomerAddressResponse | null;
+      message?: string;
+    }>(`/Customer/address/${customerId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    } else {
+      console.warn("Customer address not found:", response.data.message);
+      return null;
+    }
+  } catch (error: any) {
+    console.error("Error retrieving customer address:", error);
+    return null;
+  }
+};
+
+// Get Customer Orders
+export const getCustomerOrders = async (
+  userId: number
+): Promise<OrdersData[]> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.error("No authentication token found. Please login again.");
+      return [];
+    }
+
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: OrdersData[];
+      message?: string;
+    }>(`/Customer/orders/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.data.success) {
+      return response.data.data;
+    } else {
+      console.warn("Failed to fetch orders:", response.data.message);
+      return [];
+    }
+  } catch (error: any) {
+    console.error("Error fetching customer orders:", error);
+    return [];
   }
 };
