@@ -1,10 +1,10 @@
-const MerchantProfileService = require("../services/MerchantProfileService");
+const { getMerchantProfile } = require("../services/MerchantProfileService");
 
 const merchantProfileController = async (req, res) => {
   try {
     const { merchantId } = req.params;
 
-    const result = await MerchantProfileService.getMerchantProfile(merchantId);
+    const result = await getMerchantProfile(merchantId);
 
     if (result.success) {
       // Ensure restaurants include the imageUrl field

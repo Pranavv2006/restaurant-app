@@ -1,13 +1,5 @@
 const prisma = require("../models/prismaClient");
 
-/**
- * Calculates the distance between two geographical points using the Haversine formula.
- * @param {number} lat1 - Latitude of point 1 (degrees).
- * @param {number} lon1 - Longitude of point 1 (degrees).
- * @param {number} lat2 - Latitude of point 2 (degrees).
- * @param {number} lon2 - Longitude of point 2 (degrees).
- * @returns {number} Distance in kilometers (km).
- */
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -23,11 +15,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return distance;
 };
 
-/**
- * Calculates the delivery fee based on distance. (Example Logic)
- * @param {number} distanceKm - Distance in kilometers.
- * @returns {number} The calculated delivery fee.
- */
 const calculateDeliveryFee = (distanceKm) => {
   const BASE_FEE = 5.0;
   const FEE_PER_KM = 2.5;

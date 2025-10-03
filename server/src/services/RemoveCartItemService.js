@@ -27,4 +27,4 @@ const RemoveCartItemService = async (cartItemId) => {
   }
 };
 
-module.exports = RemoveCartItemService;
+module.exports = { RemoveCartItemService };

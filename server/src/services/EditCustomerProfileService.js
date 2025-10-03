@@ -59,4 +59,4 @@ const EditCustomerProfileService = async ({
   }
 };
 
-module.exports = EditCustomerProfileService;
+module.exports = { EditCustomerProfileService };

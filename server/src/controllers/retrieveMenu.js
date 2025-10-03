@@ -1,4 +1,6 @@
-const RetrieveMenuService = require("../services/retrieveMerchantMenuService");
+const {
+  retrieveMerchantMenu,
+} = require("../services/retrieveMerchantMenuService");
 
 const retrieveMenuController = async (req, res) => {
   try {
@@ -13,7 +15,7 @@ const retrieveMenuController = async (req, res) => {
       });
     }
 
-    const result = await RetrieveMenuService.retrieveMerchantMenu(restaurantId);
+    const result = await retrieveMerchantMenu(restaurantId);
 
     if (result.success) {
       res.status(200).json(result);

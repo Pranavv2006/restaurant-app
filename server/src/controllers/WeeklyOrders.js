@@ -1,4 +1,4 @@
-const WeeklyOrdersService = require("../services/WeeklyOrdersService");
+const { WeeklyOrdersService } = require("../services/WeeklyOrdersService");
 
 const WeeklyOrdersController = async (req, res) => {
   try {

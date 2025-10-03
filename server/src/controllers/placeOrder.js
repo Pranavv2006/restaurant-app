@@ -1,6 +1,6 @@
 const { PlaceOrderService } = require("../services/PlaceOrderService");
 
-const placeOrder = async (req, res) => {
+const placeOrderController = async (req, res) => {
   const { customerId, restaurantId, items } = req.body;
 
   // Validate required parameters
@@ -103,4 +103,4 @@ const placeOrder = async (req, res) => {
   }
 };
 
-module.exports = placeOrder;
+module.exports = { placeOrderController };

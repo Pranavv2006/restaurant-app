@@ -12,31 +12,50 @@ const createCustomerProfile = require("../controllers/createCustomerProfile");
 const editCustomerProfile = require("../controllers/editCustomerProfile");
 const closeByRestaurants = require("../controllers/closeByRestaurants");
 const placeOrder = require("../controllers/placeOrder");
+const retrieveAddress = require("../controllers/retrieveCustomerAddress");
+const getCustomerOrders = require("../controllers/getCustomerOrders");
 
 router.use((req, res, next) => {
   console.log(`🍽️ Customer route: ${req.method} ${req.path}`);
   next();
 });
 
+router.get(
+  "/address/:customerId",
+  retrieveAddress.retrieveCustomerAddressController
+);
 router.get("/search-restaurants", searchRestaurant.searchRestaurantController);
 router.get(
   "/select-restaurant/:restaurantId",
   selectRestaurant.selectRestaurantController
 );
-router.post("/cart/add", addToCart);
-router.get("/cart/:customerId", retrieveCart);
-router.put("/cart/update", updateCartItem);
-router.delete("/cart/remove/:cartItemId", removeCartItem);
+router.post("/cart/add", addToCart.addToCartController);
+router.get("/cart/:customerId", retrieveCart.retrieveCartController);
+router.put("/cart/update", updateCartItem.updateCartItemController);
+router.delete(
+  "/cart/remove/:cartItemId",
+  removeCartItem.removeCartItemController
+);
 
 // Customer profile routes
-router.get("/profile/check/:userId", checkCustomerProfile);
-router.post("/profile/create", createCustomerProfile);
-router.put("/profile/edit", editCustomerProfile);
+router.get(
+  "/profile/check/:userId",
+  checkCustomerProfile.checkCustomerProfileController
+);
+router.post(
+  "/profile/create",
+  createCustomerProfile.createCustomerProfileController
+);
+router.put("/profile/edit", editCustomerProfile.editCustomerProfileController);
 
 // Location-based restaurant search
-router.get("/restaurants/nearby", closeByRestaurants);
+router.get(
+  "/restaurants/nearby",
+  closeByRestaurants.closeByRestaurantsController
+);
 
 // Order management
-router.post("/orders", placeOrder);
+router.post("/orders", placeOrder.placeOrderController);
+router.get("/orders/:userId", getCustomerOrders.getCustomerOrdersController);
 
 module.exports = router;

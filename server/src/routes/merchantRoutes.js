@@ -76,7 +76,7 @@ router.get(
 // Order management for restaurants
 router.get(
   "/restaurants/:restaurantId/pending-orders",
-  pendingOrdersForRestaurant
+  pendingOrdersForRestaurant.pendingOrdersForRestaurantController
 );
 
 module.exports = router;

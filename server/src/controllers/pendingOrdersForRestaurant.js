@@ -2,7 +2,7 @@ const {
   PendingOrdersForRestaurantsService,
 } = require("../services/PendingOrderForRestaurantsService");
 
-const pendingOrdersForRestaurant = async (req, res) => {
+const pendingOrdersForRestaurantController = async (req, res) => {
   const { restaurantId } = req.params;
 
   // Validate required parameter
@@ -52,4 +52,4 @@ const pendingOrdersForRestaurant = async (req, res) => {
   }
 };
 
-module.exports = pendingOrdersForRestaurant;
+module.exports = { pendingOrdersForRestaurantController };
