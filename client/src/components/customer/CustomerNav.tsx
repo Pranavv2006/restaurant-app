@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CartModal from "./CartModal";
+import CheckoutModal from "./CheckoutModal";
 import QuickMenuDropdown from "./QuickMenuDropdown";
 import CreateCustomerProfileModal from "./CreateCustomerProfileModal";
 import EditCustomerProfileModal from "./EditCustomerProfileModal";
@@ -9,6 +10,8 @@ import { checkCustomerProfile } from "../../services/CustomerService";
 
 const CustomerNav = () => {
   const [showCartModal, setShowCartModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showProfileToast, setShowProfileToast] = useState(false);
@@ -54,6 +57,24 @@ const CustomerNav = () => {
     // Implement logout logic here
     localStorage.removeItem("authToken");
     window.location.href = "/";
+  };
+
+  const handleProceedToCheckout = (cartItems: any[]) => {
+    setCheckoutItems(cartItems);
+    setShowCartModal(false);
+    setShowCheckoutModal(true);
+  };
+
+  const handleOrderSuccess = (orderId: number) => {
+    console.log("Order placed successfully with ID:", orderId);
+    setShowCheckoutModal(false);
+    // You can navigate to order confirmation page or show success message here
+    // navigate(`/order-confirmation/${orderId}`);
+  };
+
+  const handleCartUpdate = () => {
+    // Refresh cart data if needed
+    console.log("Cart updated");
   };
   return (
     <>
@@ -168,6 +189,15 @@ const CustomerNav = () => {
           isOpen={showCartModal}
           onClose={() => setShowCartModal(false)}
           customerId={customerId}
+          onCartUpdate={handleCartUpdate}
+          onProceedToCheckout={handleProceedToCheckout}
+        />
+
+        <CheckoutModal
+          isOpen={showCheckoutModal}
+          onClose={() => setShowCheckoutModal(false)}
+          cartItems={checkoutItems}
+          onOrderSuccess={handleOrderSuccess}
         />
 
         <CreateCustomerProfileModal

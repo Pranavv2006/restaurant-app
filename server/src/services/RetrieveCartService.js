@@ -12,7 +12,11 @@ const RetrieveCartService = async (customerId) => {
       include: {
         cartItems: {
           include: {
-            menu: true,
+            menu: {
+              include: {
+                restaurant: true,
+              },
+            },
           },
         },
       },
