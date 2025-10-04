@@ -22,6 +22,10 @@ interface CartItem {
     description: string;
     imageUrl: string;
     category: string;
+    restaurant: {
+      id: number;
+      name: string;
+    };
   };
 }
 
@@ -38,6 +42,7 @@ interface CartModalProps {
   onClose: () => void;
   customerId: number;
   onCartUpdate?: () => void;
+  onProceedToCheckout?: (cartItems: any[]) => void;
 }
 
 const CartModal: React.FC<CartModalProps> = ({
@@ -45,6 +50,7 @@ const CartModal: React.FC<CartModalProps> = ({
   onClose,
   customerId,
   onCartUpdate,
+  onProceedToCheckout,
 }) => {
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -143,6 +149,34 @@ const CartModal: React.FC<CartModalProps> = ({
       }
     } catch (err) {
       setError("An error occurred while removing item");
+    }
+  };
+
+  const handleProceedToCheckout = () => {
+    if (
+      cartData?.cartItems &&
+      cartData.cartItems.length > 0 &&
+      onProceedToCheckout
+    ) {
+      // Transform cart items to match CheckoutModal expected format
+      const checkoutItems = cartData.cartItems.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        menu: {
+          id: item.menu.id,
+          name: item.menu.name,
+          description: item.menu.description,
+          price: parseFloat(item.unitPrice.toString()),
+          imageUrl: item.menu.imageUrl,
+        },
+        restaurant: {
+          id: item.menu.restaurant.id,
+          name: item.menu.restaurant.name,
+        },
+      }));
+
+      onProceedToCheckout(checkoutItems);
+      onClose(); // Close cart modal when proceeding to checkout
     }
   };
 
@@ -295,7 +329,10 @@ const CartModal: React.FC<CartModalProps> = ({
               >
                 Continue Shopping
               </button>
-              <button className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium">
+              <button
+                onClick={handleProceedToCheckout}
+                className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
                 Proceed to Checkout
               </button>
             </div>

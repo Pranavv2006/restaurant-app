@@ -162,6 +162,14 @@ export interface PlaceOrderResponse {
   message?: string;
 }
 
+// Multiple Orders Support
+export interface MultipleOrdersResult {
+  successfulOrders: number[];
+  failedOrders: { restaurantName: string; error: string }[];
+  totalSuccessful: number;
+  totalFailed: number;
+}
+
 export interface CustomerAddressResponse {
   address: string;
   latitude?: number;
@@ -550,12 +558,101 @@ export const placeOrder = async (
 
     return response.data;
   } catch (error: any) {
-    console.error("Error calling placeOrder API:", error);
+    console.error("❌ placeOrder API Error:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",
     };
   }
+};
+
+// Helper function to place multiple orders (one per restaurant)
+export const placeMultipleOrders = async (
+  customerId: number,
+  cartItems: Array<{
+    id: number;
+    quantity: number;
+    menu: { id: number; name: string; price: number };
+    restaurant: { id: number; name: string };
+  }>
+): Promise<MultipleOrdersResult> => {
+  // Group items by restaurant
+  const itemsByRestaurant = cartItems.reduce((acc, item) => {
+    const restaurantId = item.restaurant.id;
+    if (!acc[restaurantId]) {
+      acc[restaurantId] = {
+        restaurantId,
+        restaurantName: item.restaurant.name,
+        items: [],
+      };
+    }
+    acc[restaurantId].items.push({
+      id: item.menu.id,
+      quantity: item.quantity,
+    });
+    return acc;
+  }, {} as Record<number, { restaurantId: number; restaurantName: string; items: PlaceOrderItem[] }>);
+
+  // Create orders for each restaurant
+  const orderPromises = Object.values(itemsByRestaurant).map(
+    async (restaurantOrder) => {
+      const orderData: PlaceOrderData = {
+        customerId,
+        restaurantId: restaurantOrder.restaurantId,
+        items: restaurantOrder.items,
+      };
+
+      try {
+        const result = await placeOrder(orderData);
+        return {
+          restaurantName: restaurantOrder.restaurantName,
+          result,
+        };
+      } catch (error) {
+        return {
+          restaurantName: restaurantOrder.restaurantName,
+          result: {
+            success: false,
+            message: "Network error",
+          } as PlaceOrderResponse,
+        };
+      }
+    }
+  );
+
+  // Wait for all orders to complete
+  const results = await Promise.allSettled(orderPromises);
+
+  // Process results
+  const successfulOrders: number[] = [];
+  const failedOrders: { restaurantName: string; error: string }[] = [];
+
+  results.forEach((result) => {
+    if (result.status === "fulfilled") {
+      const { restaurantName, result: orderResult } = result.value;
+
+      if (orderResult.success && orderResult.data) {
+        successfulOrders.push(orderResult.data.orderId);
+      } else {
+        failedOrders.push({
+          restaurantName,
+          error: orderResult.message || "Unknown error",
+        });
+      }
+    } else {
+      failedOrders.push({
+        restaurantName: "Unknown",
+        error: "Network error",
+      });
+    }
+  });
+
+  return {
+    successfulOrders,
+    failedOrders,
+    totalSuccessful: successfulOrders.length,
+    totalFailed: failedOrders.length,
+  };
 };
 
 export const retrieveCustomerAddress = async (
