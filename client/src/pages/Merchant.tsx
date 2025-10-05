@@ -202,7 +202,7 @@ const Merchant = () => {
 
       case "menu":
         return (
-          <div className="min-h-screen bg-white ">
+          <div className="min-h-screen bg-white">
             {/* Full-size MenuBoard */}
             {merchantId !== null && (
               <MenuBoard
@@ -216,7 +216,7 @@ const Merchant = () => {
 
       case "restaurants":
         return (
-          <div className="min-h-screen bg-white -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-12 -mt-8">
+          <div className="min-h-screen bg-white">
             <RestaurantBoard
               merchantId={merchantId!}
               onRestaurantUpdated={checkRestaurant}
