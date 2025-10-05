@@ -20,6 +20,15 @@ interface SearchBoardProps {
   hasSearched: boolean;
 }
 
+const cuisines = [
+  { name: "Indian", emoji: "🍛" },
+  { name: "Italian", emoji: "🍕" },
+  { name: "Korean", emoji: "🍜" },
+  { name: "Chinese", emoji: "🥢" },
+  { name: "Mexican", emoji: "🌮" },
+  { name: "Japanese", emoji: "🍣" },
+];
+
 const SearchBoard: React.FC<SearchBoardProps> = ({
   results,
   getImageUrl,
@@ -32,6 +41,24 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [customerAddress, setCustomerAddress] = useState<CustomerAddress>(null);
+  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
+
+  const toggleCuisine = (cuisine: string) => {
+    setSelectedCuisines((prev) =>
+      prev.includes(cuisine)
+        ? prev.filter((c) => c !== cuisine)
+        : [...prev, cuisine]
+    );
+  };
+
+  const filterRestaurants = (restaurants: NearbyRestaurant[]) => {
+    if (selectedCuisines.length === 0) return restaurants;
+    return restaurants.filter((restaurant) =>
+      selectedCuisines.some((cuisine) =>
+        restaurant.cuisine.toLowerCase().includes(cuisine.toLowerCase())
+      )
+    );
+  };
 
   useEffect(() => {
     const fetchAddress = async () => {
@@ -135,6 +162,17 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
     }
   }, [query, customerAddress, loadingAddress]);
 
+  const filteredResults =
+    selectedCuisines.length > 0
+      ? results.filter((restaurant) =>
+          selectedCuisines.some((cuisine) =>
+            restaurant.cuisine.toLowerCase().includes(cuisine.toLowerCase())
+          )
+        )
+      : results;
+
+  const filteredNearbyRestaurants = filterRestaurants(nearbyRestaurants);
+
   return (
     <div
       className={`mt-12 transition-all duration-700 ease-out transform ${
@@ -148,25 +186,62 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
           : "opacity-0 translate-y-10"
       }`}
     >
+      {/* Cuisine Filter Bubbles */}
+      <div className="mb-6">
+        <div className="flex flex-wrap justify-center gap-3">
+          {cuisines.map((cuisine) => (
+            <button
+              key={cuisine.name}
+              onClick={() => toggleCuisine(cuisine.name)}
+              className={`px-4 py-2 rounded-full border-2 transition-all duration-300 transform hover:scale-105 ${
+                selectedCuisines.includes(cuisine.name)
+                  ? "bg-red-500 text-white border-red-500 shadow-lg"
+                  : "bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-600 hover:border-red-300 dark:hover:border-red-400"
+              }`}
+            >
+              <span className="mr-2">{cuisine.emoji}</span>
+              {cuisine.name}
+            </button>
+          ))}
+        </div>
+        {selectedCuisines.length > 0 && (
+          <div className="text-center mt-3">
+            <button
+              onClick={() => setSelectedCuisines([])}
+              className="text-sm text-red-500 hover:text-red-700 underline transition-colors duration-200"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+      </div>
       {searching && query.trim() && (
         <div className="text-center text-gray-500 dark:text-gray-400">
           Searching...
         </div>
       )}
 
-      {!searching && query.trim() && results.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-fadeInUp">
-          {results.map((restaurant, idx) => (
-            <RestaurantCard
-              key={restaurant.id}
-              id={restaurant.id}
-              name={restaurant.name}
-              location={restaurant.location}
-              cuisine={restaurant.cuisine}
-              imageUrl={getImageUrl(restaurant.imageUrl)}
-              index={idx}
-            />
-          ))}
+      {!searching && query.trim() && filteredResults.length > 0 && (
+        <div>
+          {selectedCuisines.length > 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Showing {filteredResults.length} restaurant(s) for:{" "}
+              {selectedCuisines.join(", ")}
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-fadeInUp">
+            {filteredResults.map((restaurant, idx) => (
+              <RestaurantCard
+                key={restaurant.id}
+                id={restaurant.id}
+                name={restaurant.name}
+                location={restaurant.location}
+                cuisine={restaurant.cuisine}
+                imageUrl={getImageUrl(restaurant.imageUrl)}
+                index={idx}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -178,13 +253,19 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
                 ? "Finding your address..."
                 : "Loading nearby restaurants..."}
             </div>
-          ) : nearbyRestaurants.length > 0 ? (
+          ) : filteredNearbyRestaurants.length > 0 ? (
             <>
               <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">
                 Nearby Restaurants
+                {selectedCuisines.length > 0 && (
+                  <span className="text-sm font-normal ml-2 text-gray-500 dark:text-gray-400">
+                    ({filteredNearbyRestaurants.length} of{" "}
+                    {nearbyRestaurants.length} restaurants)
+                  </span>
+                )}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-fadeInUp">
-                {nearbyRestaurants.map((restaurant, idx) => (
+                {filteredNearbyRestaurants.map((restaurant, idx) => (
                   <RestaurantCard
                     key={restaurant.id}
                     id={restaurant.id}
@@ -199,11 +280,22 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
             </>
           ) : (
             <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-              No nearby restaurants found.
+              {selectedCuisines.length > 0
+                ? `No ${selectedCuisines.join(", ")} restaurants found nearby.`
+                : "No nearby restaurants found."}
             </div>
           )}
         </div>
       )}
+
+      {!searching &&
+        query.trim() &&
+        filteredResults.length === 0 &&
+        results.length > 0 && (
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+            No restaurants found matching the selected cuisine filters.
+          </div>
+        )}
 
       {!searching && query.trim() && results.length === 0 && (
         <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
