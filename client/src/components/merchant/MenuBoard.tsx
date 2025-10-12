@@ -223,59 +223,11 @@ const MenuBoard = ({
 
   return (
     <div className="max-w-[85rem]">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:gap-x-6">
-        <label
-          htmlFor="restaurant-select"
-          className="block text-sm font-semibold text-gray-800 mb-2 sm:mb-0"
-        >
-          Select Restaurant:
-        </label>
-
-        <div className="relative w-full sm:w-80 mt-0 sm:mt-0">
-          {/* left plus icon */}
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-white opacity-90"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </div>
-
-          <RestaurantSelector
-            options={restaurantOptions}
-            value={selectedRestaurantId}
-            onChange={setSelectedRestaurantId}
-          />
-
-          {/* custom caret */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-            <svg
-              className="h-4 w-4 text-white opacity-85"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </div>
-        </div>
-      </div>
       <div className="flex flex-col">
         <div className="overflow-x-auto">
-          <div className="min-w-full inline-block align-middle">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
-              <div className="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
+          <div className="min-w-full align-middle">
+            <div className="bg-white border-gray-200 shadow-2xs overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+              <div className="px-6 py-4 grid md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200">
                     Menu Items
@@ -292,6 +244,11 @@ const MenuBoard = ({
                 </div>
                 <div>
                   <div className="inline-flex gap-x-2">
+                    <RestaurantSelector
+                      options={restaurantOptions}
+                      value={selectedRestaurantId}
+                      onChange={setSelectedRestaurantId}
+                    />
                     <button
                       onClick={handleAddMenuItem}
                       className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-violet-600 text-white hover:bg-violet-700 focus:outline-hidden focus:bg-violet-700 disabled:opacity-50 disabled:pointer-events-none"

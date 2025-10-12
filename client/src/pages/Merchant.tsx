@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarMerchant from "../components/merchant/NavbarMerchant";
 import RestaurantCreationToast from "../components/merchant/RestaurantCreationToast";
@@ -10,13 +10,29 @@ import MenuBoard from "../components/merchant/MenuBoard";
 import VisitorsCard from "../components/merchant/WeeklyOrders";
 import RestaurantBoard from "../components/merchant/RestaurantBoard";
 
+interface Restaurant {
+  id: number;
+  name: string;
+  location: string;
+  cuisine: string;
+  phone?: string; // optional if not always present
+  imageUrl?: string;
+  merchant?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+
 const Merchant = () => {
   const navigate = useNavigate();
   const [hasRestaurant, setHasRestaurant] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<number | null>(null);
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
-  const [restaurantData, setRestaurantData] = useState<any>(null);
+  const [restaurantData, setRestaurantData] = useState<Restaurant | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activePage, setActivePage] = useState<string>("dashboard"); // Add navigation state
 
@@ -38,7 +54,7 @@ const Merchant = () => {
     }
   }, []);
 
-  const checkRestaurant = async () => {
+  const checkRestaurant = useCallback(async () => {
     if (!merchantId) return;
 
     try {
@@ -75,13 +91,13 @@ const Merchant = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [merchantId]);
 
   useEffect(() => {
     if (merchantId) {
       checkRestaurant();
     }
-  }, [merchantId]);
+  }, [merchantId, checkRestaurant]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -108,7 +124,7 @@ const Merchant = () => {
     setShowCreateModal(false);
   };
 
-  const handleRestaurantCreated = (newRestaurantData?: any) => {
+  const handleRestaurantCreated = (newRestaurantData?: Restaurant) => {
     setShowCreateModal(false);
     setHasRestaurant(true);
 
@@ -202,7 +218,7 @@ const Merchant = () => {
 
       case "menu":
         return (
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen -m-6 -mx-8 -ml-12">
             {/* Full-size MenuBoard */}
             {merchantId !== null && (
               <MenuBoard
@@ -216,7 +232,7 @@ const Merchant = () => {
 
       case "restaurants":
         return (
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen -m-6 -mx-8 -ml-12">
             <RestaurantBoard
               merchantId={merchantId!}
               onRestaurantUpdated={checkRestaurant}

@@ -35,7 +35,7 @@ const MerchantSidebar = ({
         aria-label="Sidebar"
       >
         {/* Sidebar Header */}
-        <div className="p-4 bg-gray-800 text-white text-center">
+        <div className="p-4 bg-neutral-800 text-white text-center">
           <h1 className="text-2xl font-bold">DineDash</h1>
         </div>
 

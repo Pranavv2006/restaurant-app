@@ -1,8 +1,27 @@
 import axiosInstance from "../api/axiosConfig";
 
-// ==================== INTERFACES ====================
+export interface ProximitySearchData {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+}
 
-// Basic Data Models
+export interface ProximityRestaurant {
+  id: number;
+  name: string;
+  location?: string;
+  cuisine?: string;
+  imageUrl?: string;
+  latitude?: number;
+  longitude?: number;
+  distanceKm: number;
+}
+
+export interface ProximitySearchResponse {
+  success: boolean;
+  data?: ProximityRestaurant[];
+  message?: string;
+}
 interface MenuItem {
   id: number;
   name: string;
@@ -717,5 +736,47 @@ export const getCustomerOrders = async (
   } catch (error: any) {
     console.error("Error fetching customer orders:", error);
     return [];
+  }
+};
+
+export const getProximityRestaurants = async (
+  payload: ProximitySearchData
+): Promise<ProximitySearchResponse> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const { latitude, longitude, radiusKm } = payload;
+
+    const queryParams = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    });
+
+    if (radiusKm) {
+      queryParams.append("radiusKm", radiusKm.toString());
+    }
+    
+    const response = await axiosInstance.get<ProximitySearchResponse>(
+      `/Customer/proximity-search?${queryParams.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling getProximityRestaurants API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
   }
 };

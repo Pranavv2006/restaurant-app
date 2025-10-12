@@ -16,7 +16,7 @@ const Customer: React.FC = () => {
 
       {/* Menu Section */}
       <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white ml-8">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
           Popular Dishes
         </h2>
         <RecentMenu />

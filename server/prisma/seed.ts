@@ -618,7 +618,7 @@ async function main() {
   for (const r of restaurants) {
     await prisma.restaurant.create({
       data: {
-        merchantId: 22,
+        merchantId: 1,
         name: r.name,
         location: r.location,
         latitude: r.latitude,

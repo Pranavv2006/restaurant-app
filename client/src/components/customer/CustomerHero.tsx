@@ -5,7 +5,7 @@ const CustomerHero = () => {
         {/* Left Content */}
         <div>
           <h1 className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white">
-            Start your foodie journey with{" "}
+            Start your foodie <span className="pl-1">Journey</span> with{" "}
             <span className="text-violet-600">DineDash</span>
           </h1>
 

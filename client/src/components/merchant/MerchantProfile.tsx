@@ -90,7 +90,7 @@ const MerchantProfile = () => {
   return (
     <section className="relative pt-36 pb-24">
       <img
-        src="https://pagedone.io/asset/uploads/1705471739.png"
+        src="../../../public/images/profile_banner.png"
         alt="cover-image"
         className="w-full absolute top-0 left-0 z-0 h-60 object-cover"
       />
@@ -222,12 +222,6 @@ const MerchantProfile = () => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Location:</span>
-                <span className="font-medium text-gray-900">
-                  {restaurant.location}
-                </span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-gray-500">Phone:</span>
                 <span className="font-medium text-gray-900">
                   {restaurant.phone}
@@ -238,13 +232,6 @@ const MerchantProfile = () => {
                 <span className="font-medium text-gray-900">
                   {restaurant.cuisine}
                 </span>
-              </div>
-              <div className="flex justify-center mt-4">
-                <img
-                  src={`${import.meta.env.VITE_API_URL}${restaurant.imageUrl}`} // Use the correct API URL
-                  alt="Restaurant"
-                  className="rounded-lg shadow-md max-w-full h-auto"
-                />
               </div>
             </div>
           </div>

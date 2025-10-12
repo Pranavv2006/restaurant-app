@@ -40,10 +40,7 @@ const UserCreation = ({ isOpen, onClose, userName }: UserCreationProps) => {
                         </h3>
                         <p className="text-gray-500 dark:text-neutral-500">
                             {userName ? `Welcome ${userName}! ` : 'Welcome! '}
-                            You can now log into your{' '}
-                            <span className="inline-flex items-center gap-x-1.5 text-violet-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-violet-500">
-                                personal account.
-                            </span>
+                            You can now log into your account
                         </p>
 
                         <div className="mt-6 flex justify-center gap-x-4">

@@ -18,7 +18,7 @@ const colourStyles: StylesConfig<RestaurantOption, false> = {
   control: (styles) => ({
     ...styles,
     borderRadius: "9999px", // rounded-full
-    padding: "2px 6px",
+    padding: "3px 20px",
     backgroundColor: "white",
     borderColor: "#7c3aed", // violet-600
     boxShadow: "none",

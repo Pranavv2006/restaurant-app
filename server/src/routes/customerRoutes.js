@@ -14,11 +14,14 @@ const closeByRestaurants = require("../controllers/closeByRestaurants");
 const placeOrder = require("../controllers/placeOrder");
 const retrieveAddress = require("../controllers/retrieveCustomerAddress");
 const getCustomerOrders = require("../controllers/getCustomerOrders");
+const ProximitySearch = require("../controllers/ProximitySearch");
 
 router.use((req, res, next) => {
   console.log(`🍽️ Customer route: ${req.method} ${req.path}`);
   next();
 });
+
+router.get("/proximity-search", ProximitySearch.ProximitySearchController);
 
 router.get(
   "/address/:customerId",

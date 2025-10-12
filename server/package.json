@@ -10,12 +10,6 @@
     "dev": "nodemon src/index.js",
     "test-db": "node src/config/db.js",
     "db:seed": "prisma db seed",
-    "seed:korean": "tsx prisma/KoreanMenuSeed.ts",
-    "seed:italian": "tsx prisma/ItalianMenuSeed.ts",
-    "seed:indian": "tsx prisma/IndianMenuSeed.ts",
-    "seed:japanese": "tsx prisma/JapaneseMenuSeed.ts",
-    "seed:chinese": "tsx prisma/ChineseMenuSeed.ts",
-    "seed:mexican": "tsx prisma/MexicanMenuSeed.ts",
     "seed:all-menus": "npm run seed:indian && npm run seed:japanese && npm run seed:chinese && npm run seed:mexican && npm run seed:korean && npm run seed:italian"
   },
   "keywords": [],

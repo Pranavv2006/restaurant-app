@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "moduleResolution": "bundler"
+    "moduleResolution": "node"
   },
   "include": ["src/**/*", "prisma/**/*"],
   "exclude": ["node_modules", "dist"]

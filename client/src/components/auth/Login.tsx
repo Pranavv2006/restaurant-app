@@ -179,12 +179,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
                       >
                         Password *
                       </label>
-                      <a
-                        className="inline-flex items-center gap-x-1 text-sm text-violet-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-violet-500"
-                        href="#"
-                      >
-                        Forgot password?
-                      </a>
                     </div>
                     <input
                       type="password"
@@ -196,27 +190,6 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
                       placeholder="Enter your password"
                       disabled={loading}
                     />
-                  </div>
-
-                  {/* Remember Me */}
-                  <div className="flex items-center">
-                    <div className="flex">
-                      <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        className="shrink-0 mt-0.5 border-gray-200 rounded-sm text-violet-600 focus:ring-violet-500 dark:bg-neutral-800 dark:border-neutral-800 dark:checked:bg-violet-500 dark:checked:border-violet-500 dark:focus:ring-offset-gray-800"
-                        disabled={loading}
-                      />
-                    </div>
-                    <div className="ms-3">
-                      <label
-                        htmlFor="remember-me"
-                        className="text-sm dark:text-white"
-                      >
-                        Remember me
-                      </label>
-                    </div>
                   </div>
 
                   {/* Submit Button */}
