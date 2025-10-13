@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { searchRestaurants } from "../../services/CustomerService";
+import { searchRestaurants } from "../../services/HomeService";
 import SearchBoard from "./SearchBoard";
 
 const OrderHero: React.FC = () => {

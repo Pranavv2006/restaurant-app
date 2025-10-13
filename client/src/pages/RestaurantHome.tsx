@@ -3,7 +3,7 @@ import CustomerHero from "../components/customer/CustomerHero";
 import CustomerNav from "../components/customer/CustomerNav";
 import RecentMenu from "../components/customer/RecentMenu";
 
-const Customer: React.FC = () => {
+const RestaurantHome: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
       {/* Navbar */}
@@ -25,4 +25,4 @@ const Customer: React.FC = () => {
   );
 };
 
-export default Customer;
+export default RestaurantHome;

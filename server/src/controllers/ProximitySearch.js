@@ -1,4 +1,4 @@
-import { ProximitySearchService } from "../services/ProximitySearchService.js";
+const { ProximitySearchService } = require("../services/ProximitySearchService");
 
 const ProximitySearchController = async (req, res) => {
   try {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import RestaurantCard from "./RestaurantCard";
 import {
-  getNearbyRestaurants,
   retrieveCustomerAddress,
   checkCustomerProfile,
 } from "../../services/CustomerService";
-import type { NearbyRestaurant } from "../../services/CustomerService";
+import { getNearbyRestaurants } from "../../services/HomeService";
+import type { NearbyRestaurant } from "../../services/HomeService";
 
 type CustomerAddress = {
   latitude: number;

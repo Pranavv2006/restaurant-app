@@ -259,20 +259,17 @@ export const selectRestaurants = async (
 ): Promise<SelectRestaurantResponse> => {
   try {
     const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      return {
-        success: false,
-        error: "No authentication token found. Please login again",
-      };
+    const headers: any = {};
+    
+    // Add authorization header only if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const url = `/Customer/select-restaurant/${payload.restaurantId}`;
 
     const response = await axiosInstance.get<SelectRestaurantResponse>(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
     });
 
     return response.data;
@@ -291,20 +288,17 @@ export const searchRestaurants = async (
 ): Promise<SearchRestaurantResponse> => {
   try {
     const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      return {
-        success: false,
-        error: "No authentication token found. Please login again.",
-      };
+    const headers: any = {};
+    
+    // Add authorization header only if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const response = await axiosInstance.get<SearchRestaurantResponse>(
       "/Customer/search-restaurants",
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         params: { q: payload.query },
       }
     );
@@ -424,7 +418,7 @@ export const checkCustomerProfile = async (
       return {
         success: false,
         hasProfile: false,
-        message: "No authentication token found. Please login again.",
+        message: "Not authenticated - please login to access profile features.",
       };
     }
 
@@ -517,11 +511,11 @@ export const getNearbyRestaurants = async (
 ): Promise<NearbyRestaurantsResponse> => {
   try {
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
+    const headers: any = {};
+    
+    // Add authorization header only if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const { latitude, longitude, radiusKm } = payload;
@@ -537,9 +531,7 @@ export const getNearbyRestaurants = async (
     const response = await axiosInstance.get<NearbyRestaurantsResponse>(
       `/Customer/restaurants/nearby?${queryParams.toString()}`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       }
     );
 
@@ -680,7 +672,7 @@ export const retrieveCustomerAddress = async (
   try {
     const token = localStorage.getItem("authToken");
     if (!token) {
-      console.error("No authentication token found. Please login again.");
+      console.log("No authentication token - user not logged in. Address features unavailable.");
       return null;
     }
 
@@ -744,11 +736,11 @@ export const getProximityRestaurants = async (
 ): Promise<ProximitySearchResponse> => {
   try {
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
+    const headers: any = {};
+    
+    // Add authorization header only if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const { latitude, longitude, radiusKm } = payload;
@@ -765,9 +757,7 @@ export const getProximityRestaurants = async (
     const response = await axiosInstance.get<ProximitySearchResponse>(
       `/Customer/proximity-search?${queryParams.toString()}`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       }
     );
 

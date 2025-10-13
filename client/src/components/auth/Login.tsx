@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 interface LoginProps {
   onClose: () => void;
   onSwitchToRegister?: () => void;
+  onSuccess?: () => void;
 }
 
-const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
+const Login = ({ onClose, onSwitchToRegister, onSuccess }: LoginProps) => {
   const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
@@ -55,6 +56,11 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
           localStorage.setItem("user", JSON.stringify(userData));
         }
 
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+
         setTimeout(async () => {
           try {
             const user = response?.data?.user;
@@ -66,7 +72,7 @@ const Login = ({ onClose, onSwitchToRegister }: LoginProps) => {
               navigate("/merchant");
             }
             if (userRole === "Customer") {
-              navigate("/customer");
+              navigate("/");
             }
           } catch (error) {
             console.error("Post-login navigation error:", error);

@@ -6,6 +6,7 @@ const fs = require("fs");
 const loginRegisterRoutes = require("./routes/loginRegisterRoutes");
 const merchantRoutes = require("./routes/merchantRoutes");
 const customerRoutes = require("./routes/customerRoutes");
+const homeRoutes = require("./routes/freeRoutes");
 const { authenticate } = require("./middlewares/authenticate");
 const prisma = require("./models/prismaClient");
 const rateLimit = require("express-rate-limit");
@@ -113,13 +114,15 @@ const limiter = rateLimit({
 });
 
 const openPaths = ["/login", "/register"];
+
 const jwtGuard = (req, res, next) => {
   if (req.path.startsWith("/uploads") || openPaths.includes(req.path)) {
     return next();
   }
   return authenticate(req, res, next);
-};
+}
 
+app.use("/Restaurant/home", homeRoutes);
 app.use("/Restaurant", limiter, jwtGuard, loginRegisterRoutes);
 app.use("/Restaurant/Merchant", authenticate, merchantRoutes);
 app.use("/Restaurant/Customer", authenticate, customerRoutes);

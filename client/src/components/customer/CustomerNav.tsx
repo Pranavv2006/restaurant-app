@@ -6,32 +6,47 @@ import QuickMenuDropdown from "./QuickMenuDropdown";
 import CreateCustomerProfileModal from "./CreateCustomerProfileModal";
 import EditCustomerProfileModal from "./EditCustomerProfileModal";
 import ProfileToast from "./ProfileToast";
+import Login from "../auth/Login";
+import Register from "../auth/Register";
 import { checkCustomerProfile } from "../../services/CustomerService";
+import useAuth from "../../hooks/useAuth";
 
 const CustomerNav = () => {
+  const { isAuthenticated, user } = useAuth();
+  
   const [showCartModal, setShowCartModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showProfileToast, setShowProfileToast] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [customerData, setCustomerData] = useState<any>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [customerName, setCustomerName] = useState("User");
 
-  // Get userId from localStorage
+  // Get userId from auth state or localStorage
   const getUserId = () => {
+    if (user?.id) return user.id;
     const userStr = localStorage.getItem("user");
-    if (!userStr) return 1; // fallback
-    const user = JSON.parse(userStr);
-    return user.id || 1;
+    if (!userStr) return null;
+    const userData = JSON.parse(userStr);
+    return userData.id || null;
   };
 
   const userId = getUserId();
   const customerId = customerData?.id || 1;
 
-  // Check customer profile on component mount
+  // Check customer profile only if authenticated
   useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      setHasProfile(false);
+      setCustomerData(null);
+      setCustomerName("Guest");
+      return;
+    }
+
     const checkProfile = async () => {
       const result = await checkCustomerProfile(userId);
       if (result.success && result.hasProfile) {
@@ -45,7 +60,7 @@ const CustomerNav = () => {
       }
     };
     checkProfile();
-  }, [userId]);
+  }, [isAuthenticated, userId]);
 
   const handleProfileSuccess = (data: any) => {
     setHasProfile(true);
@@ -56,7 +71,9 @@ const CustomerNav = () => {
   const handleLogout = () => {
     // Implement logout logic here
     localStorage.removeItem("authToken");
-    window.location.href = "/";
+    localStorage.removeItem("user");
+    // Refresh the current page to update authentication state
+    window.location.reload();
   };
 
   const handleProceedToCheckout = (cartItems: any[]) => {
@@ -76,17 +93,47 @@ const CustomerNav = () => {
     // Refresh cart data if needed
     console.log("Cart updated");
   };
+
+  const handleLoginClick = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleRegisterClick = () => {
+    setShowRegisterModal(true);
+  };
+
+  const handleSwitchToRegister = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowRegisterModal(false);
+    setShowLoginModal(true);
+  };
+
+  const handleRegisterSuccess = (name: string) => {
+    console.log(`Registration successful for ${name}`);
+    setShowRegisterModal(false);
+    // Optionally show a success message or automatically open login modal
+  };
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // Refresh the page to update authentication state
+    window.location.reload();
+  };
   return (
     <>
       <header className="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800">
         <nav className="max-w-[85rem] w-full mx-auto px-4 flex flex-wrap basis-full items-center justify-between">
           {/* Brand */}
-          <a
-            className="sm:order-1 flex-none text-xl font-semibold dark:text-white focus:outline-hidden focus:opacity-80"
-            href="#"
+          <NavLink
+            to="/"
+            className="sm:order-1 flex-none text-xl font-semibold dark:text-white focus:outline-hidden focus:opacity-80 hover:opacity-80"
           >
             DineDash
-          </a>
+          </NavLink>
 
           {/* Right side buttons */}
           <div className="sm:order-3 flex items-center gap-x-2">
@@ -136,15 +183,36 @@ const CustomerNav = () => {
               <span className="sr-only">Toggle</span>
             </button>
 
-            {/* Quick Menu Dropdown */}
-            <QuickMenuDropdown
-              onCartClick={() => setShowCartModal(true)}
-              onProfileClick={() => setShowCreateProfileModal(true)}
-              onEditProfileClick={() => setShowEditProfileModal(true)}
-              onLogoutClick={handleLogout}
-              hasProfile={hasProfile}
-              customerName={customerName}
-            />
+            {/* Conditional rendering based on authentication */}
+            {isAuthenticated ? (
+              /* Quick Menu Dropdown for authenticated users */
+              <QuickMenuDropdown
+                onCartClick={() => setShowCartModal(true)}
+                onProfileClick={() => setShowCreateProfileModal(true)}
+                onEditProfileClick={() => setShowEditProfileModal(true)}
+                onLogoutClick={handleLogout}
+                hasProfile={hasProfile}
+                customerName={customerName}
+              />
+            ) : (
+              /* Login/Register buttons for unauthenticated users */
+              <div className="sm:order-3 flex items-center gap-x-2">
+                <button 
+                  type="button" 
+                  className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-violet-700 text-white shadow-2xs hover:bg-violet-400 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" 
+                  onClick={handleRegisterClick}
+                >
+                  Register
+                </button>
+                <button 
+                  type="button" 
+                  className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-violet-700 text-white shadow-2xs hover:bg-violet-400 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" 
+                  onClick={handleLoginClick}
+                >
+                  Login
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Navbar links */}
@@ -156,7 +224,7 @@ const CustomerNav = () => {
             <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5">
               <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5">
                 <NavLink
-                  to="/customer"
+                  to="/home"
                   className={({ isActive }) =>
                     `font-medium focus:outline-hidden ${
                       isActive
@@ -168,7 +236,7 @@ const CustomerNav = () => {
                   Home
                 </NavLink>
                 <NavLink
-                  to="/order"
+                  to="/"
                   className={({ isActive }) =>
                     `font-medium focus:outline-hidden ${
                       isActive
@@ -177,55 +245,77 @@ const CustomerNav = () => {
                     }`
                   }
                 >
-                  Order
+                  Browse Restaurants
                 </NavLink>
               </div>
             </div>
           </div>
         </nav>
 
-        {/* Modals and Toasts */}
-        <CartModal
-          isOpen={showCartModal}
-          onClose={() => setShowCartModal(false)}
-          customerId={customerId}
-          onCartUpdate={handleCartUpdate}
-          onProceedToCheckout={handleProceedToCheckout}
-        />
-
-        <CheckoutModal
-          isOpen={showCheckoutModal}
-          onClose={() => setShowCheckoutModal(false)}
-          cartItems={checkoutItems}
-          onOrderSuccess={handleOrderSuccess}
-        />
-
-        <CreateCustomerProfileModal
-          isOpen={showCreateProfileModal}
-          onClose={() => setShowCreateProfileModal(false)}
-          userId={userId}
-          onSuccess={handleProfileSuccess}
-        />
-
-        <EditCustomerProfileModal
-          isOpen={showEditProfileModal}
-          onClose={() => setShowEditProfileModal(false)}
-          customerData={customerData}
-          onSuccess={handleProfileSuccess}
-        />
-
-        {/* Profile Toast */}
-        {showProfileToast && (
-          <div className="fixed top-4 right-4 z-50 animate-slide-in">
-            <ProfileToast
-              message="Complete your profile to get started!"
-              onCreateProfile={() => {
-                setShowProfileToast(false);
-                setShowCreateProfileModal(true);
-              }}
-              onClose={() => setShowProfileToast(false)}
+        {/* Modals and Toasts - Only show for authenticated users */}
+        {isAuthenticated && (
+          <>
+            <CartModal
+              isOpen={showCartModal}
+              onClose={() => setShowCartModal(false)}
+              customerId={customerId}
+              onCartUpdate={handleCartUpdate}
+              onProceedToCheckout={handleProceedToCheckout}
             />
-          </div>
+
+            <CheckoutModal
+              isOpen={showCheckoutModal}
+              onClose={() => setShowCheckoutModal(false)}
+              cartItems={checkoutItems}
+              onOrderSuccess={handleOrderSuccess}
+            />
+
+            <CreateCustomerProfileModal
+              isOpen={showCreateProfileModal}
+              onClose={() => setShowCreateProfileModal(false)}
+              userId={userId}
+              onSuccess={handleProfileSuccess}
+            />
+
+            <EditCustomerProfileModal
+              isOpen={showEditProfileModal}
+              onClose={() => setShowEditProfileModal(false)}
+              customerData={customerData}
+              onSuccess={handleProfileSuccess}
+            />
+
+            {/* Profile Toast */}
+            {showProfileToast && (
+              <div className="fixed top-4 right-4 z-50 animate-slide-in">
+                <ProfileToast
+                  message="Complete your profile to get started!"
+                  onCreateProfile={() => {
+                    setShowProfileToast(false);
+                    setShowCreateProfileModal(true);
+                  }}
+                  onClose={() => setShowProfileToast(false)}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Login Modal - Show for both authenticated and unauthenticated users */}
+        {showLoginModal && (
+          <Login
+            onClose={() => setShowLoginModal(false)}
+            onSwitchToRegister={handleSwitchToRegister}
+            onSuccess={handleLoginSuccess}
+          />
+        )}
+
+        {/* Register Modal - Show for both authenticated and unauthenticated users */}
+        {showRegisterModal && (
+          <Register
+            onClose={() => setShowRegisterModal(false)}
+            onSwitchToLogin={handleSwitchToLogin}
+            onSuccess={handleRegisterSuccess}
+          />
         )}
       </header>
 
