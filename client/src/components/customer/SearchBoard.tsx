@@ -71,9 +71,18 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
 
       const user = JSON.parse(userData);
       const userId = user.id;
+      const userRole = user.roleType;
 
       if (!userId) {
         console.warn("No user ID available");
+        return;
+      }
+
+      // Only fetch customer data for actual customers, not merchants
+      if (userRole !== 'Customer') {
+        console.log("Skipping customer data fetch - user is not a customer");
+        setCustomerAddress(null);
+        setLoadingAddress(false);
         return;
       }
 

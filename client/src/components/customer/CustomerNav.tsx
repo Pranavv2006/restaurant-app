@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CartModal from "./CartModal";
 import CheckoutModal from "./CheckoutModal";
@@ -14,7 +14,6 @@ import useAuth from "../../hooks/useAuth";
 
 const CustomerNav = () => {
   const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
   
   const [showCartModal, setShowCartModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -40,14 +39,17 @@ const CustomerNav = () => {
   const userId = getUserId();
   const customerId = customerData?.id || 1;
 
-  // Check customer profile only if authenticated
+  // Check customer profile only if authenticated as Customer
   useEffect(() => {
-    if (!isAuthenticated || !userId) {
+    // Reset customer state for non-customers or unauthenticated users
+    if (!isAuthenticated || !userId || user?.roleType !== 'Customer') {
       setHasProfile(false);
       setCustomerData(null);
       setCustomerName("Guest");
       return;
     }
+
+    // Only proceed with profile check for authenticated customers
 
     const checkProfile = async () => {
       const result = await checkCustomerProfile(userId);
@@ -62,7 +64,7 @@ const CustomerNav = () => {
       }
     };
     checkProfile();
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, userId, user]);
 
   const handleProfileSuccess = (data: any) => {
     setHasProfile(true);
@@ -121,13 +123,20 @@ const CustomerNav = () => {
   };
 
   const handleLoginSuccess = (loginResponseData: any) => {
-    setShowLoginModal(false);
     const roleType = loginResponseData?.user?.roleType;
 
     if (roleType === 'Merchant') {
-        navigate("/merchant");
-    } else {
+        // Close modal and open merchant page in new tab
+        setShowLoginModal(false);
+        window.open("/merchant", "_blank");
+        // Keep auth data in localStorage for merchant tab to use
+    } else if (roleType === 'Customer') {
+        // Close modal and refresh page for customer
+        setShowLoginModal(false);
         window.location.reload();
+    } else {
+        // For any other role or undefined, just close modal
+        setShowLoginModal(false);
     }
   };
   return (
@@ -190,8 +199,8 @@ const CustomerNav = () => {
               <span className="sr-only">Toggle</span>
             </button>
 
-            {/* Conditional rendering based on authentication */}
-            {isAuthenticated ? (
+            {/* Conditional rendering based on authentication - only show for Customers */}
+            {isAuthenticated && user?.roleType === 'Customer' ? (
               /* Quick Menu Dropdown for authenticated users */
               <QuickMenuDropdown
                 onCartClick={() => setShowCartModal(true)}
@@ -259,8 +268,8 @@ const CustomerNav = () => {
           </div>
         </nav>
 
-        {/* Modals and Toasts - Only show for authenticated users */}
-        {isAuthenticated && (
+        {/* Modals and Toasts - Only show for authenticated customers */}
+        {isAuthenticated && user?.roleType === 'Customer' && (
           <>
             <CartModal
               isOpen={showCartModal}
