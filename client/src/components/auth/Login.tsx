@@ -4,8 +4,25 @@ import { useNavigate } from "react-router-dom";
 
 interface LoginProps {
   onClose: () => void;
-  onSwitchToRegister?: () => void;
-  onSuccess?: () => void;
+  onSwitchToRegister: () => void;
+  onSuccess: (data: LoginResponseData) => void; 
+}
+export interface LoginResponseData {
+    accessToken: string;
+    user: {
+        id: number;
+        email: string;
+        firstName: string;
+        lastName: string;
+        roleType: 'Customer' | 'Merchant' | 'SuperAdmin'; // <-- Critical piece
+    };
+}
+
+export interface AuthResult {
+  success: boolean;
+  message?: string;
+  welcomeMessage?: string;
+  data?: LoginResponseData;
 }
 
 const Login = ({ onClose, onSwitchToRegister, onSuccess }: LoginProps) => {
@@ -41,24 +58,26 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }: LoginProps) => {
 
       const isSuccess = response?.success === true;
       const backendMessage = response?.message || "Login failed";
+      const loginResponseData = response?.data;
 
       if (isSuccess) {
-        if (response?.data?.user) {
+        if (loginResponseData?.user) {
           const userData = {
-            id: response.data.user.id,
-            email: response.data.user.email,
-            firstName: response.data.user.firstName,
-            lastName: response.data.user.lastName,
-            roleType: response.data.user.roleType,
+            id: loginResponseData.user.id,
+            email: loginResponseData.user.email,
+            firstName: loginResponseData.user.firstName,
+            lastName: loginResponseData.user.lastName,
+            roleType: loginResponseData.user.roleType,
           };
 
           console.log("Storing user data:", userData);
           localStorage.setItem("user", JSON.stringify(userData));
+          localStorage.setItem("authToken", loginResponseData.accessToken); 
         }
 
         // Call success callback if provided
-        if (onSuccess) {
-          onSuccess();
+        if (onSuccess && loginResponseData) {
+          onSuccess(loginResponseData as LoginResponseData);
         }
 
         setTimeout(async () => {

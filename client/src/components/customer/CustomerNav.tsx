@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CartModal from "./CartModal";
 import CheckoutModal from "./CheckoutModal";
@@ -11,8 +11,10 @@ import Register from "../auth/Register";
 import { checkCustomerProfile } from "../../services/CustomerService";
 import useAuth from "../../hooks/useAuth";
 
+
 const CustomerNav = () => {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   
   const [showCartModal, setShowCartModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -118,10 +120,15 @@ const CustomerNav = () => {
     // Optionally show a success message or automatically open login modal
   };
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (loginResponseData: any) => {
     setShowLoginModal(false);
-    // Refresh the page to update authentication state
-    window.location.reload();
+    const roleType = loginResponseData?.user?.roleType;
+
+    if (roleType === 'Merchant') {
+        navigate("/merchant");
+    } else {
+        window.location.reload();
+    }
   };
   return (
     <>
