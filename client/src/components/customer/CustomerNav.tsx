@@ -27,7 +27,6 @@ const CustomerNav = () => {
   const [hasProfile, setHasProfile] = useState(false);
   const [customerName, setCustomerName] = useState("User");
 
-  // Get userId from auth state or localStorage
   const getUserId = () => {
     if (user?.id) return user.id;
     const userStr = localStorage.getItem("user");

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { searchRestaurants } from "../../services/HomeService";
 import SearchBoard from "./SearchBoard";
+import GooglePlacesAddressInput from "./GooglePlacesAddressInput";
 
 const OrderHero: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -9,29 +10,76 @@ const OrderHero: React.FC = () => {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState<number | undefined>(undefined);
+  const [longitude, setLongitude] = useState<number | undefined>(undefined);
+  
+  const loadDefaultRestaurants = useCallback(async () => {
+    setSearching(true);
+    const res = await searchRestaurants({}); 
 
-  // Debounce search
-  useEffect(() => {
-    if (!query.trim()) {
+    setSearching(false);
+    if (res.success) {
+      setResults(res.data ?? []);
+    } else {
       setResults([]);
-      setHasSearched(false);
+      console.log("Error loading default restaurants:", res.message);
+    }
+  }, []);
+  
+  useEffect(() => {
+  if (!hasSearched) {
+    loadDefaultRestaurants();
+  }
+}, [hasSearched, loadDefaultRestaurants]);
+
+  const handleAddressChange = (address: string, lat?: number, lng?: number) => {
+    setAddress(address);
+    setLatitude(lat);
+    setLongitude(lng);
+  };
+
+  useEffect(() => {
+    const isLocationSet = latitude !== undefined && longitude !== undefined;
+    const isQuerySet = query.trim().length > 0;
+    
+    if (!isQuerySet && !isLocationSet) {
+      loadDefaultRestaurants();
       return;
     }
-    setHasSearched(true);
+    
     setSearching(true);
+
     const timeout = setTimeout(async () => {
-      const res = await searchRestaurants({ query });
-      setSearching(false);
-      if (res.success) {
-        setResults(res.data ?? []);
-      } else {
-        setResults([]);
-        console.log(res.message);
+      const payload: {
+        query?: string;
+        latitude?: number;
+        longitude?: number;
+        radiusKm?: number;
+      } = {};
+
+      if (isQuerySet) {
+        payload.query = query.trim();
       }
-    }, 400); // 400ms debounce
+      if (isLocationSet) {
+        payload.latitude = latitude;
+        payload.longitude = longitude;
+        payload.radiusKm = 15; 
+      }
+
+      const res = await searchRestaurants(payload); 
+      setSearching(false);
+
+      if (res.success) {
+      setResults(res.data ?? []);
+      setHasSearched(true); // ✅ move here
+    } else {
+      setResults([]);
+    }
+    }, 400); 
 
     return () => clearTimeout(timeout);
-  }, [query]);
+  }, [query, latitude, longitude, loadDefaultRestaurants]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -73,43 +121,92 @@ const OrderHero: React.FC = () => {
 
           {/* Animated search form */}
           <div
-            className={`mt-7 sm:mt-12 mx-auto max-w-xl relative transition-all duration-1000 delay-500 ease-out ${
+            className={`mt-7 sm:mt-12 mx-auto max-w-4xl relative transition-all duration-1000 delay-500 ease-out ${
               isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <div>
-              <div
-                className={`relative z-10 flex gap-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-100 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-gray-900/20 transition-all duration-300 ${
-                  searchFocused
-                    ? "scale-105 shadow-xl shadow-violet-100 border-violet-300"
-                    : "hover:scale-102 hover:shadow-xl"
-                }`}
-              >
-                <div className="w-full">
-                  <label
-                    htmlFor="restaurant-search"
-                    className="block text-sm text-gray-700 font-medium dark:text-white"
-                  >
-                    <span className="sr-only">Search dishes</span>
+            <div className="space-y-6">
+              {/* Combined Search Form for Desktop, Stacked for Mobile */}
+              <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                
+                {/* Location Input Section */}
+                <div className="w-full lg:w-[30%] flex flex-col">
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 text-left tracking-wide">
+                    <span className="inline-flex items-center gap-2">
+                    </span>
                   </label>
-                  <input
-                    type="text"
-                    name="restaurant-search"
-                    id="restaurant-search"
-                    className="py-2.5 px-4 block w-full border-transparent rounded-lg focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-transparent dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600 transition-all duration-300"
-                    placeholder="Search for dishes, cuisines..."
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
+                  <div className="relative bg-white border-2 border-gray-200 rounded-xl shadow-md dark:bg-neutral-900 dark:border-neutral-700 transition-all duration-300 hover:shadow-lg hover:border-green-400 focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-100 dark:focus-within:ring-green-900/30 flex-1 group">
+                    <div className="flex items-center h-[56px] px-4">
+                      <div className="flex items-center justify-center w-8 text-gray-400 group-focus-within:text-green-500 transition-colors duration-300">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <GooglePlacesAddressInput
+                        value={address}
+                        onChange={handleAddressChange}
+                        placeholder="Location"
+                      />
+                    </div>
+                  </div>
                 </div>
-                {/* Removed the search button */}
+
+                {/* Search Input Section */}
+                <div className="w-full lg:w-[70%] flex flex-col">
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 text-left tracking-wide">
+                    <span className="inline-flex items-center gap-2">
+                    </span>
+                  </label>
+                  <div
+                    className={`relative bg-white border-2 border-gray-200 rounded-xl shadow-md dark:bg-neutral-900 dark:border-neutral-700 transition-all duration-300 flex-1 ${
+                      searchFocused
+                        ? "shadow-lg border-violet-500 ring-4 ring-violet-100 dark:ring-violet-900/30"
+                        : "hover:shadow-lg hover:border-violet-400"
+                    }`}
+                  >
+                    <div className="flex items-center h-[56px] px-4">
+                      <div className="flex items-center justify-center w-8 text-gray-400">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        name="restaurant-search"
+                        id="restaurant-search"
+                        className="flex-1 h-full px-3 border-transparent bg-transparent rounded-xl focus:outline-none dark:text-neutral-200 dark:placeholder-neutral-400 transition-all duration-300 text-base"
+                        placeholder="Search for restaurants, dishes, or cuisines..."
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => setSearchFocused(false)}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                      />
+                      {searching && (
+                        <div className="flex items-center justify-center w-8">
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-violet-200 border-t-violet-600"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Status Indicators */}
+              <div className="flex flex-wrap justify-center gap-3">
+                
+                {query && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 transition-all duration-300">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                    Searching for "{query}"
+                  </span>
+                )}
               </div>
             </div>
-            {/* End Search Section */}
 
             {/* Animated Decorative SVGs */}
             <div
@@ -177,6 +274,11 @@ const OrderHero: React.FC = () => {
             searching={searching}
             query={query}
             hasSearched={hasSearched}
+            googlePlacesCoords={
+              latitude !== undefined && longitude !== undefined
+                ? { latitude, longitude }
+                : undefined
+            }
           />
         </div>
       </div>

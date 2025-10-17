@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FaShoppingCart,
-  FaInfoCircle,
   FaArrowLeft,
   FaUtensils,
   FaPlus,
@@ -20,6 +19,8 @@ import { useParams } from "react-router-dom";
 import AddToCartToast from "../components/customer/AddToCartToast";
 import ProfileErrorToast from "../components/customer/ProfileErrorToast";
 import CreateCustomerProfileModal from "../components/customer/CreateCustomerProfileModal";
+import useAuth from "../hooks/useAuth";
+import CustomerNav from "../components/customer/CustomerNav";
 
 interface MenuItem {
   id: number;
@@ -37,6 +38,7 @@ interface RestaurantDetails {
 
 const RestaurantPage: React.FC = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
 
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -66,6 +68,11 @@ const RestaurantPage: React.FC = () => {
   const hasAnimated = useRef(false);
   const animatedCards = useRef(new Set<number>());
 
+  // Helper function to check if user is authenticated customer
+  const isCustomer = () => {
+    return isAuthenticated && user?.roleType === 'Customer';
+  };
+
   useEffect(() => {
     if (!hasAnimated.current) {
       const timer = setTimeout(() => {
@@ -79,37 +86,51 @@ const RestaurantPage: React.FC = () => {
     }
   }, []);
 
-  // Check customer profile on component mount
+  // Check customer profile on component mount - only for authenticated customers
   useEffect(() => {
     const checkProfile = async () => {
-      // Get userId from localStorage
-      const userStr = localStorage.getItem("user");
-      if (!userStr) {
-        console.error("No user found in localStorage");
+      // Only check profile if user is authenticated and is a customer
+      if (!isCustomer()) {
+        console.log("User is not an authenticated customer - skipping profile check");
+        setHasProfile(false);
+        setCustomerId(null);
         return;
       }
 
-      const user = JSON.parse(userStr);
       const userId = user.id;
+      if (!userId) {
+        console.error("No user ID found");
+        return;
+      }
 
-      const result = await checkCustomerProfile(userId);
-      if (result.success && result.hasProfile) {
-        setHasProfile(true);
-        setCustomerId(result.data.id);
-      } else {
+      try {
+        const result = await checkCustomerProfile(userId);
+        if (result.success && result.hasProfile) {
+          setHasProfile(true);
+          setCustomerId(result.data.id);
+        } else {
+          setHasProfile(false);
+          setCustomerId(null);
+        }
+      } catch (error) {
+        console.error("Error checking customer profile:", error);
         setHasProfile(false);
         setCustomerId(null);
       }
     };
-    checkProfile();
-  }, []);
+    
+    // Only run when auth state is resolved
+    if (!authLoading) {
+      checkProfile();
+    }
+  }, [isAuthenticated, user, authLoading]);
 
-  // Fetch cart items when customer ID is available
+  // Fetch cart items when customer ID is available and user is authenticated customer
   useEffect(() => {
-    if (customerId) {
+    if (customerId && isCustomer()) {
       fetchCartItems();
     }
-  }, [customerId]);
+  }, [customerId, isAuthenticated, user]);
 
   // Handle profile creation success
   const handleProfileSuccess = (data: any) => {
@@ -120,10 +141,20 @@ const RestaurantPage: React.FC = () => {
     fetchCartItems(data.id);
   };
 
-  // Fetch cart items to populate counter
+  // Fetch cart items to populate counter - only for authenticated customers
   const fetchCartItems = async (customerIdToUse?: number) => {
+    // Check if user is authenticated customer before making API call
+    if (!isCustomer()) {
+      console.log("User is not an authenticated customer - skipping cart fetch");
+      setCartItems({});
+      return;
+    }
+
     const idToUse = customerIdToUse || customerId;
-    if (!idToUse) return;
+    if (!idToUse) {
+      console.log("No customer ID available - skipping cart fetch");
+      return;
+    }
 
     try {
       const result = await retrieveCart(idToUse);
@@ -136,6 +167,7 @@ const RestaurantPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching cart items:", error);
+      setCartItems({});
     }
   };
 
@@ -152,6 +184,14 @@ const RestaurantPage: React.FC = () => {
   // Add to cart handler
   const handleAddToCart = async (item: MenuItem) => {
     try {
+      // Check if user is authenticated customer first
+      if (!isCustomer()) {
+        setToastMessage("Please log in as a customer to add items to cart");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
+      }
+
       // Check if customer profile exists
       if (!hasProfile || !customerId) {
         setShowProfileError(true);
@@ -197,7 +237,11 @@ const RestaurantPage: React.FC = () => {
 
   // Handle quantity changes
   const handleQuantityChange = async (item: MenuItem, newQuantity: number) => {
-    if (!customerId) return;
+    // Check if user is authenticated customer first
+    if (!isCustomer() || !customerId) {
+      console.log("User is not an authenticated customer - cannot modify cart");
+      return;
+    }
 
     try {
       // Find cart item ID from cart data
@@ -299,17 +343,9 @@ const RestaurantPage: React.FC = () => {
             </span>
 
             <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-              <button
-                onClick={() => {
-                  setSelectedItem(item);
-                  setShowModal(true);
-                }}
-                className="bg-gradient-to-r from-violet-500 to-violet-600 text-white px-3 py-2 rounded-lg hover:from-violet-600 hover:to-violet-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                <FaInfoCircle className="inline mr-1" /> Details
-              </button>
 
-              {cartItems[item.id] ? (
+              {/* Cart functionality - only show for authenticated customers */}
+              {isCustomer() && cartItems[item.id] ? (
                 // Show counter when item is in cart
                 <div className="flex items-center bg-white dark:bg-neutral-700 border-2 border-green-500 rounded-lg">
                   <button
@@ -334,8 +370,8 @@ const RestaurantPage: React.FC = () => {
                     <FaPlus className="text-xs" />
                   </button>
                 </div>
-              ) : (
-                // Show add button when item is not in cart
+              ) : isCustomer() ? (
+                // Show add button when item is not in cart and user is authenticated customer
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -344,6 +380,19 @@ const RestaurantPage: React.FC = () => {
                   className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <FaShoppingCart className="inline mr-1" /> Add
+                </button>
+              ) : (
+                // Show login prompt for non-customers
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setToastMessage("Please log in as a customer to add items to cart");
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 3000);
+                  }}
+                  className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-2 rounded-lg hover:from-gray-500 hover:to-gray-600 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <FaShoppingCart className="inline mr-1" /> Login to Add
                 </button>
               )}
             </div>
@@ -502,6 +551,7 @@ const RestaurantPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+      <CustomerNav />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div
@@ -509,18 +559,12 @@ const RestaurantPage: React.FC = () => {
             isVisible ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}
         >
-          <button
-            onClick={() => window.history.back()}
-            className="bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 hover:-translate-x-1 mr-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
-          >
-            <FaArrowLeft className="text-xl" />
-          </button>
           <h1 className="text-4xl md:text-5xl font-bold text-center flex-1 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-800 bg-clip-text text-transparent animate-gradient">
             {restaurantName}
           </h1>
 
-          {/* Cart Button */}
-          {hasProfile && customerId && (
+          {/* Cart Button - only show for authenticated customers */}
+          {isCustomer() && hasProfile && customerId && (
             <button
               onClick={() => setShowCartModal(true)}
               className="relative bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 ml-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
@@ -644,16 +688,18 @@ const RestaurantPage: React.FC = () => {
           </div>
         )}
 
-        {/* Create Customer Profile Modal */}
-        <CreateCustomerProfileModal
-          isOpen={showCreateProfileModal}
-          onClose={() => setShowCreateProfileModal(false)}
-          userId={JSON.parse(localStorage.getItem("user") || "{}").id || 1}
-          onSuccess={handleProfileSuccess}
-        />
+        {/* Create Customer Profile Modal - only for authenticated customers */}
+        {isCustomer() && (
+          <CreateCustomerProfileModal
+            isOpen={showCreateProfileModal}
+            onClose={() => setShowCreateProfileModal(false)}
+            userId={user?.id || 1}
+            onSuccess={handleProfileSuccess}
+          />
+        )}
 
-        {/* Cart Modal */}
-        {customerId && (
+        {/* Cart Modal - only for authenticated customers */}
+        {isCustomer() && customerId && (
           <CartModal
             isOpen={showCartModal}
             onClose={() => setShowCartModal(false)}

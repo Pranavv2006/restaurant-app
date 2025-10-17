@@ -4,7 +4,7 @@ import OrderHero from "../components/customer/OrderHero";
 import useAuth from "../hooks/useAuth";
 
 const Main: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -24,18 +24,6 @@ const Main: React.FC = () => {
 
       {/* Hero Section */}
       <OrderHero />
-      
-      {/* Optional: Show a subtle indicator for unauthenticated users */}
-      {!isAuthenticated && (
-        <div className="fixed bottom-4 right-4 bg-violet-100 dark:bg-violet-900 text-violet-800 dark:text-violet-200 px-4 py-2 rounded-lg shadow-lg z-50">
-          <p className="text-sm">
-            <span className="font-medium">👋 Welcome!</span> 
-            <a href="/auth" className="ml-2 underline hover:text-violet-600">
-              Sign in
-            </a> for personalized features
-          </p>
-        </div>
-      )}
     </div>
   );
 };

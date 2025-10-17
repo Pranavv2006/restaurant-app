@@ -1,5 +1,23 @@
 import axiosInstance from "../api/axiosConfig";
 
+// Helper function to check if user is authenticated customer
+const isAuthenticatedCustomer = (): boolean => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const userStr = localStorage.getItem("user");
+    
+    if (!token || !userStr) {
+      return false;
+    }
+    
+    const user = JSON.parse(userStr);
+    return user.roleType === 'Customer';
+  } catch (error) {
+    console.error("Error checking customer authentication:", error);
+    return false;
+  }
+};
+
 export interface ProximitySearchData {
   latitude: number;
   longitude: number;
@@ -226,6 +244,14 @@ export const addToCart = async (
   payload: AddToCartData
 ): Promise<AddToCartResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to add items to cart.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -258,19 +284,10 @@ export const selectRestaurants = async (
   payload: SelectRestaurantData
 ): Promise<SelectRestaurantResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    const headers: any = {};
-    
-    // Add authorization header only if token exists
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    // This endpoint should be public since viewing restaurant menus doesn't require customer authentication
+    const url = `/home/select-restaurant/${payload.restaurantId}`;
 
-    const url = `/Customer/select-restaurant/${payload.restaurantId}`;
-
-    const response = await axiosInstance.get<SelectRestaurantResponse>(url, {
-      headers,
-    });
+    const response = await axiosInstance.get<SelectRestaurantResponse>(url);
 
     return response.data;
   } catch (error: any) {
@@ -287,18 +304,10 @@ export const searchRestaurants = async (
   payload: SearchRestaurantData
 ): Promise<SearchRestaurantResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    const headers: any = {};
-    
-    // Add authorization header only if token exists
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
+    // Restaurant search should be public - anyone can search for restaurants
     const response = await axiosInstance.get<SearchRestaurantResponse>(
-      "/Customer/search-restaurants",
+      "/home/search-restaurants",
       {
-        headers,
         params: { q: payload.query },
       }
     );
@@ -318,6 +327,14 @@ export const retrieveCart = async (
   customerId: number
 ): Promise<RetrieveCartResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to view cart.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -350,6 +367,14 @@ export const updateCartItem = async (
   payload: UpdateCartItemData
 ): Promise<UpdateCartItemResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to update cart items.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -382,6 +407,14 @@ export const removeCartItem = async (
   cartItemId: number
 ): Promise<RemoveCartItemResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to remove cart items.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -413,6 +446,15 @@ export const checkCustomerProfile = async (
   userId: number
 ): Promise<CheckCustomerProfileResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        hasProfile: false,
+        message: "Please log in as a customer to access profile features.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -510,14 +552,7 @@ export const getNearbyRestaurants = async (
   payload: NearbyRestaurantsData
 ): Promise<NearbyRestaurantsResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    const headers: any = {};
-    
-    // Add authorization header only if token exists
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
+    // Finding nearby restaurants should be public - anyone can search for nearby restaurants
     const { latitude, longitude, radiusKm } = payload;
     const queryParams = new URLSearchParams({
       latitude: latitude.toString(),
@@ -529,10 +564,7 @@ export const getNearbyRestaurants = async (
     }
 
     const response = await axiosInstance.get<NearbyRestaurantsResponse>(
-      `/Customer/restaurants/nearby?${queryParams.toString()}`,
-      {
-        headers,
-      }
+      `/home/restaurants/nearby?${queryParams.toString()}`
     );
 
     return response.data;
@@ -735,14 +767,7 @@ export const getProximityRestaurants = async (
   payload: ProximitySearchData
 ): Promise<ProximitySearchResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    const headers: any = {};
-    
-    // Add authorization header only if token exists
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
+    // Proximity search should be public - anyone can search for restaurants by location
     const { latitude, longitude, radiusKm } = payload;
 
     const queryParams = new URLSearchParams({
@@ -755,10 +780,7 @@ export const getProximityRestaurants = async (
     }
     
     const response = await axiosInstance.get<ProximitySearchResponse>(
-      `/Customer/proximity-search?${queryParams.toString()}`,
-      {
-        headers,
-      }
+      `/home/proximity-search?${queryParams.toString()}`
     );
 
     return response.data;

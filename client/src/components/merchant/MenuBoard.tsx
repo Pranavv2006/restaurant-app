@@ -10,6 +10,7 @@ interface MenuItem {
   description: string;
   price: number;
   imageUrl?: string;
+  category?: string;
 }
 
 interface Restaurant {
@@ -78,6 +79,7 @@ const MenuBoard = ({
             description: item.description,
             price: Number(item.price),
             imageUrl: item.imageUrl,
+            category: item.category,
           }))
         );
       } else {
@@ -108,6 +110,7 @@ const MenuBoard = ({
             description: item.description,
             price: Number(item.price),
             imageUrl: item.imageUrl,
+            category: item.category,
           }));
 
           setMenuItems(mappedItems);
@@ -297,6 +300,11 @@ const MenuBoard = ({
                       </th>
                       <th scope="col" className="px-6 py-3 text-start">
                         <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
+                          Category
+                        </span>
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-start">
+                        <span className="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
                           Price
                         </span>
                       </th>
@@ -346,6 +354,11 @@ const MenuBoard = ({
                               ? stripHtmlTags(item.description).slice(0, 50) +
                                 "..."
                               : stripHtmlTags(item.description)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded dark:text-violet-200">
+                            {item.category || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4 w-1/6">

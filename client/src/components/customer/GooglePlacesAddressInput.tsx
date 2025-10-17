@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from "react";
-import { FaMapMarkerAlt, FaSpinner } from "react-icons/fa";
 
 interface GooglePlacesAddressInputProps {
   value: string;
@@ -24,12 +23,116 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
   disabled = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
 
   useEffect(() => {
+    // Add custom styles for Google Places autocomplete dropdown
+    const addCustomStyles = () => {
+      if (document.getElementById('google-places-custom-styles')) return;
+      
+      const style = document.createElement('style');
+      style.id = 'google-places-custom-styles';
+      style.innerHTML = `
+        .pac-container {
+          background-color: white;
+          border: 2px solid #10b981 !important;
+          border-radius: 0.75rem !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+          margin-top: 8px !important;
+          font-family: inherit;
+          overflow: hidden;
+        }
+        
+        .pac-container:after {
+          display: none;
+        }
+        
+        .pac-item {
+          padding: 12px 16px !important;
+          border-top: 1px solid #e5e7eb !important;
+          cursor: pointer !important;
+          font-size: 14px !important;
+          line-height: 1.5 !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .pac-item:first-child {
+          border-top: none !important;
+        }
+        
+        .pac-item:hover {
+          background-color: #f0fdf4 !important;
+          transform: translateX(4px);
+        }
+        
+        .pac-item-selected,
+        .pac-item-selected:hover {
+          background-color: #dcfce7 !important;
+        }
+        
+        .pac-icon {
+          background-image: none !important;
+          width: 20px !important;
+          height: 20px !important;
+          margin-right: 12px !important;
+          margin-top: 2px !important;
+        }
+        
+        .pac-icon:before {
+          content: "📍";
+          font-size: 16px;
+          display: block;
+        }
+        
+        .pac-item-query {
+          color: #1f2937 !important;
+          font-weight: 600 !important;
+          font-size: 14px !important;
+        }
+        
+        .pac-matched {
+          color: #10b981 !important;
+          font-weight: 700 !important;
+        }
+        
+        .pac-logo:after {
+          display: none !important;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+          .pac-container {
+            background-color: #262626;
+            border-color: #10b981 !important;
+          }
+          
+          .pac-item {
+            color: #e5e5e5 !important;
+            border-top-color: #404040 !important;
+          }
+          
+          .pac-item:hover {
+            background-color: #14532d !important;
+          }
+          
+          .pac-item-selected,
+          .pac-item-selected:hover {
+            background-color: #166534 !important;
+          }
+          
+          .pac-item-query {
+            color: #e5e5e5 !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    };
+    
+    addCustomStyles();
+    
     const initializeGooglePlaces = () => {
       if (window.google && window.google.maps && window.google.maps.places) {
         setIsGoogleLoaded(true);
@@ -42,6 +145,13 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
     const loadGooglePlacesScript = () => {
       // Check if script is already loaded
       if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        const checkGoogle = setInterval(() => {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            clearInterval(checkGoogle);
+            setIsGoogleLoaded(true);
+            initAutocomplete();
+          }
+        }, 100);
         return;
       }
 
@@ -71,22 +181,21 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
         );
       }
 
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
-        inputRef.current,
-        {
-          types: ["address"],
-          fields: ["formatted_address", "geometry", "name"],
-          strictBounds: false,
-        }
-      );
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          inputRef.current,
+          {
+            types: ["address"],
+            fields: ["formatted_address", "geometry", "name"],
+            strictBounds: false,
+          }
+        );
 
-      // Prevent autocomplete from interfering with form submission
-      autocompleteRef.current.addListener("place_changed", handlePlaceSelect);
-
-      // Prevent the autocomplete from interfering with other inputs
-      inputRef.current.addEventListener("focus", () => {
-        autocompleteRef.current.setBounds(null);
-      });
+        // Prevent autocomplete from interfering with form submission
+        autocompleteRef.current.addListener("place_changed", handlePlaceSelect);
+      } catch (error) {
+        console.error("Failed to initialize autocomplete:", error);
+      }
     };
 
     const handlePlaceSelect = () => {
@@ -110,12 +219,7 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
 
-          // Use setTimeout to ensure this doesn't interfere with form submission
-          setTimeout(() => {
-            if (!isFormSubmitting && !disabled) {
-              onChange(address, lat, lng);
-            }
-          }, 10);
+          onChange(address, lat, lng);
         }
       } catch (error) {
         console.error("Google Places error:", error);
@@ -134,13 +238,10 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
         );
       }
     };
-  }, []); // Remove onChange from dependencies to prevent re-initialization
+  }, [onChange, disabled, isFormSubmitting]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only update if this is specifically the address input and not disabled
-    if (e.target === inputRef.current && !disabled && !isFormSubmitting) {
-      onChange(e.target.value);
-    }
+    onChange(e.target.value);
   };
 
   // Detect form submission
@@ -166,36 +267,28 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
   }, []);
 
   return (
-    <div
-      className="relative"
-      onKeyDown={(e) => e.stopPropagation()}
-      onKeyUp={(e) => e.stopPropagation()}
-      onKeyPress={(e) => e.stopPropagation()}
-    >
-      <div className="relative">
-        <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <input
-          ref={inputRef}
-          type="text"
-          id="google-places-address-input"
-          value={value}
-          onChange={handleInputChange}
-          placeholder={placeholder}
-          className={`w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 dark:bg-neutral-700 dark:text-white ${className}`}
-          disabled={!isGoogleLoaded || disabled}
-          autoComplete="off"
-          onFocus={(e) => e.stopPropagation()}
-          onBlur={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onKeyUp={(e) => e.stopPropagation()}
-          onKeyPress={(e) => e.stopPropagation()}
-        />
-        {isLoading && (
-          <FaSpinner className="absolute right-3 top-1/2 transform -translate-y-1/2 text-violet-500 animate-spin" />
-        )}
-      </div>
+    <div ref={wrapperRef} className="flex-1 relative" style={{ position: 'relative' }}>
+      <input
+        ref={inputRef}
+        type="text"
+        id="google-places-address-input"
+        value={value}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        className={`w-full h-full px-3 border-transparent bg-transparent focus:outline-none dark:text-neutral-200 dark:placeholder-neutral-400 transition-all duration-300 text-base ${className}`}
+        disabled={!isGoogleLoaded || disabled}
+        autoComplete="new-password"
+        style={{ position: 'relative', zIndex: 1 }}
+      />
+      {isLoading && (
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-8" style={{ zIndex: 2 }}>
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-200 border-t-green-600"></div>
+        </div>
+      )}
       {!isGoogleLoaded && (
-        <p className="text-xs text-gray-500 mt-1">Loading Google Places...</p>
+        <div className="absolute left-0 -bottom-6 text-xs text-gray-500" style={{ zIndex: 2 }}>
+          Loading Google Places...
+        </div>
       )}
     </div>
   );

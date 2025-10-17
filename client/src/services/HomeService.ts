@@ -1,8 +1,10 @@
 import axiosInstance from "../api/axiosConfig";
 
-// Interfaces for Home/Public services
 export interface SearchRestaurantData {
-  query: string;
+  query?: string; 
+  latitude?: number; 
+  longitude?: number;
+  radiusKm?: number;
 }
 
 export interface SearchRestaurantResponse {
@@ -56,8 +58,9 @@ export interface ProximityRestaurant {
 
 export interface ProximitySearchResponse {
   success: boolean;
-  data?: ProximityRestaurant[];
+  data?: any[];   
   message?: string;
+  error?: string;
 }
 
 export interface NearbyRestaurantsData {
@@ -81,48 +84,52 @@ export interface NearbyRestaurantsResponse {
   message?: string;
 }
 
+
+
 // FIX: Functions must be defined and exported using 'export const functionName = async (...'
 export const searchRestaurants = async (
-    payload: SearchRestaurantData
-  ): Promise<SearchRestaurantResponse> => {
-    try {
-      const response = await axiosInstance.get<SearchRestaurantResponse>(
-        "/home/search-restaurants",
-        {
-          params: { q: payload.query },
-        }
-      );
+  payload: SearchRestaurantData
+): Promise<ProximitySearchResponse> => {
+  try {
+    const queryParams = new URLSearchParams();
 
-      return response.data;
-    } catch (error: any) {
-      console.error("Error calling home searchRestaurants API:", error);
-      return {
-        success: false,
-        data: [],
-        message: error.response?.data?.message || "Something went wrong",
-      };
+    // 1. Append Text Query if present
+    if (payload.query) {
+      queryParams.append("query", payload.query);
     }
-  }; // FIX: Added closing curly brace and semicolon here
-
-// Get restaurant details and menu
-export const selectRestaurant = async ( // FIX: Added 'export const'
-    payload: SelectRestaurantData
-  ): Promise<SelectRestaurantResponse> => {
-    try {
-      const response = await axiosInstance.get<SelectRestaurantResponse>(
-        `/home/select-restaurant/${payload.restaurantId}`
-      );
-
+    
+    // 2. Append Location Data if both latitude and longitude are present
+    if (payload.latitude !== undefined && payload.longitude !== undefined) {
+      queryParams.append("latitude", payload.latitude.toString());
+      queryParams.append("longitude", payload.longitude.toString());
+      
+      // Use provided radius or default to 10km
+      const radius = payload.radiusKm !== undefined ? payload.radiusKm : 10;
+      queryParams.append("radiusKm", radius.toString());
+      
+      // Use proximity search endpoint when coordinates are available
+      const endpoint = `/home/proximity-search?${queryParams.toString()}`;
+      const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
       return response.data;
-    } catch (error: any) {
-      console.error("Error calling home selectRestaurant API:", error);
-      return {
-        success: false,
-        data: undefined,
-        message: error.response?.data?.message || "Something went wrong",
-      };
+    } else if (payload.query) {
+      // Use text search endpoint when only query is provided (no coordinates)
+      const endpoint = `/home/search-restaurants?q=${encodeURIComponent(payload.query)}`;
+      const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
+      return response.data;
+    } else {
+      // Default case: return all restaurants (for initial load) - use a working endpoint
+      const endpoint = `/home/search-restaurants`;
+      const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
+      return response.data;
     }
-  }; // FIX: Added closing curly brace and semicolon here
+  } catch (error: any) {
+    console.error("Error calling home searchRestaurants API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
 
 // Search restaurants by proximity/location
 export const getProximityRestaurants = async ( // FIX: Added 'export const'
@@ -140,9 +147,6 @@ export const getProximityRestaurants = async ( // FIX: Added 'export const'
       }
 
       const response = await axiosInstance.get<ProximitySearchResponse>(
-        // It's cleaner to pass queryParams as an object to axios's `params` key
-        // but the current implementation with URLSearchParams works if you pass the string directly.
-        // I'll stick to the original structure but note the cleaner alternative.
         `/home/proximity-search?${queryParams.toString()}`
       );
 
@@ -156,8 +160,6 @@ export const getProximityRestaurants = async ( // FIX: Added 'export const'
     }
   }; // FIX: Added closing curly brace and semicolon here
 
-  // Get nearby restaurants by location
-// FIX: The original had 'export const' at the beginning of this function definition, which was outside the previous function block and caused a general syntax error. It should be defined as a standalone exported function.
 export const getNearbyRestaurants = async (
     payload: NearbyRestaurantsData
   ): Promise<NearbyRestaurantsResponse> => {
@@ -185,3 +187,23 @@ export const getNearbyRestaurants = async (
       };
     }
   };
+
+export const selectRestaurant = async (
+  payload: SelectRestaurantData
+): Promise<SelectRestaurantResponse> => {
+  try {
+    const { restaurantId } = payload;
+
+    const response = await axiosInstance.get<SelectRestaurantResponse>(
+      `/home/restaurants/select-restaurant/${restaurantId}`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling home selectRestaurant API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};

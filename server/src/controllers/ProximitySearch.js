@@ -2,12 +2,14 @@ const { ProximitySearchService } = require("../services/ProximitySearchService")
 
 const ProximitySearchController = async (req, res) => {
   try {
-    const { latitude, longitude, radiusKm } = req.query;
+    // ADD 'query' here to extract it from the URL parameters
+    const { latitude, longitude, radiusKm, query } = req.query; 
 
     const result = await ProximitySearchService(
       parseFloat(latitude),
       parseFloat(longitude),
-      radiusKm ? parseFloat(radiusKm) : 10
+      radiusKm ? parseFloat(radiusKm) : 10,
+      query // <-- PASS 'query' to the service function
     );
 
     if (result.success) {

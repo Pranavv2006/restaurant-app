@@ -137,6 +137,7 @@ export interface MenuItemResponse {
   description: string;
   price: number;
   imageUrl: string;
+  category: string;
 }
 
 export interface RetrieveMenuResponse {

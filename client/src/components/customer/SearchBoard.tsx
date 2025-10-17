@@ -18,6 +18,10 @@ interface SearchBoardProps {
   searching: boolean;
   query: string;
   hasSearched: boolean;
+  googlePlacesCoords?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 const cuisines = [
@@ -34,6 +38,7 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
   getImageUrl,
   searching,
   query,
+  googlePlacesCoords,
 }) => {
   const [nearbyRestaurants, setNearbyRestaurants] = useState<
     NearbyRestaurant[]
@@ -132,8 +137,12 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
 
   useEffect(() => {
     const fetchNearbyRestaurants = async () => {
-      const latitude = customerAddress?.latitude || 28.6139;
-      const longitude = customerAddress?.longitude || 77.209;
+      // Priority: Google Places coordinates > Customer address > Default coordinates
+      const latitude = googlePlacesCoords?.latitude || customerAddress?.latitude || 28.6139;
+      const longitude = googlePlacesCoords?.longitude || customerAddress?.longitude || 77.209;
+      
+      const usingGooglePlaces = googlePlacesCoords?.latitude !== undefined;
+      console.log(`Fetching nearby restaurants using ${usingGooglePlaces ? 'Google Places' : 'customer/default'} coordinates:`, { latitude, longitude });
 
       try {
         setLoadingNearby(true);
@@ -169,7 +178,7 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
     } else {
       setNearbyRestaurants([]);
     }
-  }, [query, customerAddress, loadingAddress]);
+  }, [query, customerAddress, loadingAddress, googlePlacesCoords]);
 
   const filteredResults =
     selectedCuisines.length > 0
@@ -264,15 +273,6 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
             </div>
           ) : filteredNearbyRestaurants.length > 0 ? (
             <>
-              <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">
-                Nearby Restaurants
-                {selectedCuisines.length > 0 && (
-                  <span className="text-sm font-normal ml-2 text-gray-500 dark:text-gray-400">
-                    ({filteredNearbyRestaurants.length} of{" "}
-                    {nearbyRestaurants.length} restaurants)
-                  </span>
-                )}
-              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-fadeInUp">
                 {filteredNearbyRestaurants.map((restaurant, idx) => (
                   <RestaurantCard
