@@ -16,7 +16,8 @@ const OrderHero: React.FC = () => {
   
   const loadDefaultRestaurants = useCallback(async () => {
     setSearching(true);
-    const res = await searchRestaurants({}); 
+    // Use a generic query to get popular restaurants for default loading
+    const res = await searchRestaurants({ query: "restaurant" }); 
 
     setSearching(false);
     if (res.success) {

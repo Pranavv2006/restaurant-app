@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import RestaurantCard from "./RestaurantCard";
 import {
-  retrieveCustomerAddress,
-  checkCustomerAddress,
+  getAllCustomerAddresses,
 } from "../../services/CustomerService";
 import { getNearbyRestaurants } from "../../services/HomeService";
 import type { NearbyRestaurant } from "../../services/HomeService";
@@ -93,39 +92,33 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
 
       setLoadingAddress(true);
       try {
-        // Get customer address first to get customer ID
-        const addressResponse = await checkCustomerAddress(userId);
+        // Get default address using the new getAllCustomerAddresses function
+        const addressResponse = await getAllCustomerAddresses(userId);
 
-        if (
-          !addressResponse.success ||
-          !addressResponse.hasAddress ||
-          !addressResponse.data
-        ) {
-          console.warn("Customer address not found");
+        if (!addressResponse.success || !addressResponse.data || addressResponse.data.totalAddresses === 0) {
+          console.warn("Customer has no addresses");
           setCustomerAddress(null);
           setLoadingAddress(false);
           return;
         }
 
-        const customerId = addressResponse.data.id;
+        // Get the default address
+        const defaultAddress = addressResponse.data.defaultAddress;
 
-        // Now get the address using customer ID
-        const addressData = await retrieveCustomerAddress(customerId);
-
-        if (addressData && addressData.latitude && addressData.longitude) {
+        if (defaultAddress && defaultAddress.latitude && defaultAddress.longitude) {
           setCustomerAddress({
-            latitude: addressData.latitude,
-            longitude: addressData.longitude,
+            latitude: defaultAddress.latitude,
+            longitude: defaultAddress.longitude,
           });
-          console.log("Customer Address retrieved successfully:", addressData);
+          console.log("Customer default address retrieved successfully:", defaultAddress);
         } else {
           setCustomerAddress(null);
           console.warn(
-            "Could not retrieve customer address with coordinates. Using default location."
+            "Could not retrieve customer default address with coordinates. Using default location."
           );
         }
       } catch (error) {
-        console.error("Failed to fetch customer address:", error);
+        console.error("Failed to fetch customer addresses:", error);
         setCustomerAddress(null);
       } finally {
         setLoadingAddress(false);

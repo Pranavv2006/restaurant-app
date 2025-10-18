@@ -1,13 +1,13 @@
 import React from "react";
 import { FaUser, FaTimes } from "react-icons/fa";
 
-interface ProfileErrorToastProps {
+interface AddressErrorToastProps {
   message: string;
   onCreateProfile: () => void;
   onClose: () => void;
 }
 
-const ProfileErrorToast: React.FC<ProfileErrorToastProps> = ({
+const AddressErrorToast: React.FC<AddressErrorToastProps> = ({
   message,
   onCreateProfile,
   onClose,
@@ -73,4 +73,4 @@ const ProfileErrorToast: React.FC<ProfileErrorToastProps> = ({
   );
 };
 
-export default ProfileErrorToast;
+export default AddressErrorToast;

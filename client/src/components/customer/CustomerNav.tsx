@@ -1,75 +1,54 @@
 import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CartModal from "./CartModal";
-import CheckoutModal from "./CheckoutModal";
 import QuickMenuDropdown from "./QuickMenuDropdown";
-import CreateCustomerProfileModal from "./CreateCustomerProfileModal";
-import EditCustomerProfileModal from "./EditCustomerProfileModal";
-import ProfileToast from "./ProfileToast";
+import ManageCustomerAddressModal from "./ManageCustomerAddressModal";
 import Login from "../auth/Login";
 import Register from "../auth/Register";
-import { checkCustomerAddress } from "../../services/CustomerService";
 import useAuth from "../../hooks/useAuth";
+import { getAllCustomerAddresses } from "../../services/CustomerService";
 
 
 const CustomerNav = () => {
   const { isAuthenticated, user } = useAuth();
   
   const [showCartModal, setShowCartModal] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
-  const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [showProfileToast, setShowProfileToast] = useState(false);
+  const [showManageAddressModal, setShowManageAddressModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [customerData, setCustomerData] = useState<any>(null);
-  const [hasProfile, setHasProfile] = useState(false);
-  const [customerName, setCustomerName] = useState("User");
+  const [customerId, setCustomerId] = useState<number | null>(null);
 
-  const getUserId = () => {
-    if (user?.id) return user.id;
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return null;
-    const userData = JSON.parse(userStr);
-    return userData.id || null;
+  // Helper function to check if user is authenticated customer
+  const isCustomer = () => {
+    return isAuthenticated && user?.roleType === 'Customer';
   };
 
-  const userId = getUserId();
-  const customerId = customerData?.id || 1;
-
-  // Check customer profile only if authenticated as Customer
+  // Get customer ID when user is authenticated customer
   useEffect(() => {
-    // Reset customer state for non-customers or unauthenticated users
-    if (!isAuthenticated || !userId || user?.roleType !== 'Customer') {
-      setHasProfile(false);
-      setCustomerData(null);
-      setCustomerName("Guest");
-      return;
-    }
+    const getCustomerId = async () => {
+      if (!isCustomer() || !user?.id) {
+        setCustomerId(null);
+        return;
+      }
 
-    // Only proceed with profile check for authenticated customers
-
-    const checkAddress = async () => {
-      const result = await checkCustomerAddress(userId);
-      if (result.success && result.hasAddress) {
-        setHasProfile(true);
-        setCustomerData(result.data);
-        setCustomerName(result.data.user.firstName);
-      } else {
-        setHasProfile(false);
-        setShowProfileToast(true);
-        setTimeout(() => setShowProfileToast(false), 5000);
+      try {
+        const result = await getAllCustomerAddresses(user.id);
+        if (result.success && result.data && result.data.customer) {
+          setCustomerId(result.data.customer.id);
+        } else {
+          setCustomerId(null);
+        }
+      } catch (error) {
+        console.error('Error getting customer ID:', error);
+        setCustomerId(null);
       }
     };
-    checkAddress();
-  }, [isAuthenticated, userId, user]);
 
-  const handleProfileSuccess = (data: any) => {
-    setHasProfile(true);
-    setCustomerData(data);
-    setCustomerName(data.user.firstName);
-  };
+    getCustomerId();
+  }, [user?.id, isAuthenticated]);
+
+  // Get user display name
+  const customerName = user?.firstName || "User";
 
   const handleLogout = () => {
     // Implement logout logic here
@@ -79,21 +58,15 @@ const CustomerNav = () => {
     window.location.reload();
   };
 
-  const handleProceedToCheckout = (cartItems: any[]) => {
-    setCheckoutItems(cartItems);
+  const handleProceedToCheckout = () => {
+    // Navigate to checkout page instead of modal
     setShowCartModal(false);
-    setShowCheckoutModal(true);
-  };
-
-  const handleOrderSuccess = (orderId: number) => {
-    console.log("Order placed successfully with ID:", orderId);
-    setShowCheckoutModal(false);
-    // You can navigate to order confirmation page or show success message here
-    // navigate(`/order-confirmation/${orderId}`);
+    // Navigate to checkout where user will provide address and contact details
+    window.location.href = '/checkout';
   };
 
   const handleCartUpdate = () => {
-    // Refresh cart data if needed
+    // Cart updates are now handled automatically by the useCart hook
     console.log("Cart updated");
   };
 
@@ -203,10 +176,8 @@ const CustomerNav = () => {
               /* Quick Menu Dropdown for authenticated users */
               <QuickMenuDropdown
                 onCartClick={() => setShowCartModal(true)}
-                onProfileClick={() => setShowCreateProfileModal(true)}
-                onEditProfileClick={() => setShowEditProfileModal(true)}
+                onAddressClick={() => setShowManageAddressModal(true)}
                 onLogoutClick={handleLogout}
-                hasProfile={hasProfile}
                 customerName={customerName}
               />
             ) : (
@@ -267,8 +238,8 @@ const CustomerNav = () => {
           </div>
         </nav>
 
-        {/* Modals and Toasts - Only show for authenticated customers */}
-        {isAuthenticated && user?.roleType === 'Customer' && (
+        {/* Modals - Only show for authenticated customers */}
+        {isAuthenticated && user?.roleType === 'Customer' && customerId && (
           <>
             <CartModal
               isOpen={showCartModal}
@@ -278,40 +249,14 @@ const CustomerNav = () => {
               onProceedToCheckout={handleProceedToCheckout}
             />
 
-            <CheckoutModal
-              isOpen={showCheckoutModal}
-              onClose={() => setShowCheckoutModal(false)}
-              cartItems={checkoutItems}
-              onOrderSuccess={handleOrderSuccess}
+            <ManageCustomerAddressModal
+              isOpen={showManageAddressModal}
+              onClose={() => setShowManageAddressModal(false)}
+              userId={user?.id || 1}
+              onSuccess={() => {
+                console.log("Address updated successfully");
+              }}
             />
-
-            <CreateCustomerProfileModal
-              isOpen={showCreateProfileModal}
-              onClose={() => setShowCreateProfileModal(false)}
-              userId={userId}
-              onSuccess={handleProfileSuccess}
-            />
-
-            <EditCustomerProfileModal
-              isOpen={showEditProfileModal}
-              onClose={() => setShowEditProfileModal(false)}
-              customerData={customerData}
-              onSuccess={handleProfileSuccess}
-            />
-
-            {/* Profile Toast */}
-            {showProfileToast && (
-              <div className="fixed top-4 right-4 z-50 animate-slide-in">
-                <ProfileToast
-                  message="Complete your profile to get started!"
-                  onCreateProfile={() => {
-                    setShowProfileToast(false);
-                    setShowCreateProfileModal(true);
-                  }}
-                  onClose={() => setShowProfileToast(false)}
-                />
-              </div>
-            )}
           </>
         )}
 

@@ -1,31 +1,28 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  FaUser,
   FaShoppingCart,
   FaSignOutAlt,
   FaChevronDown,
-  FaEdit,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
+import { useCart } from "../../hooks/useCart";
 
 interface QuickMenuDropdownProps {
   onCartClick: () => void;
-  onProfileClick: () => void;
-  onEditProfileClick: () => void;
+  onAddressClick: () => void;
   onLogoutClick: () => void;
-  hasProfile: boolean;
   customerName?: string;
 }
 
 const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
   onCartClick,
-  onProfileClick,
-  onEditProfileClick,
+  onAddressClick,
   onLogoutClick,
-  hasProfile,
   customerName = "User",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { cartItemCount } = useCart();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,35 +67,29 @@ const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-neutral-800 rounded-lg shadow-xl border border-gray-200 dark:border-neutral-700 z-50 animate-dropdown-enter">
           <div className="py-2">
-            {/* Profile Section */}
-            {hasProfile ? (
-              <button
-                onClick={() => handleItemClick(onEditProfileClick)}
-                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-150"
-              >
-                <FaEdit className="text-violet-500" />
-                <span>Edit Profile</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => handleItemClick(onProfileClick)}
-                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-150"
-              >
-                <FaUser className="text-violet-500" />
-                <span>Create Profile</span>
-              </button>
-            )}
-
-            {/* Divider */}
-            <div className="my-1 border-t border-gray-100 dark:border-neutral-700"></div>
-
             {/* Cart */}
             <button
               onClick={() => handleItemClick(onCartClick)}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-150"
             >
-              <FaShoppingCart className="text-green-500" />
-              <span>View Cart</span>
+              <div className="relative">
+                <FaShoppingCart className="text-green-500" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
+              </div>
+              <span>View Cart {cartItemCount > 0 && `(${cartItemCount})`}</span>
+            </button>
+
+            {/* Manage Addresses */}
+            <button
+              onClick={() => handleItemClick(onAddressClick)}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-150"
+            >
+              <FaMapMarkerAlt className="text-violet-500" />
+              <span>Manage Addresses</span>
             </button>
 
             {/* Divider */}

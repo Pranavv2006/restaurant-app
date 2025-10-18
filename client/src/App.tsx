@@ -5,6 +5,7 @@ import Merchant from "./pages/Merchant";
 import MerchantProfile from "./components/merchant/MerchantProfile";
 import RestaurantPage from "./pages/RestaurantPage";
 import RestaurantHome from "./pages/RestaurantHome";
+import CheckoutPage from "./pages/CheckOutPage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           path="/customer/RestaurantPage/:restaurantId"
           element={<RestaurantPage />}
         />
+        <Route path="/checkout" element={<CheckoutPage/>}/>
       </Routes>
     </Router>
   );

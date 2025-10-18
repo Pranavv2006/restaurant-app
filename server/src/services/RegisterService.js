@@ -84,6 +84,20 @@ const register = async (email, password, firstName, lastName, role) => {
             });
 
             if (role === 'Customer') {
+                // Create Customer profile
+                const customerProfile = await tx.customer.create({
+                    data: {
+                        userId: user.id
+                    }
+                });
+
+                // Create empty cart for the customer
+                await tx.cart.create({
+                    data: {
+                        customerId: customerProfile.id
+                    }
+                });
+
                 const customerPermissions = await tx.permission.findFirst({
                     where: {
                         desc: 'Order'

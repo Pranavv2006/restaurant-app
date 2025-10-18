@@ -11,6 +11,7 @@ import {
   updateCartItem,
   removeCartItem,
 } from "../../services/CustomerService";
+import { triggerCartUpdate } from "../../hooks/useCart";
 
 interface CartItem {
   id: number;
@@ -118,6 +119,8 @@ const CartModal: React.FC<CartModalProps> = ({
         if (onCartUpdate) {
           onCartUpdate();
         }
+        // Trigger global cart update for other components
+        triggerCartUpdate();
       } else {
         setError(result.message || "Failed to update item quantity");
       }
@@ -144,6 +147,8 @@ const CartModal: React.FC<CartModalProps> = ({
         if (onCartUpdate) {
           onCartUpdate();
         }
+        // Trigger global cart update for other components
+        triggerCartUpdate();
       } else {
         setError(result.message || "Failed to remove item");
       }

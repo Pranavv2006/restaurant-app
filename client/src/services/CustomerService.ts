@@ -116,25 +116,94 @@ export interface RemoveCartItemResponse {
   message?: string;
 }
 
-// Customer Address
+// Customer Address Interfaces
+export interface Address {
+  id: number;
+  customerId: number;
+  label?: string;
+  addressLine: string;
+  latitude?: number;
+  longitude?: number;
+  isDefault: boolean;
+}
+
+export interface Customer {
+  id: number;
+  userId: number;
+  phone?: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export interface CheckCustomerAddressResponse {
   success: boolean;
   hasAddress: boolean;
-  data?: any;
+  data?: {
+    customer: Customer;
+    defaultAddress?: Address;
+    totalAddresses: number;
+  };
   message?: string;
 }
 
 export interface CreateCustomerAddressData {
   userId: number;
-  address?: string;
+  label?: string;
+  addressLine: string;
   phone?: string;
   latitude?: number;
   longitude?: number;
+  isDefault?: boolean;
 }
 
 export interface CreateCustomerAddressResponse {
   success: boolean;
-  data?: any;
+  data?: {
+    customer: Customer & { addresses: Address[] };
+    newAddress: Address;
+    totalAddresses: number;
+  };
+  message?: string;
+}
+
+export interface GetAllAddressesResponse {
+  success: boolean;
+  data?: {
+    customer: Customer;
+    addresses: Address[];
+    defaultAddress?: Address;
+    totalAddresses: number;
+  };
+  message?: string;
+}
+
+export interface SetDefaultAddressData {
+  userId: number;
+  addressId: number;
+}
+
+export interface SetDefaultAddressResponse {
+  success: boolean;
+  data?: {
+    customer: Customer & { addresses: Address[] };
+    updatedAddress: Address;
+    defaultAddress: Address;
+    totalAddresses: number;
+  };
+  message?: string;
+}
+
+export interface DeleteAddressResponse {
+  success: boolean;
+  data?: {
+    customer: Customer & { addresses: Address[] };
+    remainingAddresses: number;
+    deletedAddressId: number;
+  };
   message?: string;
 }
 
@@ -262,12 +331,7 @@ export const addToCart = async (
 
     const response = await axiosInstance.post<AddToCartResponse>(
       "/Customer/cart/add",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      payload
     );
 
     return response.data;
@@ -344,17 +408,28 @@ export const retrieveCart = async (
     }
 
     const response = await axiosInstance.get<RetrieveCartResponse>(
-      `/Customer/cart/${customerId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      `/Customer/cart/${customerId}`
     );
 
     return response.data;
   } catch (error: any) {
     console.error("Error calling retrieveCart API:", error);
+    
+    // Handle 404 - cart doesn't exist yet (normal case)
+    if (error.response?.status === 404) {
+      return {
+        success: true,
+        data: {
+          id: null,
+          customerId: customerId,
+          cartItems: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        message: "Cart is empty - no items added yet.",
+      };
+    }
+    
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",
@@ -385,12 +460,7 @@ export const updateCartItem = async (
 
     const response = await axiosInstance.put<UpdateCartItemResponse>(
       "/Customer/cart/update",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      payload
     );
 
     return response.data;
@@ -424,12 +494,7 @@ export const removeCartItem = async (
     }
 
     const response = await axiosInstance.delete<RemoveCartItemResponse>(
-      `/Customer/cart/remove/${cartItemId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      `/Customer/cart/remove/${cartItemId}`
     );
 
     return response.data;
@@ -465,12 +530,7 @@ export const checkCustomerAddress = async (
     }
 
     const response = await axiosInstance.get<CheckCustomerAddressResponse>(
-      `/Customer/address/check/${userId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      `/Customer/address/check/${userId}`
     );
 
     return response.data;
@@ -488,6 +548,14 @@ export const createCustomerAddress = async (
   payload: CreateCustomerAddressData
 ): Promise<CreateCustomerAddressResponse> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to create addresses.",
+      };
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       return {
@@ -498,12 +566,7 @@ export const createCustomerAddress = async (
 
     const response = await axiosInstance.post<CreateCustomerAddressResponse>(
       "/Customer/address/create",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      payload
     );
 
     return response.data;
@@ -530,12 +593,7 @@ export const editCustomerAddress = async (
 
     const response = await axiosInstance.put<EditCustomerAddressResponse>(
       "/Customer/address/edit",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      payload
     );
 
     return response.data;
@@ -591,12 +649,7 @@ export const placeOrder = async (
 
     const response = await axiosInstance.post<PlaceOrderResponse>(
       "/Customer/orders",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      payload
     );
 
     return response.data;
@@ -702,6 +755,12 @@ export const retrieveCustomerAddress = async (
   customerId: number
 ): Promise<CustomerAddressResponse | null> => {
   try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      console.log("User not authenticated as customer. Address features unavailable.");
+      return null;
+    }
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       console.log("No authentication token - user not logged in. Address features unavailable.");
@@ -712,11 +771,7 @@ export const retrieveCustomerAddress = async (
       success: boolean;
       data: CustomerAddressResponse | null;
       message?: string;
-    }>(`/Customer/address/${customerId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    }>(`/Customer/address/${customerId}`);
 
     if (response.data.success && response.data.data) {
       return response.data.data;
@@ -726,6 +781,19 @@ export const retrieveCustomerAddress = async (
     }
   } catch (error: any) {
     console.error("Error retrieving customer address:", error);
+    return null;
+  }
+};
+
+// Legacy function - Use getDefaultAddress() for new implementations
+export const retrieveDefaultCustomerAddress = async (
+  userId: number
+): Promise<Address | null> => {
+  try {
+    const defaultAddress = await getDefaultAddress(userId);
+    return defaultAddress;
+  } catch (error) {
+    console.error("Error retrieving default customer address:", error);
     return null;
   }
 };
@@ -745,11 +813,7 @@ export const getCustomerOrders = async (
       success: boolean;
       data: OrdersData[];
       message?: string;
-    }>(`/Customer/orders/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    }>(`/Customer/orders/${userId}`);
 
     if (response.data.success) {
       return response.data.data;
@@ -790,5 +854,159 @@ export const getProximityRestaurants = async (
       success: false,
       message: error.response?.data?.message || "Something went wrong",
     };
+  }
+};
+
+// ===== MULTIPLE ADDRESS MANAGEMENT FUNCTIONS =====
+
+export const getAllCustomerAddresses = async (
+  userId: number
+): Promise<GetAllAddressesResponse> => {
+  try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to view addresses.",
+      };
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.get<GetAllAddressesResponse>(
+      `/Customer/addresses/${userId}`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling getAllCustomerAddresses API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+export const setDefaultAddress = async (
+  payload: SetDefaultAddressData
+): Promise<SetDefaultAddressResponse> => {
+  try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to manage addresses.",
+      };
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.put<SetDefaultAddressResponse>(
+      "/Customer/address/setDefault",
+      payload
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling setDefaultAddress API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+export const deleteCustomerAddress = async (
+  userId: number,
+  addressId: number
+): Promise<DeleteAddressResponse> => {
+  try {
+    // Check if user is authenticated customer
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to delete addresses.",
+      };
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found. Please login again.",
+      };
+    }
+
+    const response = await axiosInstance.delete<DeleteAddressResponse>(
+      `/Customer/address/${userId}/${addressId}`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling deleteCustomerAddress API:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Something went wrong",
+    };
+  }
+};
+
+// ===== UTILITY FUNCTIONS FOR ADDRESS MANAGEMENT =====
+
+export const getDefaultAddress = async (userId: number): Promise<Address | null> => {
+  try {
+    const response = await getAllCustomerAddresses(userId);
+    
+    if (response.success && response.data?.defaultAddress) {
+      return response.data.defaultAddress;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error getting default address:", error);
+    return null;
+  }
+};
+
+export const hasMultipleAddresses = async (userId: number): Promise<boolean> => {
+  try {
+    const response = await getAllCustomerAddresses(userId);
+    
+    if (response.success && response.data) {
+      return response.data.totalAddresses > 1;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error checking multiple addresses:", error);
+    return false;
+  }
+};
+
+export const findAddressById = async (userId: number, addressId: number): Promise<Address | null> => {
+  try {
+    const response = await getAllCustomerAddresses(userId);
+    
+    if (response.success && response.data?.addresses) {
+      const address = response.data.addresses.find(addr => addr.id === addressId);
+      return address || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error finding address by ID:", error);
+    return null;
   }
 };

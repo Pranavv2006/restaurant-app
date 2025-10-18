@@ -38,10 +38,25 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       throw new Error("At least one item is required to place an order.");
     }
 
+    // ✅ FIXED: Get customer with their default address
     const [customerRecord, restaurantRecord] = await Promise.all([
       prisma.customer.findUnique({
         where: { userId: customerId },
-        select: { latitude: true, longitude: true, address: true },
+        select: { 
+          id: true,
+          userId: true,
+          addresses: {
+            where: {
+              isDefault: true
+            },
+            select: {
+              addressLine: true,
+              latitude: true,
+              longitude: true
+            },
+            take: 1
+          }
+        },
       }),
       prisma.restaurant.findUnique({
         where: { id: restaurantId },
@@ -49,12 +64,29 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       }),
     ]);
 
-    if (!customerRecord || !restaurantRecord) {
-      throw new Error("Invalid Customer or Restaurant ID.");
+    // Debug logging
+    console.log('🔍 Customer Record:', JSON.stringify(customerRecord, null, 2));
+    console.log('🔍 Restaurant Record:', JSON.stringify(restaurantRecord, null, 2));
+
+    if (!customerRecord) {
+      throw new Error("Invalid Customer ID - customer not found.");
     }
+
+    if (!restaurantRecord) {
+      throw new Error("Invalid Restaurant ID - restaurant not found.");
+    }
+
+    // ✅ FIXED: Check if customer has a default address
+    if (!customerRecord.addresses || customerRecord.addresses.length === 0) {
+      throw new Error("Customer does not have a default delivery address. Please add an address first.");
+    }
+
+    const customerAddress = customerRecord.addresses[0];
+
+    // ✅ FIXED: Get location from the address object
     if (
-      !customerRecord.latitude ||
-      !customerRecord.longitude ||
+      !customerAddress.latitude ||
+      !customerAddress.longitude ||
       !restaurantRecord.latitude ||
       !restaurantRecord.longitude
     ) {
@@ -63,8 +95,8 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       );
     }
 
-    const customerLat = parseFloat(customerRecord.latitude);
-    const customerLon = parseFloat(customerRecord.longitude);
+    const customerLat = parseFloat(customerAddress.latitude);
+    const customerLon = parseFloat(customerAddress.longitude);
     const restaurantLat = parseFloat(restaurantRecord.latitude);
     const restaurantLon = parseFloat(restaurantRecord.longitude);
 
@@ -111,13 +143,14 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
 
     const orderTotal = itemsTotal + deliveryFee;
 
+    // ✅ FIXED: Use addressLine from the address object
     const order = await prisma.order.create({
       data: {
         user: { connect: { id: customerId } },
         restaurant: { connect: { id: restaurantId } },
         total: orderTotal,
         deliveryFee: deliveryFee,
-        deliveryAddress: customerRecord.address,
+        deliveryAddress: customerAddress.addressLine,
 
         items: {
           create: itemsForOrderCreate,
@@ -132,6 +165,19 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       },
     });
 
+    // Clear the customer's cart after successful order placement
+    const cart = await prisma.cart.findUnique({
+      where: { customerId: customerRecord.id }
+    });
+
+    if (cart) {
+      // Delete all cart items for this customer
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id }
+      });
+      console.log(`🗑️ Cart cleared for customer ${customerRecord.id} after order ${order.id}`);
+    }
+
     return {
       success: true,
       message: `Order ${order.id} placed successfully`,
@@ -141,7 +187,7 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
         deliveryFee: order.deliveryFee,
         status: order.status,
         orderDate: order.orderDate,
-        address: customerRecord.address,
+        address: customerAddress.addressLine,
       },
     };
   } catch (error) {
@@ -151,7 +197,8 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       success: false,
       message:
         error.message.includes("Invalid Customer or Restaurant") ||
-        error.message.includes("Location data")
+        error.message.includes("Location data") ||
+        error.message.includes("default delivery address")
           ? error.message
           : "An internal error occurred while processing the order.",
       data: null,

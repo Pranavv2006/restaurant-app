@@ -8,7 +8,7 @@ import {
 import {
   selectRestaurants,
   addToCart,
-  checkCustomerAddress,
+  getAllCustomerAddresses,
   retrieveCart,
   updateCartItem,
   removeCartItem,
@@ -16,10 +16,11 @@ import {
 import CartModal from "../components/customer/CartModal";
 import { useParams } from "react-router-dom";
 import AddToCartToast from "../components/customer/AddToCartToast";
-import ProfileErrorToast from "../components/customer/ProfileErrorToast";
-import CreateCustomerProfileModal from "../components/customer/CreateCustomerProfileModal";
+import ProfileErrorToast from "../components/customer/AddressErrorToast";
+import CreateCustomerProfileModal from "../components/customer/ManageCustomerAddressModal";
 import useAuth from "../hooks/useAuth";
 import CustomerNav from "../components/customer/CustomerNav";
+import { triggerCartUpdate } from "../hooks/useCart";
 
 interface MenuItem {
   id: number;
@@ -39,8 +40,6 @@ const RestaurantPage: React.FC = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const { isAuthenticated, user, loading: authLoading } = useAuth();
 
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [showModal, setShowModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -103,16 +102,16 @@ const RestaurantPage: React.FC = () => {
       }
 
       try {
-        const result = await checkCustomerAddress(userId);
-        if (result.success && result.hasAddress) {
+        const result = await getAllCustomerAddresses(userId);
+        if (result.success && result.data && result.data.totalAddresses > 0) {
           setHasAddress(true);
-          setCustomerId(result.data.id);
+          setCustomerId(result.data.customer.id);
         } else {
           setHasAddress(false);
           setCustomerId(null);
         }
       } catch (error) {
-        console.error("Error checking customer address:", error);
+        console.error("Error checking customer addresses:", error);
         setHasAddress(false);
         setCustomerId(null);
       }
@@ -134,10 +133,10 @@ const RestaurantPage: React.FC = () => {
   // Handle address creation success
   const handleAddressSuccess = (data: any) => {
     setHasAddress(true);
-    setCustomerId(data.id);
+    setCustomerId(data.customer.id);
     setShowCreateAddressModal(false);
     setShowAddressError(false);
-    fetchCartItems(data.id);
+    fetchCartItems(data.customer.id);
   };
 
   // Fetch cart items to populate counter - only for authenticated customers
@@ -213,6 +212,9 @@ const RestaurantPage: React.FC = () => {
           [item.id]: (prev[item.id] || 0) + 1,
         }));
 
+        // Trigger global cart update for other components
+        triggerCartUpdate();
+
         // Auto-hide toast after 3 seconds
         setTimeout(() => {
           setShowToast(false);
@@ -260,6 +262,8 @@ const RestaurantPage: React.FC = () => {
                 delete newItems[item.id];
                 return newItems;
               });
+              // Trigger global cart update
+              triggerCartUpdate();
             }
           } else {
             // Update quantity
@@ -272,6 +276,8 @@ const RestaurantPage: React.FC = () => {
                 ...prev,
                 [item.id]: newQuantity,
               }));
+              // Trigger global cart update
+              triggerCartUpdate();
             }
           }
         }
@@ -401,67 +407,6 @@ const RestaurantPage: React.FC = () => {
     );
   };
 
-  const Modal: React.FC<{ item: MenuItem }> = ({ item }) => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-2xl w-full mx-4 shadow-2xl transform animate-modal-enter">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-              {item.name}
-            </h2>
-            <button
-              onClick={() => setShowModal(false)}
-              className="text-gray-400 hover:text-gray-600 text-3xl transform hover:rotate-90 transition-transform duration-300"
-            >
-              ×
-            </button>
-          </div>
-
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-4 ${
-              item.category === "Vegetarian"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {item.category === "Vegetarian"
-              ? "🟢 Vegetarian"
-              : "🔴 Non-Vegetarian"}
-          </span>
-
-          <div className="relative overflow-hidden rounded-xl mb-4">
-            <img
-              src={item.imageUrl}
-              alt={item.name}
-              className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src =
-                  "https://images.unsplash.com/photo-1495195134817-aeb325a55b65";
-              }}
-            />
-          </div>
-
-          <p className="text-gray-600 leading-relaxed mb-6">
-            {item.description}
-          </p>
-
-          <div className="flex justify-between items-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-              ₹{item.price.toFixed(2)}
-            </p>
-            <button
-              onClick={() => setShowModal(false)}
-              className="bg-gradient-to-r from-violet-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-violet-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       if (!restaurantId) {
@@ -562,24 +507,8 @@ const RestaurantPage: React.FC = () => {
             {restaurantName}
           </h1>
 
-          {/* Cart Button - only show for authenticated customers */}
-          {isCustomer() && hasAddress && customerId && (
-            <button
-              onClick={() => setShowCartModal(true)}
-              className="relative bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 ml-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
-            >
-              <FaShoppingCart className="text-xl" />
-              {Object.values(cartItems).reduce((sum, count) => sum + count, 0) >
-                0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse shadow-md border-2 border-white dark:border-neutral-800">
-                  {Object.values(cartItems).reduce(
-                    (sum, count) => sum + count,
-                    0
-                  )}
-                </span>
-              )}
-            </button>
-          )}
+          
+          
         </div>
 
         {/* Vegetarian Section */}
@@ -655,9 +584,6 @@ const RestaurantPage: React.FC = () => {
             </p>
           </div>
         )}
-
-        {/* Modal */}
-        {showModal && selectedItem && <Modal item={selectedItem} />}
 
         {/* Toast */}
         {showToast && (

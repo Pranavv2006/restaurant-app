@@ -107,18 +107,15 @@ export const searchRestaurants = async (
       const radius = payload.radiusKm !== undefined ? payload.radiusKm : 10;
       queryParams.append("radiusKm", radius.toString());
       
-      // Use proximity search endpoint when coordinates are available
       const endpoint = `/home/proximity-search?${queryParams.toString()}`;
       const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
       return response.data;
     } else if (payload.query) {
-      // Use text search endpoint when only query is provided (no coordinates)
       const endpoint = `/home/search-restaurants?q=${encodeURIComponent(payload.query)}`;
       const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
       return response.data;
     } else {
-      // Default case: return all restaurants (for initial load) - use a working endpoint
-      const endpoint = `/home/search-restaurants`;
+      const endpoint = `/home/search-restaurants?q=restaurant`;
       const response = await axiosInstance.get<ProximitySearchResponse>(endpoint);
       return response.data;
     }

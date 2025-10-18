@@ -7,7 +7,7 @@ const RetrieveCartService = async (customerId) => {
     }
 
     // Find cart for customer
-    const cart = await prisma.cart.findUnique({
+    let cart = await prisma.cart.findUnique({
       where: { customerId: customerId },
       include: {
         cartItems: {
@@ -22,8 +22,34 @@ const RetrieveCartService = async (customerId) => {
       },
     });
 
+    // If cart doesn't exist, create one for the customer
     if (!cart) {
-      return { success: false, message: "Cart not found for this customer." };
+      // First verify that the customer exists
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId }
+      });
+
+      if (!customer) {
+        return { success: false, message: "Customer not found." };
+      }
+
+      // Create empty cart for customer
+      cart = await prisma.cart.create({
+        data: {
+          customerId: customerId,
+        },
+        include: {
+          cartItems: {
+            include: {
+              menu: {
+                include: {
+                  restaurant: true,
+                },
+              },
+            },
+          },
+        },
+      });
     }
 
     return { success: true, data: cart };
