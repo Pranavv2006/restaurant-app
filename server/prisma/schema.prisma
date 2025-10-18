@@ -148,15 +148,28 @@ model Payment {
 model Customer {
   id        Int     @id @default(autoincrement())
   userId    Int     @unique @map("user_id")
-  address   String?
+  Address   String?
   phone     String?
-  latitude  Decimal? @db.Decimal(10, 8)
-  longitude Decimal? @db.Decimal(11, 8)
+  addresses Address[]
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   cart Cart?
 
   @@map("Customers")
+}
+
+model Address {
+  id          Int       @id @default(autoincrement())
+  customerId  Int       @map("customer_id")
+  label       String?   
+  addressLine String     
+  latitude    Decimal?   @db.Decimal(10, 8)
+  longitude   Decimal?   @db.Decimal(11, 8)
+  isDefault   Boolean    @default(false)
+
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("Addresses")
 }
 
 model Cart {
