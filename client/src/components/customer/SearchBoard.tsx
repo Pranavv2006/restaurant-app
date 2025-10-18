@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import RestaurantCard from "./RestaurantCard";
 import {
   retrieveCustomerAddress,
-  checkCustomerProfile,
+  checkCustomerAddress,
 } from "../../services/CustomerService";
 import { getNearbyRestaurants } from "../../services/HomeService";
 import type { NearbyRestaurant } from "../../services/HomeService";
@@ -93,21 +93,21 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
 
       setLoadingAddress(true);
       try {
-        // Get customer profile first to get customer ID
-        const profileResponse = await checkCustomerProfile(userId);
+        // Get customer address first to get customer ID
+        const addressResponse = await checkCustomerAddress(userId);
 
         if (
-          !profileResponse.success ||
-          !profileResponse.hasProfile ||
-          !profileResponse.data
+          !addressResponse.success ||
+          !addressResponse.hasAddress ||
+          !addressResponse.data
         ) {
-          console.warn("Customer profile not found");
+          console.warn("Customer address not found");
           setCustomerAddress(null);
           setLoadingAddress(false);
           return;
         }
 
-        const customerId = profileResponse.data.id;
+        const customerId = addressResponse.data.id;
 
         // Now get the address using customer ID
         const addressData = await retrieveCustomerAddress(customerId);

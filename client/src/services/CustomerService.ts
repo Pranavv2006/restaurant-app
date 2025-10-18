@@ -116,15 +116,15 @@ export interface RemoveCartItemResponse {
   message?: string;
 }
 
-// Customer Profile
-export interface CheckCustomerProfileResponse {
+// Customer Address
+export interface CheckCustomerAddressResponse {
   success: boolean;
-  hasProfile: boolean;
+  hasAddress: boolean;
   data?: any;
   message?: string;
 }
 
-export interface CreateCustomerProfileData {
+export interface CreateCustomerAddressData {
   userId: number;
   address?: string;
   phone?: string;
@@ -132,13 +132,13 @@ export interface CreateCustomerProfileData {
   longitude?: number;
 }
 
-export interface CreateCustomerProfileResponse {
+export interface CreateCustomerAddressResponse {
   success: boolean;
   data?: any;
   message?: string;
 }
 
-export interface EditCustomerProfileData {
+export interface EditCustomerAddressData {
   customerId: number;
   address?: string;
   phone?: string;
@@ -146,7 +146,7 @@ export interface EditCustomerProfileData {
   longitude?: number;
 }
 
-export interface EditCustomerProfileResponse {
+export interface EditCustomerAddressResponse {
   success: boolean;
   data?: any;
   message?: string;
@@ -442,16 +442,16 @@ export const removeCartItem = async (
   }
 };
 
-export const checkCustomerProfile = async (
+export const checkCustomerAddress = async (
   userId: number
-): Promise<CheckCustomerProfileResponse> => {
+): Promise<CheckCustomerAddressResponse> => {
   try {
     // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
-        hasProfile: false,
-        message: "Please log in as a customer to access profile features.",
+        hasAddress: false,
+        message: "Please log in as a customer to access address features.",
       };
     }
 
@@ -459,13 +459,13 @@ export const checkCustomerProfile = async (
     if (!token) {
       return {
         success: false,
-        hasProfile: false,
-        message: "Not authenticated - please login to access profile features.",
+        hasAddress: false,
+        message: "Not authenticated - please login to access address features.",
       };
     }
 
-    const response = await axiosInstance.get<CheckCustomerProfileResponse>(
-      `/Customer/profile/check/${userId}`,
+    const response = await axiosInstance.get<CheckCustomerAddressResponse>(
+      `/Customer/address/check/${userId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -475,18 +475,18 @@ export const checkCustomerProfile = async (
 
     return response.data;
   } catch (error: any) {
-    console.error("Error calling checkCustomerProfile API:", error);
+    console.error("Error calling checkCustomerAddress API:", error);
     return {
       success: false,
-      hasProfile: false,
+      hasAddress: false,
       message: error.response?.data?.message || "Something went wrong",
     };
   }
 };
 
-export const createCustomerProfile = async (
-  payload: CreateCustomerProfileData
-): Promise<CreateCustomerProfileResponse> => {
+export const createCustomerAddress = async (
+  payload: CreateCustomerAddressData
+): Promise<CreateCustomerAddressResponse> => {
   try {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -496,8 +496,8 @@ export const createCustomerProfile = async (
       };
     }
 
-    const response = await axiosInstance.post<CreateCustomerProfileResponse>(
-      "/Customer/profile/create",
+    const response = await axiosInstance.post<CreateCustomerAddressResponse>(
+      "/Customer/address/create",
       payload,
       {
         headers: {
@@ -508,7 +508,7 @@ export const createCustomerProfile = async (
 
     return response.data;
   } catch (error: any) {
-    console.error("Error calling createCustomerProfile API:", error);
+    console.error("Error calling createCustomerAddress API:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",
@@ -516,9 +516,9 @@ export const createCustomerProfile = async (
   }
 };
 
-export const editCustomerProfile = async (
-  payload: EditCustomerProfileData
-): Promise<EditCustomerProfileResponse> => {
+export const editCustomerAddress = async (
+  payload: EditCustomerAddressData
+): Promise<EditCustomerAddressResponse> => {
   try {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -528,8 +528,8 @@ export const editCustomerProfile = async (
       };
     }
 
-    const response = await axiosInstance.put<EditCustomerProfileResponse>(
-      "/Customer/profile/edit",
+    const response = await axiosInstance.put<EditCustomerAddressResponse>(
+      "/Customer/address/edit",
       payload,
       {
         headers: {
@@ -540,7 +540,7 @@ export const editCustomerProfile = async (
 
     return response.data;
   } catch (error: any) {
-    console.error("Error calling editCustomerProfile API:", error);
+    console.error("Error calling editCustomerAddress API:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",

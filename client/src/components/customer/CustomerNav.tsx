@@ -8,7 +8,7 @@ import EditCustomerProfileModal from "./EditCustomerProfileModal";
 import ProfileToast from "./ProfileToast";
 import Login from "../auth/Login";
 import Register from "../auth/Register";
-import { checkCustomerProfile } from "../../services/CustomerService";
+import { checkCustomerAddress } from "../../services/CustomerService";
 import useAuth from "../../hooks/useAuth";
 
 
@@ -50,9 +50,9 @@ const CustomerNav = () => {
 
     // Only proceed with profile check for authenticated customers
 
-    const checkProfile = async () => {
-      const result = await checkCustomerProfile(userId);
-      if (result.success && result.hasProfile) {
+    const checkAddress = async () => {
+      const result = await checkCustomerAddress(userId);
+      if (result.success && result.hasAddress) {
         setHasProfile(true);
         setCustomerData(result.data);
         setCustomerName(result.data.user.firstName);
@@ -62,7 +62,7 @@ const CustomerNav = () => {
         setTimeout(() => setShowProfileToast(false), 5000);
       }
     };
-    checkProfile();
+    checkAddress();
   }, [isAuthenticated, userId, user]);
 
   const handleProfileSuccess = (data: any) => {

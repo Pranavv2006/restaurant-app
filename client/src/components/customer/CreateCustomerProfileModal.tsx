@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaTimes, FaUser, FaPhone } from "react-icons/fa";
-import { createCustomerProfile } from "../../services/CustomerService";
+import { createCustomerAddress } from "../../services/CustomerService";
 import GooglePlacesAddressInput from "./GooglePlacesAddressInput";
 
 interface CreateCustomerProfileModalProps {
@@ -31,7 +31,7 @@ const CreateCustomerProfileModal: React.FC<CreateCustomerProfileModalProps> = ({
     setError(null);
 
     try {
-      const result = await createCustomerProfile({
+      const result = await createCustomerAddress({
         userId,
         address: formData.address || undefined,
         phone: formData.phone || undefined,

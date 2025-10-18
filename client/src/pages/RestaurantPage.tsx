@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FaShoppingCart,
-  FaArrowLeft,
   FaUtensils,
   FaPlus,
   FaMinus,
@@ -9,7 +8,7 @@ import {
 import {
   selectRestaurants,
   addToCart,
-  checkCustomerProfile,
+  checkCustomerAddress,
   retrieveCart,
   updateCartItem,
   removeCartItem,
@@ -54,11 +53,11 @@ const RestaurantPage: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Customer profile state
-  const [hasProfile, setHasProfile] = useState(false);
+  // Customer address state
+  const [hasAddress, setHasAddress] = useState(false);
   const [customerId, setCustomerId] = useState<number | null>(null);
-  const [showProfileError, setShowProfileError] = useState(false);
-  const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+  const [showAddressError, setShowAddressError] = useState(false);
+  const [showCreateAddressModal, setShowCreateAddressModal] = useState(false);
 
   // Cart state
   const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
@@ -86,13 +85,13 @@ const RestaurantPage: React.FC = () => {
     }
   }, []);
 
-  // Check customer profile on component mount - only for authenticated customers
+  // Check customer address on component mount - only for authenticated customers
   useEffect(() => {
-    const checkProfile = async () => {
-      // Only check profile if user is authenticated and is a customer
+    const checkAddress = async () => {
+      // Only check address if user is authenticated and is a customer
       if (!isCustomer()) {
-        console.log("User is not an authenticated customer - skipping profile check");
-        setHasProfile(false);
+        console.log("User is not an authenticated customer - skipping address check");
+        setHasAddress(false);
         setCustomerId(null);
         return;
       }
@@ -104,24 +103,24 @@ const RestaurantPage: React.FC = () => {
       }
 
       try {
-        const result = await checkCustomerProfile(userId);
-        if (result.success && result.hasProfile) {
-          setHasProfile(true);
+        const result = await checkCustomerAddress(userId);
+        if (result.success && result.hasAddress) {
+          setHasAddress(true);
           setCustomerId(result.data.id);
         } else {
-          setHasProfile(false);
+          setHasAddress(false);
           setCustomerId(null);
         }
       } catch (error) {
-        console.error("Error checking customer profile:", error);
-        setHasProfile(false);
+        console.error("Error checking customer address:", error);
+        setHasAddress(false);
         setCustomerId(null);
       }
     };
     
     // Only run when auth state is resolved
     if (!authLoading) {
-      checkProfile();
+      checkAddress();
     }
   }, [isAuthenticated, user, authLoading]);
 
@@ -132,12 +131,12 @@ const RestaurantPage: React.FC = () => {
     }
   }, [customerId, isAuthenticated, user]);
 
-  // Handle profile creation success
-  const handleProfileSuccess = (data: any) => {
-    setHasProfile(true);
+  // Handle address creation success
+  const handleAddressSuccess = (data: any) => {
+    setHasAddress(true);
     setCustomerId(data.id);
-    setShowCreateProfileModal(false);
-    setShowProfileError(false);
+    setShowCreateAddressModal(false);
+    setShowAddressError(false);
     fetchCartItems(data.id);
   };
 
@@ -192,9 +191,9 @@ const RestaurantPage: React.FC = () => {
         return;
       }
 
-      // Check if customer profile exists
-      if (!hasProfile || !customerId) {
-        setShowProfileError(true);
+      // Check if customer address exists
+      if (!hasAddress || !customerId) {
+        setShowAddressError(true);
         return;
       }
 
@@ -564,7 +563,7 @@ const RestaurantPage: React.FC = () => {
           </h1>
 
           {/* Cart Button - only show for authenticated customers */}
-          {isCustomer() && hasProfile && customerId && (
+          {isCustomer() && hasAddress && customerId && (
             <button
               onClick={() => setShowCartModal(true)}
               className="relative bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 transform hover:scale-110 ml-4 p-3 rounded-full border-2 border-gray-200 dark:border-neutral-600 hover:border-violet-300"
@@ -674,27 +673,27 @@ const RestaurantPage: React.FC = () => {
           </div>
         )}
 
-        {/* Profile Error Toast */}
-        {showProfileError && (
+        {/* Address Error Toast */}
+        {showAddressError && (
           <div className="fixed top-4 right-4 z-50 animate-slide-in">
             <ProfileErrorToast
-              message="Please complete your customer profile before adding items to cart."
+              message="Please add your delivery address before adding items to cart."
               onCreateProfile={() => {
-                setShowProfileError(false);
-                setShowCreateProfileModal(true);
+                setShowAddressError(false);
+                setShowCreateAddressModal(true);
               }}
-              onClose={() => setShowProfileError(false)}
+              onClose={() => setShowAddressError(false)}
             />
           </div>
         )}
 
-        {/* Create Customer Profile Modal - only for authenticated customers */}
+        {/* Create Customer Address Modal - only for authenticated customers */}
         {isCustomer() && (
           <CreateCustomerProfileModal
-            isOpen={showCreateProfileModal}
-            onClose={() => setShowCreateProfileModal(false)}
+            isOpen={showCreateAddressModal}
+            onClose={() => setShowCreateAddressModal(false)}
             userId={user?.id || 1}
-            onSuccess={handleProfileSuccess}
+            onSuccess={handleAddressSuccess}
           />
         )}
 

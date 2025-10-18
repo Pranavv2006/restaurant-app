@@ -5,9 +5,12 @@ const addToCart = require("../controllers/addToCart");
 const retrieveCart = require("../controllers/retrieveCart");
 const updateCartItem = require("../controllers/updateCartItem");
 const removeCartItem = require("../controllers/removeCartItem");
-const checkCustomerProfile = require("../controllers/checkCustomerProfile");
-const createCustomerProfile = require("../controllers/createCustomerProfile");
+const checkCustomerAddress = require("../controllers/checkCustomerAddress");
+const createCustomerAddress = require("../controllers/createCustomerAddress");
 const editCustomerProfile = require("../controllers/editCustomerProfile");
+const getAllCustomerAddresses = require("../controllers/getAllCustomerAddresses");
+const setDefaultAddress = require("../controllers/setDefaultAddress");
+const deleteAddress = require("../controllers/deleteAddress");
 const placeOrder = require("../controllers/placeOrder");
 const retrieveAddress = require("../controllers/retrieveCustomerAddress");
 const getCustomerOrders = require("../controllers/getCustomerOrders");
@@ -30,16 +33,28 @@ router.delete(
   removeCartItem.removeCartItemController
 );
 
-// Customer profile routes
+// Customer address routes
 router.get(
-  "/profile/check/:userId",
-  checkCustomerProfile.checkCustomerProfileController
+  "/address/check/:userId",
+  checkCustomerAddress.checkCustomerAddressController
+);
+router.get(
+  "/addresses/:userId",
+  getAllCustomerAddresses.getAllCustomerAddressesController
 );
 router.post(
-  "/profile/create",
-  createCustomerProfile.createCustomerProfileController
+  "/address/create",
+  createCustomerAddress.createCustomerAddressController
 );
-router.put("/profile/edit", editCustomerProfile.editCustomerProfileController);
+router.put("/address/edit", editCustomerProfile.editCustomerProfileController);
+router.put(
+  "/address/setDefault",
+  setDefaultAddress.setDefaultAddressController
+);
+router.delete(
+  "/address/:userId/:addressId",
+  deleteAddress.deleteAddressController
+);
 
 // Order management
 router.post("/orders", placeOrder.placeOrderController);

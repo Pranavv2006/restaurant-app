@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
   placeMultipleOrders,
   retrieveCustomerAddress,
-  checkCustomerProfile,
-  editCustomerProfile,
+  checkCustomerAddress,
+  editCustomerAddress,
 } from "../../services/CustomerService";
 
 interface CartItem {
@@ -90,17 +90,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       // Set customerId to userId (PlaceOrderService expects user ID, not customer profile ID)
       setCustomerId(userId);
 
-      // Check customer profile for address data
-      const profileResponse = await checkCustomerProfile(userId);
+      // Check customer address data
+      const addressResponse = await checkCustomerAddress(userId);
 
       if (
-        profileResponse.success &&
-        profileResponse.hasProfile &&
-        profileResponse.data
+        addressResponse.success &&
+        addressResponse.hasAddress &&
+        addressResponse.data
       ) {
         // Get customer address
         const addressData = await retrieveCustomerAddress(
-          profileResponse.data.id
+          addressResponse.data.id
         );
         if (addressData) {
           setDeliveryAddress(addressData);
@@ -116,7 +116,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     try {
       setIsLoading(true);
-      const result = await editCustomerProfile({
+      const result = await editCustomerAddress({
         customerId,
         address: deliveryAddress.address,
         latitude: deliveryAddress.latitude,
