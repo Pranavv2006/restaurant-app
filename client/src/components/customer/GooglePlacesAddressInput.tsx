@@ -25,6 +25,8 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<any>(null);
+  const lastSelectionRef = useRef<string>("");
+  const debounceTimeoutRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
@@ -205,7 +207,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
       }
 
       try {
-        setIsLoading(true);
         const place = autocompleteRef.current?.getPlace();
 
         // Only trigger onChange if we have a valid place with geometry
@@ -216,14 +217,25 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
           place.formatted_address
         ) {
           const address = place.formatted_address;
+          
+          // Prevent duplicate selections
+          if (lastSelectionRef.current === address) {
+            return;
+          }
+          
+          lastSelectionRef.current = address;
+          
+          setIsLoading(true);
+          
+          // Immediate callback for better responsiveness
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
-
+          
           onChange(address, lat, lng);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Google Places error:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -237,10 +249,15 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
           autocompleteRef.current
         );
       }
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [onChange, disabled, isFormSubmitting]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Reset last selection when user types manually
+    lastSelectionRef.current = "";
     onChange(e.target.value);
   };
 
@@ -263,6 +280,11 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
     return () => {
       document.removeEventListener("click", detectFormSubmission, true);
       document.removeEventListener("submit", detectFormSubmission, true);
+      
+      // Clean up debounce timeout on unmount
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, []);
 

@@ -31,7 +31,7 @@ const calculateDeliveryFee = (distanceKm) => {
 const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
   try {
     if (!customerId || !restaurantId) {
-      throw new Error("customerId (User ID) and restaurantId are required.");
+      throw new Error("customerId and restaurantId are required.");
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -41,7 +41,7 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
     // ✅ FIXED: Get customer with their default address
     const [customerRecord, restaurantRecord] = await Promise.all([
       prisma.customer.findUnique({
-        where: { userId: customerId },
+        where: { id: customerId },
         select: { 
           id: true,
           userId: true,
@@ -143,10 +143,10 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
 
     const orderTotal = itemsTotal + deliveryFee;
 
-    // ✅ FIXED: Use addressLine from the address object
+    // ✅ FIXED: Use addressLine from the address object and correct userId
     const order = await prisma.order.create({
       data: {
-        user: { connect: { id: customerId } },
+        user: { connect: { id: customerRecord.userId } },
         restaurant: { connect: { id: restaurantId } },
         total: orderTotal,
         deliveryFee: deliveryFee,

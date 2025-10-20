@@ -1,7 +1,7 @@
 import React from "react";
 import CustomerHero from "../components/customer/CustomerHero";
 import CustomerNav from "../components/customer/CustomerNav";
-import RecentMenu from "../components/customer/RecentMenu";
+import WhyCustomersLove from "../components/customer/WhyCustomersLove";
 
 const RestaurantHome: React.FC = () => {
   return (
@@ -16,10 +16,7 @@ const RestaurantHome: React.FC = () => {
 
       {/* Menu Section */}
       <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Popular Dishes
-        </h2>
-        <RecentMenu />
+        <WhyCustomersLove />
       </section>
     </div>
   );

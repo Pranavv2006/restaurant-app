@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { searchRestaurants } from "../../services/HomeService";
 import SearchBoard from "./SearchBoard";
 import GooglePlacesAddressInput from "./GooglePlacesAddressInput";
@@ -13,6 +13,7 @@ const OrderHero: React.FC = () => {
   const [address, setAddress] = useState("");
   const [latitude, setLatitude] = useState<number | undefined>(undefined);
   const [longitude, setLongitude] = useState<number | undefined>(undefined);
+  const immediateSearchRef = useRef(false);
   
   const loadDefaultRestaurants = useCallback(async () => {
     setSearching(true);
@@ -38,7 +39,66 @@ const OrderHero: React.FC = () => {
     setAddress(address);
     setLatitude(lat);
     setLongitude(lng);
+    
+    // Immediate search when address is selected from Google Places
+    if (lat !== undefined && lng !== undefined) {
+      // Set flag to prevent useEffect from duplicating the search
+      immediateSearchRef.current = true;
+      
+      // Trigger immediate search with the new coordinates
+      performSearch(query, lat, lng);
+      
+      // Reset flag after a short delay to allow future useEffect triggers
+      setTimeout(() => {
+        immediateSearchRef.current = false;
+      }, 200);
+    }
   };
+
+  const performSearch = useCallback(async (searchQuery: string, lat?: number, lng?: number) => {
+    setSearching(true);
+    
+    const payload: {
+      query?: string;
+      latitude?: number;
+      longitude?: number;
+      radiusKm?: number;
+    } = {};
+
+    const isQuerySet = searchQuery.trim().length > 0;
+    const isLocationSet = lat !== undefined && lng !== undefined;
+
+    if (isQuerySet) {
+      payload.query = searchQuery.trim();
+    }
+    if (isLocationSet) {
+      payload.latitude = lat;
+      payload.longitude = lng;
+      payload.radiusKm = 15; 
+    }
+
+    // If neither query nor location is set, load default restaurants
+    if (!isQuerySet && !isLocationSet) {
+      loadDefaultRestaurants();
+      return;
+    }
+
+    try {
+      const res = await searchRestaurants(payload);
+      
+      if (res.success) {
+        setResults(res.data ?? []);
+        setHasSearched(true);
+      } else {
+        setResults([]);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      setResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [loadDefaultRestaurants]);
 
   useEffect(() => {
     const isLocationSet = latitude !== undefined && longitude !== undefined;
@@ -49,38 +109,18 @@ const OrderHero: React.FC = () => {
       return;
     }
     
-    setSearching(true);
-
-    const timeout = setTimeout(async () => {
-      const payload: {
-        query?: string;
-        latitude?: number;
-        longitude?: number;
-        radiusKm?: number;
-      } = {};
-
-      if (isQuerySet) {
-        payload.query = query.trim();
-      }
-      if (isLocationSet) {
-        payload.latitude = latitude;
-        payload.longitude = longitude;
-        payload.radiusKm = 15; 
-      }
-
-      const res = await searchRestaurants(payload); 
-      setSearching(false);
-
-      if (res.success) {
-      setResults(res.data ?? []);
-      setHasSearched(true); // ✅ move here
-    } else {
-      setResults([]);
+    // Skip if we just made an immediate search to prevent duplicates
+    if (immediateSearchRef.current) {
+      return;
     }
-    }, 400); 
+    
+    // Debounce text query changes, but allow immediate location-based searches
+    const timeout = setTimeout(() => {
+      performSearch(query, latitude, longitude);
+    }, isQuerySet ? 400 : 0); // No delay for location-only searches
 
     return () => clearTimeout(timeout);
-  }, [query, latitude, longitude, loadDefaultRestaurants]);
+  }, [query, performSearch, latitude, longitude, loadDefaultRestaurants]);
 
   useEffect(() => {
     setIsVisible(true);

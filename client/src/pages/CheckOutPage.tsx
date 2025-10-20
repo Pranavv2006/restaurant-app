@@ -75,7 +75,7 @@ interface OrderSummaryProps {
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({ items, deliveryFee, tax }) => {
-  const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal + deliveryFee + tax;
 
   return (
@@ -84,8 +84,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ items, deliveryFee, tax }) 
       
       {items.map((item) => (
         <div key={item.id} className="flex justify-between mb-2 text-gray-700 dark:text-gray-300">
-          <span>{item.name}:</span>
-          <span>₹{item.price.toFixed(2)}</span>
+          <span>{item.name} (x{item.quantity}):</span>
+          <span>₹{(item.price * item.quantity).toFixed(2)}</span>
         </div>
       ))}
       
@@ -142,6 +142,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderIds, setOrderIds] = useState<number[]>([]);
+  const [finalOrderItems, setFinalOrderItems] = useState<OrderItem[]>([]);
 
   // Helper function to check if user is authenticated customer
   const isCustomer = () => {
@@ -169,6 +170,9 @@ const CheckoutPage: React.FC = () => {
     price: parseFloat(item.unitPrice.toString()),
     quantity: item.quantity,
   }));
+
+  // Use preserved order items for display when cart is cleared after order placement
+  const displayOrderItems = currentStep === 4 && finalOrderItems.length > 0 ? finalOrderItems : orderItems;
 
   useEffect(() => {
     if (isCustomer() && user?.id) {
@@ -244,7 +248,7 @@ const CheckoutPage: React.FC = () => {
       case 1: // Cart step
         return cartItems.length > 0;
       case 2: // Details step
-        const hasRequiredFields = !!formData.email.trim() && !!formData.phone.trim();
+        const hasRequiredFields = !!formData.phone.trim();
         const hasAddress = formData.useExistingAddress 
           ? !!formData.selectedAddressId 
           : !!formData.newAddress.addressLine.trim();
@@ -278,8 +282,17 @@ const CheckoutPage: React.FC = () => {
 
     setPlacingOrder(true);
     try {
+      // Preserve order items for display on confirmation page
+      const currentOrderItems: OrderItem[] = cartItems.map(item => ({
+        id: item.menu.id,
+        name: item.menu.name,
+        price: parseFloat(item.unitPrice.toString()),
+        quantity: item.quantity,
+      }));
+      setFinalOrderItems(currentOrderItems);
+
       // Transform cart items for order placement
-      const orderItems = cartItems.map(item => ({
+      const orderItemsForAPI = cartItems.map(item => ({
         id: item.menu.id,
         quantity: item.quantity,
         menu: {
@@ -293,7 +306,7 @@ const CheckoutPage: React.FC = () => {
         },
       }));
 
-      const result = await placeMultipleOrders(customerId, orderItems);
+      const result = await placeMultipleOrders(customerId, orderItemsForAPI);
       
       if (result.totalSuccessful > 0) {
         setOrderIds(result.successfulOrders);
@@ -377,7 +390,7 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
       <CustomerNav />
-      <div className="max-w-5xl mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-lg overflow-hidden">
+      <div className="max-w-5xl my-4 mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-white dark:bg-neutral-800 p-4 border-b border-gray-200 dark:border-neutral-700">
           <div className="flex justify-between items-center max-w-2xl mx-auto">
@@ -499,15 +512,6 @@ const CheckoutPage: React.FC = () => {
                   <div className="mb-6">
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Contact Information</h2>
                     <div className="space-y-4">
-                      <input
-                        type="email"
-                        name="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-violet-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
-                        required
-                      />
                       <input
                         type="tel"
                         name="phone"
@@ -691,20 +695,6 @@ const CheckoutPage: React.FC = () => {
                         <p className="text-sm text-gray-600 dark:text-gray-400">Pay when your order arrives</p>
                       </div>
                     </label>
-                    <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={paymentMethod === 'card'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300"
-                      />
-                      <div className="ml-3">
-                        <h3 className="font-medium text-gray-800 dark:text-white">Credit/Debit Card</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Pay securely online</p>
-                      </div>
-                    </label>
                   </div>
                 </div>
               )}
@@ -726,12 +716,6 @@ const CheckoutPage: React.FC = () => {
                       </div>
                       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Order Placed Successfully!</h2>
                       <p className="text-gray-600 mb-6">Your order has been confirmed and is being prepared.</p>
-                      {orderIds.length > 0 && (
-                        <div className="mb-6">
-                          <p className="text-sm text-gray-600">Order IDs:</p>
-                          <p className="font-mono text-violet-600">{orderIds.join(', ')}</p>
-                        </div>
-                      )}
                       <button
                         onClick={() => navigate('/')}
                         className="bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 transition-colors"
@@ -778,7 +762,7 @@ const CheckoutPage: React.FC = () => {
             {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
               <OrderSummary
-                items={orderItems}
+                items={displayOrderItems}
                 deliveryFee={3.00}
                 tax={2.15}
               />
