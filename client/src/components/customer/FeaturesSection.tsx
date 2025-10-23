@@ -13,7 +13,7 @@ const FeaturesSection: React.FC = () => {
       <div className="w-full max-h-[400px] overflow-hidden rounded-xl mb-10">
         <img
           className="w-full h-full object-cover"
-          src="https://brownliving.in/cdn/shop/articles/vegan-meal-ideas-for-special-occasions-and-celebrations-8497649.png?v=1760155561"
+          src="https://brownliving.in/cdn/shop/articles/vegan-meal-ideas-for-special-occasions-and-celebrations-8497649.png?v=1760155561  "
           alt="Restaurant system overview"
         />
       </div>

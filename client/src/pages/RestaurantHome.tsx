@@ -5,6 +5,7 @@ import WhyCustomersLove from "../components/customer/WhyCustomersLove";
 import ReviewSection from "../components/customer/ReviewSection";
 import FeaturesSection from "../components/customer/FeaturesSection";
 import PartnerWithUs from "../components/merchant/PartnerWithUs";
+import FAQSection from "../components/customer/FAQSection";
 
 const RestaurantHome: React.FC = () => {
   return (
@@ -35,6 +36,10 @@ const RestaurantHome: React.FC = () => {
 
       <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
         <PartnerWithUs />
+      </section>
+
+      <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
+        <FAQSection />
       </section>
     </div>
   );
