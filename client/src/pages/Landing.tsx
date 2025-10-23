@@ -36,6 +36,10 @@ const Landing = () => {
     setIsUserCreationOpen(true);
   };
 
+  const handleLoginSuccess = () => {
+    return;
+  };
+
   const handleUserCreationClose = () => {
     setIsUserCreationOpen(false);
     setRegisteredUserName("");
@@ -69,6 +73,7 @@ const Landing = () => {
         <Login
           onClose={() => setIsLoginOpen(false)}
           onSwitchToRegister={handleSwitchToRegister}
+          onSuccess={handleLoginSuccess}
         />
       )}
 
