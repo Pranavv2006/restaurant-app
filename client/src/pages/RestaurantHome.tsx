@@ -3,6 +3,8 @@ import CustomerHero from "../components/customer/CustomerHero";
 import CustomerNav from "../components/customer/CustomerNav";
 import WhyCustomersLove from "../components/customer/WhyCustomersLove";
 import ReviewSection from "../components/customer/ReviewSection";
+import FeaturesSection from "../components/customer/FeaturesSection";
+import PartnerWithUs from "../components/merchant/PartnerWithUs";
 
 const RestaurantHome: React.FC = () => {
   return (
@@ -21,11 +23,18 @@ const RestaurantHome: React.FC = () => {
       </section>
 
       <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
+        <FeaturesSection />
+      </section>
+
+      <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
         <ReviewSection
           title="What Our Customers Say"
-          subtitle="See what people love about our food and service!"
           options={{ loop: true }}
         />
+      </section>
+
+      <section className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
+        <PartnerWithUs />
       </section>
     </div>
   );

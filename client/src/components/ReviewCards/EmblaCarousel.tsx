@@ -16,7 +16,7 @@ type PropType = {
 
 const EmblaCarousel: React.FC<PropType> = ({ slides, options }) => {
   const autoplay = useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false }) // 3s interval
+    Autoplay({ delay: 3000, stopOnInteraction: false })
   );
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [autoplay.current]);
   const { selectedIndex, scrollSnaps, onDotButtonClick } = useDotButton(emblaApi);
