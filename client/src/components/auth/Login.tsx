@@ -25,7 +25,7 @@ export interface AuthResult {
   data?: LoginResponseData;
 }
 
-const Login = ({ onClose, onSwitchToRegister, onSuccess }: LoginProps) => {
+const Login = ({ onClose, onSwitchToRegister}: LoginProps) => {
   const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
@@ -75,11 +75,6 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }: LoginProps) => {
           localStorage.setItem("authToken", loginResponseData.accessToken); 
         }
 
-        // Call success callback if provided - let the parent handle navigation
-        if (onSuccess && loginResponseData) {
-          onSuccess(loginResponseData as LoginResponseData);
-          return; // Exit early, let parent handle navigation
-        }
 
         // Fallback navigation only if no onSuccess callback is provided
         setTimeout(async () => {
