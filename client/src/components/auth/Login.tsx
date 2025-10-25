@@ -85,7 +85,7 @@ const Login = ({ onClose, onSwitchToRegister}: LoginProps) => {
             console.log("User role:", userRole);
 
             if (userRole === "Merchant") {
-              navigate("/merchant");
+              window.open("/merchant", "_blank")
             }
             if (userRole === "Customer") {
               navigate("/");

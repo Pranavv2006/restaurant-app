@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback, useState } from "react";
 import { type EmblaOptionsType } from "embla-carousel";
 import { DotButton, useDotButton } from "./EmblaCarouselDotButton";
 import {
@@ -8,6 +8,7 @@ import {
 } from "./EmblaCarouselArrowButtons";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+useEmblaCarousel.globalOptions = {loop: true}
 
 type PropType = {
   slides: React.ReactNode[]; 
@@ -22,6 +23,14 @@ const EmblaCarousel: React.FC<PropType> = ({ slides, options }) => {
   const { selectedIndex, scrollSnaps, onDotButtonClick } = useDotButton(emblaApi);
   const { prevBtnDisabled, nextBtnDisabled, onPrevButtonClick, onNextButtonClick } =
     usePrevNextButtons(emblaApi);
+  const [someOptions, setOptions] = useState({ loop: true });
+
+  const toggleLoop = useCallback(() => {
+    setOptions((currentOptions) => ({
+      ...currentOptions,
+      loop: !currentOptions.loop
+    }))
+  }, []);
 
   return (
     <section className="embla" onMouseEnter={() => autoplay.current.stop()} onMouseLeave={() => autoplay.current.play()}>
