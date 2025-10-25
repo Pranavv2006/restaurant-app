@@ -23,8 +23,11 @@ const EmblaCarousel: React.FC<PropType> = ({ slides, options }) => {
   const { selectedIndex, scrollSnaps, onDotButtonClick } = useDotButton(emblaApi);
   const { prevBtnDisabled, nextBtnDisabled, onPrevButtonClick, onNextButtonClick } =
     usePrevNextButtons(emblaApi);
+
+  // @ts-ignore
   const [someOptions, setOptions] = useState({ loop: true });
 
+  // @ts-ignore
   const toggleLoop = useCallback(() => {
     setOptions((currentOptions) => ({
       ...currentOptions,

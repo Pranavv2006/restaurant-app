@@ -92,7 +92,6 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
 
       setLoadingAddress(true);
       try {
-        // Get default address using the new getAllCustomerAddresses function
         const addressResponse = await getAllCustomerAddresses(userId);
 
         if (!addressResponse.success || !addressResponse.data || addressResponse.data.totalAddresses === 0) {
@@ -102,7 +101,6 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
           return;
         }
 
-        // Get the default address
         const defaultAddress = addressResponse.data.defaultAddress;
 
         if (defaultAddress && defaultAddress.latitude && defaultAddress.longitude) {
@@ -126,7 +124,7 @@ const SearchBoard: React.FC<SearchBoardProps> = ({
     };
 
     fetchAddress();
-  }, []); // Run once on component mount
+  }, []); 
 
   useEffect(() => {
     const fetchNearbyRestaurants = async () => {

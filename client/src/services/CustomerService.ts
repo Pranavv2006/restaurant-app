@@ -253,6 +253,7 @@ export interface PlaceOrderData {
   customerId: number;
   restaurantId: number;
   items: PlaceOrderItem[];
+  customerEmail: string;
 }
 
 export interface PlaceOrderResponse {
@@ -662,7 +663,6 @@ export const placeOrder = async (
   }
 };
 
-// Helper function to place multiple orders (one per restaurant)
 export const placeMultipleOrders = async (
   customerId: number,
   cartItems: Array<{
@@ -670,7 +670,8 @@ export const placeMultipleOrders = async (
     quantity: number;
     menu: { id: number; name: string; price: number };
     restaurant: { id: number; name: string };
-  }>
+  }>,
+  customerEmail: string,
 ): Promise<MultipleOrdersResult> => {
   // Group items by restaurant
   const itemsByRestaurant = cartItems.reduce((acc, item) => {
@@ -696,6 +697,7 @@ export const placeMultipleOrders = async (
         customerId,
         restaurantId: restaurantOrder.restaurantId,
         items: restaurantOrder.items,
+        customerEmail
       };
 
       try {

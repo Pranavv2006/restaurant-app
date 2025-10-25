@@ -94,23 +94,6 @@ const CustomerNav = () => {
     // Optionally show a success message or automatically open login modal
   };
 
-  const handleLoginSuccess = (loginResponseData: any) => {
-    const roleType = loginResponseData?.user?.roleType;
-
-    if (roleType === 'Merchant') {
-        // Close modal and open merchant page in new tab
-        setShowLoginModal(false);
-        window.open("/merchant", "_blank");
-        // Keep auth data in localStorage for merchant tab to use
-    } else if (roleType === 'Customer') {
-        // Close modal and refresh page for customer
-        setShowLoginModal(false);
-        window.location.reload();
-    } else {
-        // For any other role or undefined, just close modal
-        setShowLoginModal(false);
-    }
-  };
   return (
     <>
       <header className="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800">
@@ -265,7 +248,6 @@ const CustomerNav = () => {
           <Login
             onClose={() => setShowLoginModal(false)}
             onSwitchToRegister={handleSwitchToRegister}
-            onSuccess={handleLoginSuccess}
           />
         )}
 

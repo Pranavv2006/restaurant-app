@@ -141,7 +141,10 @@ const CheckoutPage: React.FC = () => {
   const [showManageAddressModal, setShowManageAddressModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  
+  // @ts-ignore
   const [orderIds, setOrderIds] = useState<number[]>([]);
+
   const [finalOrderItems, setFinalOrderItems] = useState<OrderItem[]>([]);
 
   // Helper function to check if user is authenticated customer
@@ -282,7 +285,6 @@ const CheckoutPage: React.FC = () => {
 
     setPlacingOrder(true);
     try {
-      // Preserve order items for display on confirmation page
       const currentOrderItems: OrderItem[] = cartItems.map(item => ({
         id: item.menu.id,
         name: item.menu.name,
@@ -305,15 +307,23 @@ const CheckoutPage: React.FC = () => {
           name: item.menu.restaurant.name,
         },
       }));
-
-      const result = await placeMultipleOrders(customerId, orderItemsForAPI);
+    
+      const userStr = localStorage.getItem("user");
+      let customerEmail = "";
+      if (userStr) {
+      try {
+          const user = JSON.parse(userStr);
+          customerEmail = user.email; 
+        } catch (e) {
+          console.error("Could not parse user object for email.");
+        }
+      }
+      const result = await placeMultipleOrders(customerId, orderItemsForAPI, customerEmail);
       
       if (result.totalSuccessful > 0) {
         setOrderIds(result.successfulOrders);
         setOrderPlaced(true);
-        setCurrentStep(4); // Move to confirmation step
-        
-        // Clear cart UI immediately and trigger global cart update
+        setCurrentStep(4); 
         setCartItems([]);
         triggerCartUpdate();
       } else {

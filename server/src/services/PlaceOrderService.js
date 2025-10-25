@@ -30,6 +30,8 @@ const calculateDeliveryFee = (distanceKm) => {
 
 const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
   try {
+    console.log('🔍 PlaceOrderService Input:', { customerId, restaurantId, items });
+
     if (!customerId || !restaurantId) {
       throw new Error("customerId and restaurantId are required.");
     }
@@ -69,19 +71,23 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
     console.log('🔍 Restaurant Record:', JSON.stringify(restaurantRecord, null, 2));
 
     if (!customerRecord) {
+      console.error('❌ Customer not found for ID:', customerId);
       throw new Error("Invalid Customer ID - customer not found.");
     }
 
     if (!restaurantRecord) {
+      console.error('❌ Restaurant not found for ID:', restaurantId);
       throw new Error("Invalid Restaurant ID - restaurant not found.");
     }
 
     // ✅ FIXED: Check if customer has a default address
     if (!customerRecord.addresses || customerRecord.addresses.length === 0) {
+      console.error('❌ No default address for customer:', customerId);
       throw new Error("Customer does not have a default delivery address. Please add an address first.");
     }
 
     const customerAddress = customerRecord.addresses[0];
+    console.log('📍 Customer Address:', customerAddress);
 
     // ✅ FIXED: Get location from the address object
     if (
@@ -191,14 +197,17 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       },
     };
   } catch (error) {
-    console.error("PlaceOrderService Error:", error.message);
+    console.error("❌ PlaceOrderService Error:", error.message);
+    console.error("❌ Full Error:", error);
 
     return {
       success: false,
       message:
         error.message.includes("Invalid Customer or Restaurant") ||
         error.message.includes("Location data") ||
-        error.message.includes("default delivery address")
+        error.message.includes("default delivery address") ||
+        error.message.includes("Customer ID") ||
+        error.message.includes("Restaurant ID")
           ? error.message
           : "An internal error occurred while processing the order.",
       data: null,

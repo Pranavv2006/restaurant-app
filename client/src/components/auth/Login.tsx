@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 interface LoginProps {
   onClose: () => void;
   onSwitchToRegister: () => void;
-  onSuccess: (data: LoginResponseData) => void; 
 }
+
 export interface LoginResponseData {
     accessToken: string;
     user: {
@@ -89,6 +89,7 @@ const Login = ({ onClose, onSwitchToRegister}: LoginProps) => {
             }
             if (userRole === "Customer") {
               navigate("/");
+              window.location.reload();
             }
           } catch (error) {
             console.error("Post-login navigation error:", error);
