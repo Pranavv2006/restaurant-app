@@ -296,7 +296,7 @@ const CartModal: React.FC<CartModalProps> = ({
                   </div>
 
                   {/* Item Total */}
-                  <div className="text-right">
+                  <div className="text-right flex justify-between items-center">
                     <p className="font-bold text-gray-800 dark:text-white">
                       ₹
                       {(
@@ -305,7 +305,7 @@ const CartModal: React.FC<CartModalProps> = ({
                     </p>
                     <button
                       onClick={() => handleRemoveItem(item.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors mt-1"
+                      className="text-red-500 hover:text-red-700 transition-colors mt-1 pl-2"
                     >
                       <FaTrash className="text-sm" />
                     </button>
@@ -328,12 +328,6 @@ const CartModal: React.FC<CartModalProps> = ({
               </span>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 bg-gray-200 dark:bg-neutral-700 text-gray-800 dark:text-white py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors font-medium"
-              >
-                Continue Shopping
-              </button>
               <button
                 onClick={handleProceedToCheckout}
                 className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"

@@ -64,7 +64,6 @@ const RestaurantPage: React.FC = () => {
 
   // Animation entrance effect - only play once per page visit
   const hasAnimated = useRef(false);
-  const animatedCards = useRef(new Set<number>());
 
   // Helper function to check if user is authenticated customer
   const isCustomer = () => {
@@ -289,38 +288,21 @@ const RestaurantPage: React.FC = () => {
 
   const MenuCard: React.FC<{ item: MenuItem; index: number }> = ({
     item,
-    index,
   }) => {
-    const cardKey = item.id;
-    const shouldAnimate = isVisible && !animatedCards.current.has(cardKey);
-    if (isVisible && !animatedCards.current.has(cardKey)) {
-      animatedCards.current.add(cardKey);
-    }
-
     return (
-      <div
-        className={`bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-lg hover:rotate-1 group cursor-pointer ${
-          shouldAnimate ? "animate-bounce-in" : ""
-        } ${
-          isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-        }`}
-        style={{
-          animationDelay: shouldAnimate ? `${index * 150}ms` : "0ms",
-        }}
-      >
+      <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden">
         <div className="relative overflow-hidden">
           <img
             src={item.imageUrl}
             alt={item.name}
-            className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-48 object-cover"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src =
                 "https://images.unsplash.com/photo-1495195134817-aeb325a55b65";
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-2 right-2">
             <span
               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                 item.category === "Vegetarian"
@@ -334,11 +316,11 @@ const RestaurantPage: React.FC = () => {
         </div>
 
         <div className="p-5">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-violet-600 transition-colors duration-300">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
             {item.name}
           </h3>
 
-          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors duration-300">
+          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4">
             {item.description}
           </p>
 
@@ -347,8 +329,7 @@ const RestaurantPage: React.FC = () => {
               ₹{item.price.toFixed(2)}
             </span>
 
-            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-
+            <div className="flex space-x-2">
               {/* Cart functionality - only show for authenticated customers */}
               {isCustomer() && cartItems[item.id] ? (
                 // Show counter when item is in cart
@@ -382,12 +363,11 @@ const RestaurantPage: React.FC = () => {
                     e.stopPropagation();
                     handleAddToCart(item);
                   }}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl"
                 >
                   <FaShoppingCart className="inline mr-1" /> Add
                 </button>
               ) : (
-                // Show login prompt for non-customers
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -395,7 +375,7 @@ const RestaurantPage: React.FC = () => {
                     setShowToast(true);
                     setTimeout(() => setShowToast(false), 3000);
                   }}
-                  className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-2 rounded-lg hover:from-gray-500 hover:to-gray-600 transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-2 rounded-lg hover:from-gray-500 hover:to-gray-600 text-sm shadow-lg"
                 >
                   <FaShoppingCart className="inline mr-1" /> Login to Add
                 </button>
@@ -635,39 +615,7 @@ const RestaurantPage: React.FC = () => {
       </div>
 
       <style>{`
-        @keyframes bounce-in {
-          0% {
-            opacity: 0;
-            transform: translateY(30px) scale(0.9);
-          }
-          50% {
-            transform: translateY(-10px) scale(1.05);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
 
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes modal-enter {
-          0% {
-            opacity: 0;
-            transform: scale(0.8) translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
 
         @keyframes gradient {
           0%, 100% {

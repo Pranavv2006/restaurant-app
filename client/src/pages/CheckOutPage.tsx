@@ -708,33 +708,164 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {/* Step 4: Confirmation */}
               {currentStep === 4 && (
-                <div className="text-center">
+                <div>
                   {placingOrder ? (
-                    <div className="py-8">
+                    <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-12 w-12 border-4 border-violet-500 border-t-transparent mx-auto mb-4"></div>
                       <p className="text-gray-600">Placing your order...</p>
                     </div>
                   ) : orderPlaced ? (
                     <div className="py-8">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                      {/* Success Header */}
+                      <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Order Placed Successfully!</h2>
+                        <p className="text-gray-600 mb-6">Your order has been confirmed and is being prepared.</p>
                       </div>
-                      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Order Placed Successfully!</h2>
-                      <p className="text-gray-600 mb-6">Your order has been confirmed and is being prepared.</p>
-                      <button
-                        onClick={() => navigate('/')}
-                        className="bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 transition-colors"
-                      >
-                        Continue Shopping
-                      </button>
+
+                      {/* Order Details */}
+                      <div className="bg-white dark:bg-neutral-700 rounded-lg p-6 mb-6 border border-gray-200 dark:border-neutral-600">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Order Details</h3>
+                        
+                        {/* Order Items */}
+                        <div className="space-y-4 mb-6">
+                          {finalOrderItems.map((item) => (
+                            <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-neutral-600 rounded-lg">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-800 dark:text-white">{item.name}</h4>
+                                <div className="flex justify-between items-center mt-1">
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    Quantity: {item.quantity}
+                                  </span>
+                                  <span className="text-sm font-medium text-violet-600">
+                                    ₹{item.price.toFixed(2)} each
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-gray-800 dark:text-white">
+                                  ₹{(item.price * item.quantity).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Order Information */}
+                        <div className="border-t border-gray-200 dark:border-neutral-600 pt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium text-gray-800 dark:text-white mb-2">Delivery Information</h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                    Preparing
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+                                  <span className="text-gray-800 dark:text-white">{formData.phone}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Address:</span>
+                                  <span className="text-gray-800 dark:text-white text-right ml-2">
+                                    {formData.useExistingAddress 
+                                      ? addresses.find(addr => addr.id === formData.selectedAddressId)?.addressLine
+                                      : formData.newAddress.addressLine
+                                    }
+                                  </span>
+                                </div>
+                                {formData.instructions && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600 dark:text-gray-400">Instructions:</span>
+                                    <span className="text-gray-800 dark:text-white text-right ml-2">{formData.instructions}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 className="font-medium text-gray-800 dark:text-white mb-2">Payment Information</h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Payment Method:</span>
+                                  <span className="text-gray-800 dark:text-white">
+                                    {paymentMethod === 'cash' ? 'Cash on Delivery' : paymentMethod}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600 dark:text-gray-400">Order Time:</span>
+                                  <span className="text-gray-800 dark:text-white">
+                                    {new Date().toLocaleString()}
+                                  </span>
+                                </div>
+                                {orderIds.length > 0 && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600 dark:text-gray-400">Order ID:</span>
+                                    <span className="text-gray-800 dark:text-white font-mono">
+                                      #{orderIds[0]}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Price Summary */}
+                        <div className="border-t border-gray-200 dark:border-neutral-600 mt-4 pt-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                              <span className="text-gray-800 dark:text-white">
+                                ₹{finalOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Delivery Fee:</span>
+                              <span className="text-gray-800 dark:text-white">₹3.00</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                              <span className="text-gray-800 dark:text-white">₹2.15</span>
+                            </div>
+                            <div className="flex justify-between font-semibold text-lg border-t border-gray-200 dark:border-neutral-600 pt-2">
+                              <span className="text-gray-800 dark:text-white">Total Paid:</span>
+                              <span className="text-violet-600">
+                                ₹{(finalOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 3.00 + 2.15).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                          onClick={() => navigate('/')}
+                          className="bg-violet-600 text-white px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors font-medium"
+                        >
+                          Continue Browsing
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Navigate to order tracking if implemented
+                            console.log('Track order clicked');
+                          }}
+                          className="border border-violet-600 text-violet-600 px-6 py-3 rounded-lg hover:bg-violet-50 transition-colors font-medium"
+                        >
+                          Track Your Order
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="py-8">
+                    <div className="text-center py-8">
                       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Something went wrong</h2>
                       <p className="text-gray-600 mb-6">Unable to place your order. Please try again.</p>
                       <button
@@ -769,13 +900,14 @@ const CheckoutPage: React.FC = () => {
               )}
             </div>
 
-            {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
-              <OrderSummary
-                items={displayOrderItems}
-                deliveryFee={3.00}
-                tax={2.15}
-              />
+              {currentStep < 4 && (
+                <OrderSummary
+                  items={displayOrderItems}
+                  deliveryFee={3.00}
+                  tax={2.15}
+                />
+              )}
             </div>
         </div>
         </div>

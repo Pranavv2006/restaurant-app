@@ -66,10 +66,6 @@ const PlaceOrderService = async ({ customerId, restaurantId, items }) => {
       }),
     ]);
 
-    // Debug logging
-    console.log('🔍 Customer Record:', JSON.stringify(customerRecord, null, 2));
-    console.log('🔍 Restaurant Record:', JSON.stringify(restaurantRecord, null, 2));
-
     if (!customerRecord) {
       console.error('❌ Customer not found for ID:', customerId);
       throw new Error("Invalid Customer ID - customer not found.");
