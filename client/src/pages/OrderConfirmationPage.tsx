@@ -19,14 +19,13 @@ interface OrderDetails {
     orderIds: number[];
     deliveryFee?: number;
     tax?: number;
-} 
+}
 
 const OrderConfirmationPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const orderData = location.state as OrderDetails;
 
-    // Redirect to home if no order data
     if (!orderData) {
         navigate('/');
         return null;
@@ -44,7 +43,6 @@ const OrderConfirmationPage: React.FC = () => {
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    {/* Order Header */}
                     <div className="border-b border-gray-200 p-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -70,7 +68,6 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Order Status */}
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-6 mt-6">
                         <div className="flex">
                             <div className="flex-shrink-0">
@@ -85,7 +82,6 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Product Details */}
                     <div className="p-6">
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Order Items</h2>
                         <div className="space-y-4">
@@ -114,7 +110,6 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Delivery Information */}
                     <div className="border-t border-gray-200 p-6">
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Delivery Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,7 +130,6 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Price Breakdown */}
                     <div className="bg-gray-50 p-6">
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
                         <div className="space-y-3">
@@ -160,7 +154,6 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Payment Information */}
                     <div className="border-t border-gray-200 p-6">
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Payment Information</h2>
                         <div className="flex items-center">
@@ -174,24 +167,17 @@ const OrderConfirmationPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="border-t border-gray-200 p-6 bg-gray-50">
                         <div className="flex flex-wrap gap-4">
                             <button 
-                                onClick={() => {
-                                    // Implement download invoice functionality
-                                    console.log('Download invoice clicked');
-                                }}
+                                onClick={() => console.log('Download invoice clicked')}
                                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
                                 <FaFileDownload className="mr-2 h-4 w-4" />
                                 Download Invoice
                             </button>
                             <button 
-                                onClick={() => {
-                                    // Implement track order functionality
-                                    console.log('Track order clicked');
-                                }}
+                                onClick={() => console.log('Track order clicked')}
                                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             >
                                 <FaTruck className="mr-2 h-4 w-4" />
