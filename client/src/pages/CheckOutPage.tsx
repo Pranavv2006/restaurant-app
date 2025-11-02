@@ -855,7 +855,6 @@ const CheckoutPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            // Navigate to order tracking if implemented
                             console.log('Track order clicked');
                           }}
                           className="border border-violet-600 text-violet-600 px-6 py-3 rounded-lg hover:bg-violet-50 transition-colors font-medium"

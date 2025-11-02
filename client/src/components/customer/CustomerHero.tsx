@@ -1,29 +1,16 @@
 const CustomerHero = () => {
   return (
-    <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-        {/* Left Content */}
-        <div>
-          <h1 className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white">
-            Start your foodie <span className="pl-1">Journey</span> with{" "}
-            <span className="text-violet-600">DineDash</span>
-          </h1>
-
-          {/* Buttons */}
-        </div>
-
-        {/* Right Side Video */}
-        <div className="relative">
-          <video
-            className="w-full h-64 object-cover rounded-lg"
-            autoPlay
-            loop
-            muted
-          >
-            <source src="/Assets/HomePage_Video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
+    <div className="flex flex-row justify-center items-center">
+      <video width="1200" height="1600" autoPlay loop className="rounded-2xl opacity-60">
+        <source src="../../../Assets/Hero_Project.mp4" type="video/mp4"/>
+      </video>
+      <div className="absolute top-23 left-21">
+        <h1 className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white">
+          Start your Foodie Journey with 
+        </h1>
+        <h1 className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white text-center">
+          <span className="text-violet-600">DineDash</span>
+        </h1>
       </div>
     </div>
   );

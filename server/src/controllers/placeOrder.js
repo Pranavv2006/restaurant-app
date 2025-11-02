@@ -141,6 +141,14 @@ const placeOrderController = async (req, res) => {
                       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
                         <tr>
                           <td style="padding: 15px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                            <strong style="color: #555555;">Delivery Address:</strong>
+                          </td>
+                          <td style="padding: 15px; background-color: #f8f9fa; text-align: right; border-bottom: 1px solid #e9ecef;">
+                            <span style="color: #333333;">${data.address}</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 15px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef;">
                             <strong style="color: #555555;">Order Date:</strong>
                           </td>
                           <td style="padding: 15px; background-color: #f8f9fa; text-align: right; border-bottom: 1px solid #e9ecef;">
@@ -153,14 +161,6 @@ const placeOrderController = async (req, res) => {
                           </td>
                           <td style="padding: 15px; background-color: #ffffff; text-align: right; border-bottom: 1px solid #e9ecef;">
                             <span style="display: inline-block; padding: 6px 12px; background-color: #fef3c7; color: #92400e; border-radius: 20px; font-size: 14px; font-weight: 600;">${data.status}</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 15px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef;">
-                            <strong style="color: #555555;">Delivery Address:</strong>
-                          </td>
-                          <td style="padding: 15px; background-color: #f8f9fa; text-align: right; border-bottom: 1px solid #e9ecef;">
-                            <span style="color: #333333;">${data.address}</span>
                           </td>
                         </tr>
                       </table>
