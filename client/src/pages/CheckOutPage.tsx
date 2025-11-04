@@ -127,7 +127,7 @@ interface ContactFormData {
   useExistingAddress: boolean;
 }
 
-const CheckoutPage: React.FC = () => {
+const CheckoutPage = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -408,45 +408,6 @@ const CheckoutPage: React.FC = () => {
             <button onClick={() => setCurrentStep(3)} disabled={currentStep < 3 && !canProceedFromStep(2)}>
               <StepIndicator step={3} currentStep={currentStep} label="Payment" />
             </button>
-            <div className="flex-1 h-0.5 bg-gray-300 dark:bg-neutral-600 mx-2"></div>
-            <button onClick={() => setCurrentStep(4)} disabled={currentStep < 4}>
-              <StepIndicator step={4} currentStep={currentStep} label="Confirmation" />
-            </button>
-          </div>
-        </div>
-
-        {/* Hero Section */}
-        <div
-          className="relative h-48 bg-cover bg-center"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=400&fit=crop)',
-          }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-white">
-            {currentStep === 1 && (
-              <>
-                <h1 className="text-4xl font-bold mb-2">1. Review Your Cart</h1>
-                <p className="text-lg">Check your items before proceeding to checkout</p>
-              </>
-            )}
-            {currentStep === 2 && (
-              <>
-                <h1 className="text-4xl font-bold mb-2">2. Your Details</h1>
-                <p className="text-lg">Please tell us where to send your delicious food!</p>
-              </>
-            )}
-            {currentStep === 3 && (
-              <>
-                <h1 className="text-4xl font-bold mb-2">3. Payment Method</h1>
-                <p className="text-lg">Choose how you'd like to pay for your order</p>
-              </>
-            )}
-            {currentStep === 4 && (
-              <>
-                <h1 className="text-4xl font-bold mb-2">4. Order Confirmation</h1>
-                <p className="text-lg">Your order has been placed successfully!</p>
-              </>
-            )}
           </div>
         </div>
 
