@@ -7,6 +7,7 @@ import RestaurantPage from "./pages/RestaurantPage";
 import RestaurantHome from "./pages/RestaurantHome";
 import CheckoutPage from "./pages/CheckOutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
+import OrdersPage from "./pages/OrdersPage";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         />
         <Route path="/checkout" element={<CheckoutPage/>}/>
         <Route path="/order-confirmation" element={<OrderConfirmationPage />}/>
+        <Route path="/orders-history" element={<OrdersPage />} />
       </Routes>
     </Router>
   );

@@ -4,8 +4,10 @@ import {
   FaSignOutAlt,
   FaChevronDown,
   FaMapMarkerAlt,
+  FaHistory,
 } from "react-icons/fa";
 import { useCart } from "../../hooks/useCart";
+import { useNavigate } from "react-router-dom";
 
 interface QuickMenuDropdownProps {
   onCartClick: () => void;
@@ -23,6 +25,7 @@ const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { cartItemCount } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,6 +46,10 @@ const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
   const handleItemClick = (action: () => void) => {
     action();
     setIsOpen(false);
+  };
+
+  const handleOrdersClick = () => {
+    navigate('/orders-history');
   };
 
   return (
@@ -81,6 +88,15 @@ const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
                 )}
               </div>
               <span>View Cart {cartItemCount > 0 && `(${cartItemCount})`}</span>
+            </button>
+
+            {/* Order History */}
+            <button
+              onClick={() => handleItemClick(handleOrdersClick)}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors duration-150"
+            >
+              <FaHistory className="text-blue-500" />
+              <span>Order History</span>
             </button>
 
             {/* Manage Addresses */}
