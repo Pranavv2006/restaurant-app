@@ -6,16 +6,21 @@ import {
   faShoppingCart,
   faClock
 } from '@fortawesome/free-solid-svg-icons';
+import CarouselSlides from "./carouselslides";
 
 const FeaturesSection: React.FC = () => {
+  const images = [
+    "https://www.tasteandflavors.com/wp-content/uploads/2021/03/what-to-cook-on-sundays-landscape.gif",
+    "https://www.tastingtable.com/img/gallery/12-indigenous-people-in-food-who-are-changing-the-culinary-landscape/l-intro-1663429409.jpg",
+    "https://i.pinimg.com/1200x/39/5b/62/395b62e48d968805c4b4f51c6c0f2032.jpg",
+    "https://i.pinimg.com/1200x/a9/cc/51/a9cc5175db9327a5b5065de33cdde151.jpg",
+    "https://i.pinimg.com/736x/24/bd/33/24bd339c122b87d2c210e95802482c3c.jpg"
+  ]
+
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-      <div className="w-full max-h-[400px] overflow-hidden rounded-xl mb-10">
-        <img
-          className="w-full h-full object-cover"
-          src="https://brownliving.in/cdn/shop/articles/vegan-meal-ideas-for-special-occasions-and-celebrations-8497649.png?v=1760155561  "
-          alt="Restaurant system overview"
-        />
+      <div className="w-full max-w-6xl mx-auto h-96 md:h-[32rem] overflow-hidden rounded-xl mb-10">
+        <CarouselSlides slides={images} options={{ loop: true, containScroll: false, align: 'center' }} />
       </div>
 
       {/* Grid */}
