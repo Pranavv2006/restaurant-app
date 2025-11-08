@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   FaShoppingCart,
   FaSignOutAlt,
-  FaChevronDown,
   FaMapMarkerAlt,
   FaHistory,
 } from "react-icons/fa";
 import { useCart } from "../../hooks/useCart";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 
 interface QuickMenuDropdownProps {
   onCartClick: () => void;
@@ -57,14 +57,14 @@ const QuickMenuDropdown: React.FC<QuickMenuDropdownProps> = ({
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 py-2 px-3 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 dark:bg-violet-800 dark:border-violet-700 dark:text-white dark:hover:bg-violet-700 dark:focus:bg-violet-700 transition-colors duration-200"
+        className="flex items-center gap-2 py-2 px-3 text-sm font-medium rounded-lg text-gray-800 shadow-sm focus:outline-none dark:text-white transition-colors duration-200"
       >
         <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
           {customerName.charAt(0).toUpperCase()}
         </div>
         <span className="hidden sm:block">{customerName}</span>
-        <FaChevronDown
-          className={`text-xs transition-transform duration-200 ${
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
         />

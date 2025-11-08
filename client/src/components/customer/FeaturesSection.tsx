@@ -6,7 +6,7 @@ import {
   faShoppingCart,
   faClock
 } from '@fortawesome/free-solid-svg-icons';
-import CarouselSlides from "./carouselslides";
+import CarouselSlides from "./CarouselSlides";
 
 const FeaturesSection: React.FC = () => {
   const images = [
@@ -19,8 +19,8 @@ const FeaturesSection: React.FC = () => {
 
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-      <div className="w-full max-w-6xl mx-auto h-96 md:h-[32rem] overflow-hidden rounded-xl mb-10">
-        <CarouselSlides slides={images} options={{ loop: true, containScroll: false, align: 'center' }} />
+      <div className="w-full max-w-6xl mx-auto h-96 md:h-[32rem] relative rounded-xl mb-10">
+        <CarouselSlides slides={images}/>
       </div>
 
       {/* Grid */}
