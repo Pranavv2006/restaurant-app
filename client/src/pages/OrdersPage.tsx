@@ -1,18 +1,55 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerNav from "../components/customer/CustomerNav";
 import OrderSection from "../components/customer/OrderSection";
 import useAuth from "../hooks/useAuth";
+import CartModal from "../components/customer/CartModal";
+import { getAllCustomerAddresses } from "../services/CustomerService";
 
 const OrdersPage: React.FC = () => {
     const { isAuthenticated, user, loading: authLoading } = useAuth();
+    const [showCartModal, setShowCartModal] = useState(false);
     const navigate = useNavigate();
+    const [customerId, setCustomerId] = useState<number | null>(null);
+
     const isCustomer = () => {
         return isAuthenticated && user?.roleType === 'Customer';
     };
 
     const handleLoginClick = () => {
         alert("Please use the login button in the navigation bar above.");
+    };
+
+    useEffect(() => {
+        const getCustomerId = async () => {
+          if (!isCustomer() || !user?.id) {
+            setCustomerId(null);
+            return;
+          }
+    
+          try {
+            const result = await getAllCustomerAddresses(user.id);
+            if (result.success && result.data && result.data.customer) {
+              setCustomerId(result.data.customer.id);
+            } else {
+              setCustomerId(null);
+            }
+          } catch (error) {
+            console.error('Error getting customer ID:', error);
+            setCustomerId(null);
+          }
+        };
+    
+        getCustomerId();
+      }, [user?.id, isAuthenticated]);
+    
+    const handleCartUpdate = () => {
+        console.log("Cart updated");
+    };
+
+    const handleProceedToCheckout = () => {
+        setShowCartModal(false);
+        window.location.href = '/checkout';
     };
 
     if (authLoading) {
@@ -125,7 +162,7 @@ const OrdersPage: React.FC = () => {
                         </button>
                         
                         <button
-                            onClick={() => navigate('/checkout')}
+                            onClick={() => setShowCartModal(true)}
                             className="border border-violet-600 text-violet-600 px-6 py-3 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all duration-300 font-medium flex items-center justify-center"
                         >
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,6 +173,18 @@ const OrdersPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {isAuthenticated && user?.roleType === 'Customer' && customerId && (
+                <>
+                    <CartModal
+                    isOpen={showCartModal}
+                    onClose={() => setShowCartModal(false)}
+                    customerId={customerId}
+                    onCartUpdate={handleCartUpdate}
+                    onProceedToCheckout={handleProceedToCheckout}
+                    />
+                </>
+                )}
 
             <style>{`
                 @keyframes fade-in {
