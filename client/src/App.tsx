@@ -6,7 +6,6 @@ import MerchantProfile from "./components/merchant/MerchantProfile";
 import RestaurantPage from "./pages/RestaurantPage";
 import RestaurantHome from "./pages/RestaurantHome";
 import CheckoutPage from "./pages/CheckOutPage";
-import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import OrdersPage from "./pages/OrdersPage";
 
 function App() {
@@ -23,7 +22,6 @@ function App() {
           element={<RestaurantPage />}
         />
         <Route path="/checkout" element={<CheckoutPage/>}/>
-        <Route path="/order-confirmation" element={<OrderConfirmationPage />}/>
         <Route path="/orders-history" element={<OrdersPage />} />
       </Routes>
     </Router>

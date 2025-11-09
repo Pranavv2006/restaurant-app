@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerNav from "../components/customer/CustomerNav";
 import OrderSection from "../components/customer/OrderSection";
@@ -6,7 +6,7 @@ import useAuth from "../hooks/useAuth";
 import CartModal from "../components/customer/CartModal";
 import { getAllCustomerAddresses } from "../services/CustomerService";
 
-const OrdersPage: React.FC = () => {
+const OrdersPage = () => {
     const { isAuthenticated, user, loading: authLoading } = useAuth();
     const [showCartModal, setShowCartModal] = useState(false);
     const navigate = useNavigate();

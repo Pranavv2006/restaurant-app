@@ -1,4 +1,3 @@
-import React from "react";
 import CustomerHero from "../components/customer/CustomerHero";
 import CustomerNav from "../components/customer/CustomerNav";
 import WhyCustomersLove from "../components/customer/WhyCustomersLove";
@@ -7,7 +6,7 @@ import FeaturesSection from "../components/customer/FeaturesSection";
 import PartnerWithUs from "../components/merchant/PartnerWithUs";
 import FAQSection from "../components/customer/FAQSection";
 
-const RestaurantHome: React.FC = () => {
+const RestaurantHome = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
       {/* Navbar */}

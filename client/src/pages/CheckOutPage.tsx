@@ -5,8 +5,28 @@ import CustomerNav from '../components/customer/CustomerNav';
 import GooglePlacesAddressInput from '../components/customer/GooglePlacesAddressInput';
 import AddressErrorToast from '../components/customer/AddressErrorToast';
 import ManageCustomerAddressModal from '../components/customer/ManageCustomerAddressModal';
-import { useNavigate } from 'react-router-dom';
 import { triggerCartUpdate } from '../hooks/useCart';
+import { useNavigate } from "react-router-dom";
+import OrderConfirmationModal from './OrderConfirmationModal';
+
+interface FinalOrderItems {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  image?: string;
+}
+
+interface OrderDetails {
+  items: FinalOrderItems[];
+  phone: string;
+  address: string;
+  instructions?: string;
+  paymentMethod: string;
+  orderIds: number[];
+  deliveryFee?: number;
+  tax?: number;
+}
 
 interface StepIndicatorProps {
   step: number;
@@ -140,6 +160,8 @@ const CheckoutPage = () => {
   const [showAddressErrorToast, setShowAddressErrorToast] = useState(false);
   const [showManageAddressModal, setShowManageAddressModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [orderPayload, setOrderPayload] = useState<OrderDetails | null>(null);
 
   const isCustomer = () => {
     return isAuthenticated && user?.roleType === 'Customer';
@@ -174,6 +196,8 @@ const CheckoutPage = () => {
       loadCustomerData();
     }
   }, [isAuthenticated, user]);
+
+
 
   const loadCustomerData = async () => {
     if (!user?.id) return;
@@ -304,23 +328,33 @@ const CheckoutPage = () => {
       );
       
       if (results.totalSuccessful > 0) {
+        const itemsSnapshot = currentOrderItems ? currentOrderItems.map(i => ({ ...i })) : [];
+
+        const payload: OrderDetails = {
+          items: itemsSnapshot,
+          phone: formData.phone,
+          address: formData.useExistingAddress
+            ? (addresses.find(addr => addr.id === formData.selectedAddressId)?.addressLine ?? "")
+            : formData.newAddress.addressLine,
+          instructions: formData.instructions,
+          paymentMethod: paymentMethod,
+          orderIds: results.successfulOrders,
+          deliveryFee: 3.0,
+          tax: 2.15
+        };
+
+        try {
+          sessionStorage.setItem("lastOrder", JSON.stringify(payload));
+        } catch (e) {
+          console.warn("sessionStorage not available", e);
+        }
+
         setCartItems([]);
         triggerCartUpdate();
 
-        navigate('/order-confirmation', {
-          state: {
-            items: currentOrderItems,
-            phone: formData.phone,
-            address: formData.useExistingAddress 
-              ? addresses.find(addr => addr.id === formData.selectedAddressId)?.addressLine || ''
-              : formData.newAddress.addressLine,
-            instructions: formData.instructions,
-            paymentMethod: paymentMethod,
-            orderIds: results.successfulOrders,
-            deliveryFee: 3.00,
-            tax: 2.15
-          }
-        });
+        setOrderPayload(payload);
+        setOrderModalOpen(true);
+
       } else {
         console.error("All orders failed");
       }
@@ -387,6 +421,17 @@ const CheckoutPage = () => {
       }));
     }
   };
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("lastOrder");
+      if (stored) {
+        const parsed = JSON.parse(stored) as OrderDetails;
+        setOrderPayload(parsed);
+        setOrderModalOpen(true);
+      }
+    } catch {}
+  }, []);
 
   
 
@@ -720,6 +765,23 @@ const CheckoutPage = () => {
           }}
         />
       )}
+
+      <OrderConfirmationModal
+        open={orderModalOpen}
+        orderData={orderPayload}
+        onClose={() => {
+          setOrderModalOpen(false);
+          setOrderPayload(null);
+          try { sessionStorage.removeItem("lastOrder"); } catch {}
+        }}
+        onContinueBrowsing={() => {
+          setOrderModalOpen(false);
+          setOrderPayload(null);
+          try { sessionStorage.removeItem("lastOrder"); } catch {}
+          navigate("/"); 
+        }}
+      />
+      
     </div>
   );
 };
