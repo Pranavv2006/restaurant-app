@@ -1,5 +1,6 @@
-import { useEffect } from "react";
-import { FaMoneyBill, FaShoppingCart, FaTimes } from "react-icons/fa";
+import { useEffect, useRef} from "react";
+import { FaMoneyBill, FaShoppingCart, FaTimes, FaDownload } from "react-icons/fa";
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet} from "@react-pdf/renderer";
 
 interface FinalOrderItems {
   id: number;
@@ -27,12 +28,220 @@ type Props = {
   onContinueBrowsing?: () => void;
 };
 
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontSize: 12,
+    fontFamily: 'Helvetica',
+  },
+  header: {
+    marginBottom: 20,
+    borderBottom: '2px solid #333',
+    paddingBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 3,
+  },
+  section: {
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottom: '1px solid #eee',
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  itemQuantity: {
+    fontSize: 10,
+    color: '#666',
+  },
+  itemPrice: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  infoColumn: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 3,
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontSize: 11,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 5,
+  },
+  summaryLabel: {
+    fontSize: 11,
+  },
+  summaryValue: {
+    fontSize: 11,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    marginTop: 5,
+    borderTop: '2px solid #333',
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  totalValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  alert: {
+    backgroundColor: '#FEF3C7',
+    padding: 10,
+    marginBottom: 15,
+    borderLeft: '4px solid #F59E0B',
+  },
+  alertText: {
+    fontSize: 10,
+    color: '#92400E',
+  },
+});
+
+const OrderPDF = ({ orderData }: { orderData: OrderDetails }) => {
+  const calculateSubtotal = () =>
+    orderData.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const calculateTotal = () => 
+    calculateSubtotal() + (orderData.deliveryFee ?? 3.0) + (orderData.tax ?? 2.15);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Order Confirmation</Text>
+          <Text style={styles.subtitle}>Order placed successfully!</Text>
+          {orderData.orderIds.length > 0 && (
+            <Text style={styles.subtitle}>Order ID: #{orderData.orderIds[0]}</Text>
+          )}
+          <Text style={styles.subtitle}>Order Time: {new Date().toLocaleString()}</Text>
+        </View>
+
+        {/* Alert */}
+        <View style={styles.alert}>
+          <Text style={styles.alertText}>Order Status: Preparing</Text>
+          <Text style={styles.alertText}>Your order is being prepared and will be delivered soon.</Text>
+        </View>
+
+        {/* Order Items */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Items</Text>
+          {orderData.items.map((item) => (
+            <View key={item.id} style={styles.itemRow}>
+              <View style={styles.itemDetails}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+              </View>
+              <View>
+                <Text style={styles.itemPrice}>₹{(item.price * item.quantity).toFixed(2)}</Text>
+                <Text style={styles.itemQuantity}>₹{item.price.toFixed(2)} each</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Delivery Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Delivery Information</Text>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoColumn}>
+              <Text style={styles.infoLabel}>Contact</Text>
+              <Text style={styles.infoValue}>{orderData.phone}</Text>
+            </View>
+            <View style={styles.infoColumn}>
+              <Text style={styles.infoLabel}>Address</Text>
+              <Text style={styles.infoValue}>{orderData.address}</Text>
+            </View>
+          </View>
+          {orderData.instructions && (
+            <View>
+              <Text style={styles.infoLabel}>Special Instructions</Text>
+              <Text style={styles.infoValue}>{orderData.instructions}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Order Summary */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Summary</Text>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryValue}>₹{calculateSubtotal().toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery Fee</Text>
+            <Text style={styles.summaryValue}>₹{(orderData.deliveryFee ?? 3.0).toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Tax</Text>
+            <Text style={styles.summaryValue}>₹{(orderData.tax ?? 2.15).toFixed(2)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total Paid</Text>
+            <Text style={styles.totalValue}>₹{calculateTotal().toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {/* Payment */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment</Text>
+          <Text style={styles.infoValue}>
+            {orderData.paymentMethod === "cash" ? "Cash on Delivery" : orderData.paymentMethod}
+          </Text>
+          <Text style={styles.itemQuantity}>Payment will be collected upon delivery</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
 const OrderConfirmationModal = ({
   open,
   orderData,
   onClose,
   onContinueBrowsing,
 }: Props) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const original = document.body.style.overflow;
@@ -71,7 +280,7 @@ const OrderConfirmationModal = ({
       <div className="relative z-10 max-w-3xl w-full mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-gray-700">
+          <div ref={modalRef} className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-gray-700">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Order Confirmation
@@ -202,6 +411,18 @@ const OrderConfirmationModal = ({
           <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
             <div className="text-sm text-gray-500 dark:text-gray-300">Thank you for ordering!</div>
             <div className="flex gap-2">
+              <PDFDownloadLink
+                document={<OrderPDF orderData={orderData} />}
+                fileName={`order-${orderData.orderIds[0] || 'confirmation'}.pdf`}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                {({ loading }) => (
+                  <>
+                    <FaDownload className="mr-2 h-4 w-4" />
+                    {loading ? 'Generating PDF...' : 'Download PDF'}
+                  </>
+                )}
+              </PDFDownloadLink>
               <button
                 onClick={() => {
                   onContinueBrowsing?.();
