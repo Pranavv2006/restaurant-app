@@ -7,29 +7,31 @@ interface Props {
 
 const OrderSection: React.FC<Props> = ({ userId }) => {
     const [orders, setOrders] = useState<OrdersData[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [filterDuration, setFilterDuration] = useState<string>("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                setLoading(true);
                 setError(null);
                 const response = await getCustomerOrders(userId);
                 setOrders(response);
             } catch (error: any) {
                 console.error("Error fetching orders:", error);
                 setError("Failed to load orders. Please try again.");
-            } finally {
-                setLoading(false);
-            }
+            } 
         };
 
         if (userId) {
             fetchOrders();
         }
+
+        const intervalId = setInterval(fetchOrders, 5000);
+
+        return () => clearInterval(intervalId);
     }, [userId]);
 
     // Helper functions
@@ -144,20 +146,11 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
         return true;
     });
 
-    if (loading) {
-        return (
-            <section className="bg-white py-8 antialiased dark:bg-gray-900 md:py-16">
-                <div className="mx-auto max-w-screen-xl px-4 2xl:px-0">
-                    <div className="mx-auto max-w-5xl">
-                        <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
-                            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading your orders...</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        );
-    }
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentOrders = filteredOrders.slice(startIndex, endIndex);
+
 
     if (error) {
         return (
@@ -194,9 +187,8 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                             My orders ({filteredOrders.length})
                         </h2>
 
-                        <div className="mt-6 gap-4 space-y-4 sm:mt-0 sm:flex sm:items-center sm:justify-end sm:space-y-0">
+                        <div className="mt-6 gap-6 space-y-4 sm:mt-0 sm:flex sm:items-center sm:justify-end sm:space-y-0">
                             <div>
-                                <label htmlFor="order-type" className="sr-only mb-2 block text-sm font-medium text-gray-900 dark:text-white">Select order type</label>
                                 <select 
                                     id="order-type" 
                                     value={filterStatus}
@@ -211,10 +203,9 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                                 </select>
                             </div>
 
-                            <span className="inline-block text-gray-500 dark:text-gray-400"> from </span>
+                            <span className="inline-block text-gray-500 dark:text-gray-400 mx-3"> from </span>
 
                             <div>
-                                <label htmlFor="duration" className="sr-only mb-2 block text-sm font-medium text-gray-900 dark:text-white">Select duration</label>
                                 <select 
                                     id="duration"
                                     value={filterDuration}
@@ -259,7 +250,7 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredOrders.map((order) => (
+                                {currentOrders.map((order) => (
                                     <div key={order.id} className="flex flex-wrap items-center gap-y-4 py-6">
                                         <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
                                             <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Order ID:</dt>
@@ -303,6 +294,12 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                                         </dl>
 
                                         <div className="w-full grid sm:grid-cols-2 lg:flex lg:w-64 lg:items-center lg:justify-end gap-4">
+                                            <button 
+                                                onClick={() => handleViewDetails(order.id)}
+                                                className="w-full inline-flex justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 lg:w-auto"
+                                            >
+                                                View details
+                                            </button>
                                             {canCancelOrder(order.status) ? (
                                                 <button 
                                                     type="button" 
@@ -322,13 +319,6 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                                             ) : (
                                                 <div className="w-full lg:w-auto" /> // Empty space for consistent layout
                                             )}
-                                            
-                                            <button 
-                                                onClick={() => handleViewDetails(order.id)}
-                                                className="w-full inline-flex justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 lg:w-auto"
-                                            >
-                                                View details
-                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -336,28 +326,47 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                         )}
                     </div>
 
-                    {filteredOrders.length > 10 && (
+                    {filteredOrders.length > itemsPerPage && (
                         <nav className="mt-6 flex items-center justify-center sm:mt-8" aria-label="Page navigation">
                             <ul className="flex h-8 items-center -space-x-px text-sm">
                                 <li>
-                                    <button className="ms-0 flex h-8 items-center justify-center rounded-s-lg border border-e-0 border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                        <span className="sr-only">Previous</span>
-                                        <svg className="h-4 w-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m15 19-7-7 7-7" />
-                                        </svg>
+                                    <button 
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="ms-0 flex h-8 items-center justify-center rounded-s-lg border border-e-0 border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                    >
+                                    <span className="sr-only">Previous</span>
+                                    <svg className="h-4 w-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m15 19-7-7 7-7" />
+                                    </svg>
                                     </button>
                                 </li>
-                                <li>
-                                    <button className="z-10 flex h-8 items-center justify-center border border-primary-300 bg-primary-50 px-3 leading-tight text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">
-                                        1
+
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <li key={index}>
+                                    <button 
+                                        onClick={() => setCurrentPage(index + 1)}
+                                        className={`flex h-8 items-center justify-center border px-3 leading-tight ${
+                                        currentPage === index + 1
+                                            ? 'z-10 border-primary-300 bg-primary-50 text-primary-600 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                                            : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        {index + 1}
                                     </button>
-                                </li>
+                                    </li>
+                                ))}
+
                                 <li>
-                                    <button className="flex h-8 items-center justify-center rounded-e-lg border border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                        <span className="sr-only">Next</span>
-                                        <svg className="h-4 w-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m9 5 7 7-7 7" />
-                                        </svg>
+                                    <button 
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="flex h-8 items-center justify-center rounded-e-lg border border-gray-300 bg-white px-3 leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                    >
+                                    <span className="sr-only">Next</span>
+                                    <svg className="h-4 w-4 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m9 5 7 7-7 7" />
+                                    </svg>
                                     </button>
                                 </li>
                             </ul>
