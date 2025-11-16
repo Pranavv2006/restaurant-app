@@ -1,106 +1,96 @@
-const jwt = require('jsonwebtoken');  
-const prisma = require('../models/prismaClient');
-const bcrypt = require('bcrypt');
+const prisma = require("../models/prismaClient");
+const bcrypt = require("bcrypt");
+const { generateTokens } = require("../utils/jwtUtils");
+const RefreshTokenService = require("./RefreshTokenService");
 
 const login = async (email, password) => {
-    try {
-        const validate = await prisma.user.findUnique({
-            where: {
-                email: email
-            },
-            include: {
-                userRoles: {
-                    where: {status: true},
-                    include: {
-                        role: true
-                    }
-                }
-            }
-        })
-
-        if (!email || !password) {
-            return {
-                success: false,
-                message: 'Email and password are required',
-                error: 'MISSING_CREDENTIALS'
-            }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        },
+        userPermissions: {
+          include: {
+            permission: true
+          }
         }
+      },
+    });
 
-        if (!validate) {
-            return {
-                success: false,
-                message: 'Email not Found'
-            }
-        }
-
-        const user = validate;
-
-        if (await bcrypt.compare(password, user.password)) {
-
-            const roles = user.userRoles.map(ur => ({
-                id: ur.role.id,
-                type: ur.role.type
-            }));
-
-            const userType = roles.length > 0 ? roles[0].type : 'Customer';
-
-            const tokenPayload = {
-                userId: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                roles: roles
-            };
-
-            const accessToken = jwt.sign(tokenPayload, process.env.ACCESS_TOKEN_SECRET, {
-                expiresIn: '1h'
-            });
-
-            let welcomeMessage = '';
-
-            switch (userType) {
-                case 'Customer':
-                    welcomeMessage = 'Wecome Customer';
-                    break;
-                
-                case 'Merchant':
-                    welcomeMessage = 'Welcome Merchant';
-                    break;
-
-                case 'SuperAdmin':
-                    welcomeMessage = 'Welcome SuperAdmin'
-                default:
-                    break;
-            }
-
-            return {
-                success: true,
-                message: `${userType} Logged In Successfully!`,
-                welcomeMessage: welcomeMessage,
-                data: {
-                    accessToken,
-                    user: {
-                        id: user.id,
-                        email: user.email,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        roleType: userType
-                    }
-                }
-            };
-        } else {
-            return {
-                success: false,
-                message: 'Invalid password'
-            };
-        }
-    } catch (error) {
-        console.error(`Error during login: ${error.message}`);
-        return {
-            success: false,
-            message: error.message
-        };
+    if (!user) {
+      return {
+        success: false,
+        message: "Invalid email or password",
+      };
     }
-}
 
-module.exports = {login}
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return {
+        success: false,
+        message: "Invalid email or password",
+      };
+    }
+
+    const activeRoles = user.userRoles
+      .filter(userRole => userRole.status === true)
+      .map(userRole => userRole.role);
+
+    const activePermissions = user.userPermissions
+      .filter(userPermission => userPermission.status === true)
+      .map(userPermission => userPermission.permission.desc);
+
+    const primaryRole = activeRoles.length > 0 ? activeRoles[0] : null;
+
+    const payload = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      roleType: primaryRole?.type || 'User', 
+      role: primaryRole?.type,
+      permissions: activePermissions,
+    };
+
+    const tokens = generateTokens(payload);
+
+    try {
+      const storedToken = await RefreshTokenService.storeRefreshToken(user.id, tokens.refreshToken);
+    } catch (storeError) {
+      throw storeError;
+    }
+
+    return {
+      success: true,
+      message: "Login successful",
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roleType: primaryRole?.type || 'User',
+          role: primaryRole?.type,
+          permissions: activePermissions,
+          roles: activeRoles.map(role => role.type),
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+    };
+
+  } catch (error) {
+    
+    if (error.message.includes('Failed to store refresh token')) {
+      throw new Error("Failed to store authentication token. Please try again.");
+    }
+    
+    throw new Error("Internal server error during authentication");
+  }
+};
+
+module.exports = { login };

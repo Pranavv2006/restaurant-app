@@ -7,6 +7,19 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isRevoked Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
 model User {
   id        Int    @id @default(autoincrement())
   email     String @unique @db.VarChar(255)
@@ -19,6 +32,7 @@ model User {
   restaurants     Restaurant[]
   orders          Order[]
   customers       Customer[]
+  refreshTokens   RefreshToken[]
 
   @@map("Users")
 }

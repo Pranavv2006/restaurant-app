@@ -62,6 +62,9 @@ const RestaurantPage: React.FC = () => {
   const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
   const [showCartModal, setShowCartModal] = useState(false);
 
+  // Local quantity state for items not yet in cart
+  const [localQuantities, setLocalQuantities] = useState<{ [key: number]: number }>({});
+
   // Animation entrance effect - only play once per page visit
   const hasAnimated = useRef(false);
 
@@ -178,7 +181,24 @@ const RestaurantPage: React.FC = () => {
     return { veg, nonVeg };
   }, [menu]);
 
-  // Add to cart handler
+  // Get quantity for display (either from cart or local state)
+  const getDisplayQuantity = (itemId: number): number => {
+    if (cartItems[itemId]) {
+      return cartItems[itemId];
+    }
+    return localQuantities[itemId] || 1;
+  };
+
+  // Handle local quantity changes (before adding to cart)
+  const handleLocalQuantityChange = (itemId: number, delta: number) => {
+    setLocalQuantities(prev => {
+      const current = prev[itemId] || 1;
+      const newQuantity = Math.max(1, current + delta);
+      return { ...prev, [itemId]: newQuantity };
+    });
+  };
+
+  // Add to cart handler with quantity
   const handleAddToCart = async (item: MenuItem) => {
     try {
       // Check if user is authenticated customer first
@@ -195,21 +215,30 @@ const RestaurantPage: React.FC = () => {
         return;
       }
 
+      const quantity = localQuantities[item.id] || 1;
+
       const result = await addToCart({
         customerId,
         menuId: item.id,
-        quantity: 1,
+        quantity: quantity,
       });
 
       if (result.success) {
-        setToastMessage(`${item.name} added to cart!`);
+        setToastMessage(`${quantity} x ${item.name} added to cart!`);
         setShowToast(true);
 
         // Update local cart state
         setCartItems((prev) => ({
           ...prev,
-          [item.id]: (prev[item.id] || 0) + 1,
+          [item.id]: quantity,
         }));
+
+        // Reset local quantity for this item
+        setLocalQuantities(prev => {
+          const newState = { ...prev };
+          delete newState[item.id];
+          return newState;
+        });
 
         // Trigger global cart update for other components
         triggerCartUpdate();
@@ -235,8 +264,8 @@ const RestaurantPage: React.FC = () => {
     }
   };
 
-  // Handle quantity changes
-  const handleQuantityChange = async (item: MenuItem, newQuantity: number) => {
+  // Handle quantity changes for items already in cart
+  const handleCartQuantityChange = async (item: MenuItem, newQuantity: number) => {
     // Check if user is authenticated customer first
     if (!isCustomer() || !customerId) {
       console.log("User is not an authenticated customer - cannot modify cart");
@@ -289,6 +318,9 @@ const RestaurantPage: React.FC = () => {
   const MenuCard: React.FC<{ item: MenuItem; index: number }> = ({
     item,
   }) => {
+    const isInCart = !!cartItems[item.id];
+    const displayQuantity = getDisplayQuantity(item.id);
+
     return (
       <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-md overflow-hidden">
         <div className="relative overflow-hidden">
@@ -324,64 +356,114 @@ const RestaurantPage: React.FC = () => {
             {item.description}
           </p>
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
               ₹{item.price.toFixed(2)}
             </span>
+            {/* Total Price Display */}
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Total: <span className="font-bold text-green-600">₹{(item.price * displayQuantity).toFixed(2)}</span>
+            </span>
+          </div>
 
-            <div className="flex space-x-2">
-              {/* Cart functionality - only show for authenticated customers */}
-              {isCustomer() && cartItems[item.id] ? (
-                // Show counter when item is in cart
-                <div className="flex items-center bg-white dark:bg-neutral-700 border-2 border-green-500 rounded-lg">
+          {/* Always show quantity controls for authenticated customers */}
+          {isCustomer() ? (
+            <div className="space-y-2">
+              {isInCart ? (
+                // When in cart - show counter and "In Cart" badge on the right
+                <div className="flex items-center justify-end gap-2">
+                  {/* Quantity Counter */}
+                  <div className="flex items-center bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCartQuantityChange(item, displayQuantity - 1);
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-neutral-600 rounded-l-lg transition-colors"
+                    >
+                      <FaMinus className="text-sm" />
+                    </button>
+                    
+                    <span className="px-4 py-1 text-lg font-semibold text-green-600 min-w-[3rem] text-center">
+                      {displayQuantity}
+                    </span>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCartQuantityChange(item, displayQuantity + 1);
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-neutral-600 rounded-r-lg transition-colors"
+                    >
+                      <FaPlus className="text-sm" />
+                    </button>
+                  </div>
+
+                  {/* In Cart Badge */}
+                  <div className="flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-3 py-2 rounded-lg text-xs font-semibold">
+                    <FaShoppingCart className="mr-1.5 text-xl" />
+                    In Cart
+                  </div>
+                </div>
+              ) : (
+                // Before adding to cart - show counter and "Add to Cart" button on the right
+                <div className="flex items-center justify-end gap-2">
+                  {/* Quantity Counter */}
+                  <div className="flex items-center bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLocalQuantityChange(item.id, -1);
+                      }}
+                      disabled={displayQuantity <= 1}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-neutral-600 rounded-l-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FaMinus className="text-sm" />
+                    </button>
+                    
+                    <span className="px-4 py-1 text-lg font-semibold text-green-600 min-w-[3rem] text-center">
+                      {displayQuantity}
+                    </span>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLocalQuantityChange(item.id, 1);
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-neutral-600 rounded-r-lg transition-colors"
+                    >
+                      <FaPlus className="text-sm" />
+                    </button>
+                  </div>
+
+                  {/* Add to Cart Button - Made Narrower */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleQuantityChange(item, cartItems[item.id] - 1);
+                      handleAddToCart(item);
                     }}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors"
+                    className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-xs font-semibold shadow-lg hover:shadow-xl flex items-center justify-center whitespace-nowrap"
                   >
-                    <FaMinus className="text-xs" />
-                  </button>
-                  <span className="px-3 py-2 text-sm font-semibold text-green-600 bg-green-50">
-                    {cartItems[item.id]}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleQuantityChange(item, cartItems[item.id] + 1);
-                    }}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-r-lg transition-colors"
-                  >
-                    <FaPlus className="text-xs" />
+                    <FaShoppingCart className="mr-1.5 text-xl" />
+                    Add
                   </button>
                 </div>
-              ) : isCustomer() ? (
-                // Show add button when item is not in cart and user is authenticated customer
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(item);
-                  }}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 text-sm shadow-lg hover:shadow-xl"
-                >
-                  <FaShoppingCart className="inline mr-1" /> Add
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setToastMessage("Please log in as a customer to add items to cart");
-                    setShowToast(true);
-                    setTimeout(() => setShowToast(false), 3000);
-                  }}
-                  className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-2 rounded-lg hover:from-gray-500 hover:to-gray-600 text-sm shadow-lg"
-                >
-                  <FaShoppingCart className="inline mr-1" /> Login to Add
-                </button>
               )}
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setToastMessage("Please log in as a customer to add items to cart");
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 3000);
+              }}
+              className="w-full bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-2 rounded-lg hover:from-gray-500 hover:to-gray-600 text-xs font-semibold shadow-lg flex items-center justify-center"
+            >
+              <FaShoppingCart className="mr-1.5 text-xs" />
+              Login to Add
+            </button>
+          )}
         </div>
       </div>
     );
@@ -420,7 +502,7 @@ const RestaurantPage: React.FC = () => {
           setRestaurantName(data.restaurantName || "Menu");
 
           const cleanedMenu = data.menu.map((item: any) => ({
-            ...item, // item.price is treated as 'any' (or string) here, and is converted to a number
+            ...item,
             price: parseFloat(item.price),
           }));
 

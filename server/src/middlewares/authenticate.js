@@ -1,29 +1,49 @@
-const jwt = require('jsonwebtoken');
-const path = require('path');
-
-require('dotenv').config({path: path.join(__dirname, '..', '.env')});
+const { verifyAccessToken } = require('../utils/jwtUtils');
 
 const authenticate = (req, res, next) => {
+  try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({
-            status: 'fail',
-            message: 'Unauthorized!',
-        });
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token is required',
+      });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.substring(7); 
 
     try {
-        const user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        req.user = user;
-        next();
+      const decoded = verifyAccessToken(token);
+      req.user = decoded;
+      next();
     } catch (error) {
+      if (error.name === 'TokenExpiredError') {
         return res.status(401).json({
-            status: 'fail',
-            message: 'Unauthorized!',
+          success: false,
+          message: 'Access token expired',
+          code: 'TOKEN_EXPIRED',
         });
+      } else if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid access token',
+          code: 'INVALID_TOKEN',
+        });
+      } else {
+        return res.status(401).json({
+          success: false,
+          message: 'Token verification failed',
+        });
+      }
     }
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error during authentication',
+    });
+  }
 };
 
 module.exports = { authenticate };

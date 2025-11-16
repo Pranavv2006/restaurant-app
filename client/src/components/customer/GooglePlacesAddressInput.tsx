@@ -145,7 +145,7 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
     };
 
     const loadGooglePlacesScript = () => {
-      // Check if script is already loaded
+
       if (document.querySelector('script[src*="maps.googleapis.com"]')) {
         const checkGoogle = setInterval(() => {
           if (window.google && window.google.maps && window.google.maps.places) {
@@ -176,7 +176,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
     const initAutocomplete = () => {
       if (!inputRef.current || !window.google) return;
 
-      // Clear any existing autocomplete instance
       if (autocompleteRef.current) {
         window.google?.maps?.event?.clearInstanceListeners(
           autocompleteRef.current
@@ -193,7 +192,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
           }
         );
 
-        // Prevent autocomplete from interfering with form submission
         autocompleteRef.current.addListener("place_changed", handlePlaceSelect);
       } catch (error) {
         console.error("Failed to initialize autocomplete:", error);
@@ -201,7 +199,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
     };
 
     const handlePlaceSelect = () => {
-      // Prevent place selection during form submission or when disabled
       if (isFormSubmitting || disabled) {
         return;
       }
@@ -209,7 +206,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
       try {
         const place = autocompleteRef.current?.getPlace();
 
-        // Only trigger onChange if we have a valid place with geometry
         if (
           place &&
           place.geometry &&
@@ -218,7 +214,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
         ) {
           const address = place.formatted_address;
           
-          // Prevent duplicate selections
           if (lastSelectionRef.current === address) {
             return;
           }
@@ -227,7 +222,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
           
           setIsLoading(true);
           
-          // Immediate callback for better responsiveness
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
           
@@ -242,7 +236,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
 
     initializeGooglePlaces();
 
-    // Cleanup function
     return () => {
       if (autocompleteRef.current) {
         window.google?.maps?.event?.clearInstanceListeners(
@@ -256,12 +249,10 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
   }, [onChange, disabled, isFormSubmitting]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Reset last selection when user types manually
     lastSelectionRef.current = "";
     onChange(e.target.value);
   };
 
-  // Detect form submission
   useEffect(() => {
     const detectFormSubmission = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -281,7 +272,6 @@ const GooglePlacesAddressInput: React.FC<GooglePlacesAddressInputProps> = ({
       document.removeEventListener("click", detectFormSubmission, true);
       document.removeEventListener("submit", detectFormSubmission, true);
       
-      // Clean up debounce timeout on unmount
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }

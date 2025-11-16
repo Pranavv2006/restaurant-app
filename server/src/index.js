@@ -3,15 +3,20 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 
+require("dotenv").config({ path: path.join(__dirname, '../.env')});
+
+console.log('🔍 Environment Check:');
+console.log('ACCESS_TOKEN_SECRET loaded:', !!process.env.ACCESS_TOKEN_SECRET);
+console.log('REFRESH_TOKEN_SECRET loaded:', !!process.env.REFRESH_TOKEN_SECRET);
+
 const loginRegisterRoutes = require("./routes/loginRegisterRoutes");
 const merchantRoutes = require("./routes/merchantRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const homeRoutes = require("./routes/freeRoutes");
+const authRoutes = require("./routes/authRoutes");
 const { authenticate } = require("./middlewares/authenticate");
 const prisma = require("./models/prismaClient");
 const rateLimit = require("express-rate-limit");
-
-require("dotenv").config();
 
 const app = express();
 const port = process.env.server_port || 3000;
@@ -32,7 +37,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const uploadsDir = path.join(__dirname, "../uploads"); // Corrected path
+const uploadsDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log("✅ Created uploads directory:", uploadsDir);
@@ -63,7 +68,7 @@ app.use(
 
 app.get("/test-image/:filename", (req, res) => {
   const { filename } = req.params;
-  const filePath = path.join(__dirname, "../uploads/menu-items", filename); // Corrected path
+  const filePath = path.join(__dirname, "../uploads/menu-items", filename);
 
   console.log("Looking for file:", filePath);
 
@@ -96,7 +101,7 @@ app.get("/test-image/:filename", (req, res) => {
 
 app.get("/debug-image/:filename", (req, res) => {
   const { filename } = req.params;
-  const filePath = path.join(__dirname, "../uploads/restaurants", filename); // Corrected path
+  const filePath = path.join(__dirname, "../uploads/restaurants", filename);
 
   console.log("Looking for file:", filePath);
 
@@ -113,7 +118,7 @@ const limiter = rateLimit({
   message: "Too many Requests, please try again after 10 minutes",
 });
 
-const openPaths = ["/login", "/register"];
+const openPaths = ["/login", "/register", "/refresh-token"];
 
 const jwtGuard = (req, res, next) => {
   if (req.path.startsWith("/uploads") || openPaths.includes(req.path)) {
@@ -123,6 +128,7 @@ const jwtGuard = (req, res, next) => {
 }
 
 app.use("/Restaurant/home", homeRoutes);
+app.use("/Restaurant/auth", authRoutes);
 app.use("/Restaurant", limiter, jwtGuard, loginRegisterRoutes);
 app.use("/Restaurant/Merchant", authenticate, merchantRoutes);
 app.use("/Restaurant/Customer", authenticate, customerRoutes);
@@ -134,7 +140,7 @@ app.get("/", async (req, res) => {
 
 app.get("/debug-uploads", (req, res) => {
   try {
-    const uploadsPath = path.join(__dirname, "../uploads"); // Corrected path
+    const uploadsPath = path.join(__dirname, "../uploads");
 
     function getDirectoryContents(dirPath, relativePath = "") {
       const items = [];
