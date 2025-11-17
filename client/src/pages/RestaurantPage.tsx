@@ -36,7 +36,7 @@ interface RestaurantDetails {
   menu: MenuItem[];
 }
 
-const RestaurantPage: React.FC = () => {
+const RestaurantPage = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const { isAuthenticated, user, loading: authLoading } = useAuth();
 
@@ -48,27 +48,21 @@ const RestaurantPage: React.FC = () => {
   const [restaurantName, setRestaurantName] =
     useState<string>("Restaurant Menu");
 
-  // Toast states
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Customer address state
   const [hasAddress, setHasAddress] = useState(false);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [showAddressError, setShowAddressError] = useState(false);
   const [showCreateAddressModal, setShowCreateAddressModal] = useState(false);
 
-  // Cart state
   const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
   const [showCartModal, setShowCartModal] = useState(false);
 
-  // Local quantity state for items not yet in cart
   const [localQuantities, setLocalQuantities] = useState<{ [key: number]: number }>({});
 
-  // Animation entrance effect - only play once per page visit
   const hasAnimated = useRef(false);
 
-  // Helper function to check if user is authenticated customer
   const isCustomer = () => {
     return isAuthenticated && user?.roleType === 'Customer';
   };
@@ -81,15 +75,12 @@ const RestaurantPage: React.FC = () => {
       }, 100);
       return () => clearTimeout(timer);
     } else {
-      // If animation has already played, set visible immediately
       setIsVisible(true);
     }
   }, []);
 
-  // Check customer address on component mount - only for authenticated customers
   useEffect(() => {
     const checkAddress = async () => {
-      // Only check address if user is authenticated and is a customer
       if (!isCustomer()) {
         console.log("User is not an authenticated customer - skipping address check");
         setHasAddress(false);
@@ -118,21 +109,17 @@ const RestaurantPage: React.FC = () => {
         setCustomerId(null);
       }
     };
-    
-    // Only run when auth state is resolved
     if (!authLoading) {
       checkAddress();
     }
   }, [isAuthenticated, user, authLoading]);
 
-  // Fetch cart items when customer ID is available and user is authenticated customer
   useEffect(() => {
     if (customerId && isCustomer()) {
       fetchCartItems();
     }
   }, [customerId, isAuthenticated, user]);
 
-  // Handle address creation success
   const handleAddressSuccess = (data: any) => {
     setHasAddress(true);
     setCustomerId(data.customer.id);
@@ -141,9 +128,7 @@ const RestaurantPage: React.FC = () => {
     fetchCartItems(data.customer.id);
   };
 
-  // Fetch cart items to populate counter - only for authenticated customers
   const fetchCartItems = async (customerIdToUse?: number) => {
-    // Check if user is authenticated customer before making API call
     if (!isCustomer()) {
       console.log("User is not an authenticated customer - skipping cart fetch");
       setCartItems({});
@@ -171,17 +156,13 @@ const RestaurantPage: React.FC = () => {
     }
   };
 
-  // --- useMemo to group items by the string category ("Veg" or "Non-Veg") ---
   const groupedMenu = useMemo(() => {
-    // 1. Filter Veg items
     const veg = menu.filter((item) => item.category === "Vegetarian");
-    // 2. Filter Non-Veg items
     const nonVeg = menu.filter((item) => item.category === "Non-Vegetarian");
 
     return { veg, nonVeg };
   }, [menu]);
 
-  // Get quantity for display (either from cart or local state)
   const getDisplayQuantity = (itemId: number): number => {
     if (cartItems[itemId]) {
       return cartItems[itemId];
@@ -189,7 +170,6 @@ const RestaurantPage: React.FC = () => {
     return localQuantities[itemId] || 1;
   };
 
-  // Handle local quantity changes (before adding to cart)
   const handleLocalQuantityChange = (itemId: number, delta: number) => {
     setLocalQuantities(prev => {
       const current = prev[itemId] || 1;
@@ -198,10 +178,8 @@ const RestaurantPage: React.FC = () => {
     });
   };
 
-  // Add to cart handler with quantity
   const handleAddToCart = async (item: MenuItem) => {
     try {
-      // Check if user is authenticated customer first
       if (!isCustomer()) {
         setToastMessage("Please log in as a customer to add items to cart");
         setShowToast(true);
@@ -209,7 +187,6 @@ const RestaurantPage: React.FC = () => {
         return;
       }
 
-      // Check if customer address exists
       if (!hasAddress || !customerId) {
         setShowAddressError(true);
         return;
@@ -227,23 +204,19 @@ const RestaurantPage: React.FC = () => {
         setToastMessage(`${quantity} x ${item.name} added to cart!`);
         setShowToast(true);
 
-        // Update local cart state
         setCartItems((prev) => ({
           ...prev,
           [item.id]: quantity,
         }));
 
-        // Reset local quantity for this item
         setLocalQuantities(prev => {
           const newState = { ...prev };
           delete newState[item.id];
           return newState;
         });
 
-        // Trigger global cart update for other components
         triggerCartUpdate();
 
-        // Auto-hide toast after 3 seconds
         setTimeout(() => {
           setShowToast(false);
         }, 3000);
@@ -263,17 +236,13 @@ const RestaurantPage: React.FC = () => {
       }, 3000);
     }
   };
-
-  // Handle quantity changes for items already in cart
   const handleCartQuantityChange = async (item: MenuItem, newQuantity: number) => {
-    // Check if user is authenticated customer first
     if (!isCustomer() || !customerId) {
       console.log("User is not an authenticated customer - cannot modify cart");
       return;
     }
 
     try {
-      // Find cart item ID from cart data
       const cartResult = await retrieveCart(customerId);
       if (cartResult.success && cartResult.data?.cartItems) {
         const cartItem = cartResult.data.cartItems.find(
@@ -282,7 +251,6 @@ const RestaurantPage: React.FC = () => {
 
         if (cartItem) {
           if (newQuantity === 0) {
-            // Remove item
             const removeResult = await removeCartItem(cartItem.id);
             if (removeResult.success) {
               setCartItems((prev) => {
@@ -290,11 +258,9 @@ const RestaurantPage: React.FC = () => {
                 delete newItems[item.id];
                 return newItems;
               });
-              // Trigger global cart update
               triggerCartUpdate();
             }
           } else {
-            // Update quantity
             const updateResult = await updateCartItem({
               cartItemId: cartItem.id,
               quantity: newQuantity,
@@ -304,7 +270,6 @@ const RestaurantPage: React.FC = () => {
                 ...prev,
                 [item.id]: newQuantity,
               }));
-              // Trigger global cart update
               triggerCartUpdate();
             }
           }
@@ -370,7 +335,6 @@ const RestaurantPage: React.FC = () => {
           {isCustomer() ? (
             <div className="space-y-2">
               {isInCart ? (
-                // When in cart - show counter and "In Cart" badge on the right
                 <div className="flex items-center justify-end gap-2">
                   {/* Quantity Counter */}
                   <div className="flex items-center bg-gray-50 dark:bg-neutral-700 rounded-lg">
@@ -406,7 +370,6 @@ const RestaurantPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                // Before adding to cart - show counter and "Add to Cart" button on the right
                 <div className="flex items-center justify-end gap-2">
                   {/* Quantity Counter */}
                   <div className="flex items-center bg-gray-50 dark:bg-neutral-700 rounded-lg">
@@ -653,7 +616,6 @@ const RestaurantPage: React.FC = () => {
             <AddToCartToast
               message={toastMessage}
               onUndo={() => {
-                // Handle undo logic here if needed
                 setShowToast(false);
               }}
               onClose={() => setShowToast(false)}

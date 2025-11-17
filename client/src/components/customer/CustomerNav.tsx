@@ -7,6 +7,7 @@ import Login from "../auth/Login";
 import Register from "../auth/Register";
 import useAuth from "../../hooks/useAuth";
 import { getAllCustomerAddresses } from "../../services/CustomerService";
+import DarkModeSwitch from "./DarkModeSwitch";
 
 
 const CustomerNav = () => {
@@ -18,12 +19,10 @@ const CustomerNav = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [customerId, setCustomerId] = useState<number | null>(null);
 
-  // Helper function to check if user is authenticated customer
   const isCustomer = () => {
     return isAuthenticated && user?.roleType === 'Customer';
   };
 
-  // Get customer ID when user is authenticated customer
   useEffect(() => {
     const getCustomerId = async () => {
       if (!isCustomer() || !user?.id) {
@@ -47,26 +46,20 @@ const CustomerNav = () => {
     getCustomerId();
   }, [user?.id, isAuthenticated]);
 
-  // Get user display name
   const customerName = user?.firstName || "User";
 
   const handleLogout = () => {
-    // Implement logout logic here
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
-    // Refresh the current page to update authentication state
     window.location.reload();
   };
 
   const handleProceedToCheckout = () => {
-    // Navigate to checkout page instead of modal
     setShowCartModal(false);
-    // Navigate to checkout where user will provide address and contact details
     window.location.href = '/checkout';
   };
 
   const handleCartUpdate = () => {
-    // Cart updates are now handled automatically by the useCart hook
     console.log("Cart updated");
   };
 
@@ -91,7 +84,6 @@ const CustomerNav = () => {
   const handleRegisterSuccess = (name: string) => {
     console.log(`Registration successful for ${name}`);
     setShowRegisterModal(false);
-    // Optionally show a success message or automatically open login modal
   };
 
   return (
@@ -156,15 +148,16 @@ const CustomerNav = () => {
 
             {/* Conditional rendering based on authentication - only show for Customers */}
             {isAuthenticated && user?.roleType === 'Customer' ? (
-              /* Quick Menu Dropdown for authenticated users */
-              <QuickMenuDropdown
-                onCartClick={() => setShowCartModal(true)}
-                onAddressClick={() => setShowManageAddressModal(true)}
-                onLogoutClick={handleLogout}
-                customerName={customerName}
-              />
+              <div className="sm:order-3 flex items-center gap-x-2">
+                <QuickMenuDropdown
+                  onCartClick={() => setShowCartModal(true)}
+                  onAddressClick={() => setShowManageAddressModal(true)}
+                  onLogoutClick={handleLogout}
+                  customerName={customerName}
+                />
+                <DarkModeSwitch />
+              </div>
             ) : (
-              /* Login/Register buttons for unauthenticated users */
               <div className="sm:order-3 flex items-center gap-x-2">
                 <button 
                   type="button" 
@@ -180,6 +173,7 @@ const CustomerNav = () => {
                 >
                   Login
                 </button>
+                <DarkModeSwitch />
               </div>
             )}
           </div>
