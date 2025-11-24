@@ -1,5 +1,6 @@
 const { generateTokens, verifyRefreshToken } = require('../utils/jwtUtils');
 const RefreshTokenService = require('../services/RefreshTokenService');
+const prisma = require('../models/prismaClient');
 
 const refreshToken = async (req, res) => {
   try {
@@ -24,17 +25,52 @@ const refreshToken = async (req, res) => {
 
     const tokenRecord = await RefreshTokenService.validateRefreshToken(refreshToken);
 
+    const user = await prisma.user.findUnique({
+      where: { id: tokenRecord.user.id },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        },
+        userPermissions: {
+          include: {
+            permission: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    const activeRoles = user.userRoles
+      .filter(userRole => userRole.status === true)
+      .map(userRole => userRole.role);
+
+    const activePermissions = user.userPermissions
+      .filter(userPermission => userPermission.status === true)
+      .map(userPermission => userPermission.permission.desc);
+
+    const primaryRole = activeRoles.length > 0 ? activeRoles[0] : null;
+
     const payload = {
-      id: tokenRecord.user.id,
-      email: tokenRecord.user.email,
-      firstName: tokenRecord.user.firstName,
-      lastName: tokenRecord.user.lastName,
-      roleType: tokenRecord.user.roleType,
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      roleType: primaryRole?.type || 'User',
+      role: primaryRole?.type,
+      permissions: activePermissions,
     };
 
     const tokens = generateTokens(payload);
 
-    await RefreshTokenService.storeRefreshToken(tokenRecord.user.id, tokens.refreshToken);
+    await RefreshTokenService.storeRefreshToken(user.id, tokens.refreshToken);
 
     await RefreshTokenService.revokeRefreshToken(refreshToken);
 
@@ -45,11 +81,13 @@ const refreshToken = async (req, res) => {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
-          id: tokenRecord.user.id,
-          email: tokenRecord.user.email,
-          firstName: tokenRecord.user.firstName,
-          lastName: tokenRecord.user.lastName,
-          roleType: tokenRecord.user.roleType,
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roleType: primaryRole?.type || 'User',
+          role: primaryRole?.type,
+          permissions: activePermissions,
         },
       },
     });

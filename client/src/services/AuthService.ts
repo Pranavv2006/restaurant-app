@@ -32,6 +32,7 @@ export interface LoginResponse {
     welcomeMessage?: string;
     data?: {
         accessToken: string;
+        refreshToken: string;
         user: {
             id: number;
             email: string;
@@ -83,6 +84,7 @@ export const authService = {
 
             if (response.data.success === true && response.data.data?.accessToken) {
                 localStorage.setItem('authToken', response.data.data.accessToken);
+                localStorage.setItem('refreshToken', response.data.data.refreshToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.accessToken}`;
             }
@@ -103,6 +105,23 @@ export const authService = {
         }
     },
 
+    logout: async () => {
+        try {
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (refreshToken) {
+                await axiosInstance.post('/auth/logout', { refreshToken });
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            delete axiosInstance.defaults.headers.common['Authorization'];
+        }
+    },
+
     isAuthenticated: () => {
         const token = localStorage.getItem('authToken');
         const user = localStorage.getItem('user');
@@ -111,5 +130,9 @@ export const authService = {
 
     getToken: () => {
         return localStorage.getItem('authToken');
+    },
+
+    getRefreshToken: () => {
+        return localStorage.getItem('refreshToken');
     }
 };

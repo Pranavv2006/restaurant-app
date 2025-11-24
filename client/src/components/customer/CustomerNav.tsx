@@ -8,7 +8,8 @@ import Register from "../auth/Register";
 import useAuth from "../../hooks/useAuth";
 import { getAllCustomerAddresses } from "../../services/CustomerService";
 import DarkModeSwitch from "./DarkModeSwitch";
-
+import { authService } from "../../services/AuthService";
+import { useNavigate } from "react-router-dom";
 
 const CustomerNav = () => {
   const { isAuthenticated, user } = useAuth();
@@ -18,6 +19,8 @@ const CustomerNav = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [customerId, setCustomerId] = useState<number | null>(null);
+
+  const navigate = useNavigate();
 
   const isCustomer = () => {
     return isAuthenticated && user?.roleType === 'Customer';
@@ -48,9 +51,9 @@ const CustomerNav = () => {
 
   const customerName = user?.firstName || "User";
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    await authService.logout();
+    navigate('/');
     window.location.reload();
   };
 
@@ -181,7 +184,7 @@ const CustomerNav = () => {
           {/* Navbar links */}
           <div
             id="hs-navbar-alignment"
-            className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:grow-0 sm:basis-auto sm:block sm:order-2"
+            className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block sm:order-2 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2"
             aria-labelledby="hs-navbar-alignment-collapse"
           >
             <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5">

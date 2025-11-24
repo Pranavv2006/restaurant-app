@@ -16,7 +16,6 @@ class RefreshTokenService {
 
       return tokenRecord;
     } catch (error) {
-      console.error('Error storing refresh token:', error);
       throw new Error('Failed to store refresh token');
     }
   }
@@ -32,7 +31,6 @@ class RefreshTokenService {
               email: true,
               firstName: true,
               lastName: true,
-              roleType: true,
             },
           },
         },

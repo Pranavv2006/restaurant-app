@@ -67,7 +67,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
         {price !== undefined && (
           <div className="mt-3">
             <span className="text-2xl font-bold text-gray-800 dark:text-white">
-              ${price.toFixed(2)}
+              ₹{price.toFixed(2)}
             </span>
           </div>
         )}
@@ -102,15 +102,11 @@ const MenuCard: React.FC<MenuCardProps> = ({
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              className="flex-1 py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
+              className="flex-1 py-2.5 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg bg-violet-600 text-white hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors dark:bg-violet-500 dark:hover:bg-violet-600"
             >
               <FaShoppingCart />
               Add to Cart
             </button>
-          </div>
-          
-          <div className="mt-3 text-sm text-gray-600 dark:text-neutral-400 text-right">
-            Total: <span className="font-semibold text-gray-800 dark:text-white">${(price * quantity).toFixed(2)}</span>
           </div>
         </div>
       )}

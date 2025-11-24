@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllCustomerAddresses, createCustomerAddress, retrieveCart, placeMultipleOrders, type Address, type MultipleOrdersResult } from '../services/CustomerService';
+import { getAllCustomerAddresses, createCustomerAddress, retrieveCart, placeMultipleOrders, updateCartItem, type Address, type MultipleOrdersResult } from '../services/CustomerService';
 import useAuth from '../hooks/useAuth';
 import CustomerNav from '../components/customer/CustomerNav';
 import GooglePlacesAddressInput from '../components/customer/GooglePlacesAddressInput';
@@ -8,6 +8,7 @@ import ManageCustomerAddressModal from '../components/customer/ManageCustomerAdd
 import { triggerCartUpdate } from '../hooks/useCart';
 import { useNavigate } from "react-router-dom";
 import OrderConfirmationModal from './OrderConfirmationModal';
+import { FaMinus, FaPlus } from 'react-icons/fa';
 
 interface FinalOrderItems {
   id: number;
@@ -153,7 +154,7 @@ const CheckoutPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [customerId, setCustomerId] = useState<number | null>(null);  // Rename this variable
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [loadingCart, setLoadingCart] = useState(false);
   const [creatingAddress, setCreatingAddress] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -255,6 +256,32 @@ const CheckoutPage = () => {
       setCartItems([]);
     } finally {
       setLoadingCart(false);
+    }
+  };
+
+  const handleQuantityChange = async (cartItemId: number, newQuantity: number) => {
+    if (newQuantity < 1 || !customerId) return;
+
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+
+    try {
+      const result = await updateCartItem({
+        cartItemId,
+        quantity: newQuantity
+      });
+      
+      if (result.success) {
+        triggerCartUpdate();
+      } else {
+        await loadCartItems(customerId);
+      }
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      await loadCartItems(customerId);
     }
   };
 
@@ -439,7 +466,6 @@ const CheckoutPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
       <CustomerNav />
       <div className="max-w-5xl my-4 mx-auto bg-white dark:bg-neutral-800 rounded-lg shadow-lg overflow-hidden">
-        {/* Header */}
         <div className="bg-white dark:bg-neutral-800 p-4 border-b border-gray-200 dark:border-neutral-700">
           <div className="flex justify-between items-center max-w-2xl mx-auto">
             <button onClick={() => setCurrentStep(1)} disabled={currentStep === 1}>
@@ -456,12 +482,9 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Step Content */}
             <div className="lg:col-span-2">
-              {/* Step 1: Cart Review */}
               {currentStep === 1 && (
                 <div>
                   {loadingCart ? (
@@ -497,10 +520,32 @@ const CheckoutPage = () => {
                             <div className="flex-1">
                               <h3 className="font-semibold text-gray-800 dark:text-white">{item.menu.name}</h3>
                               <p className="text-sm text-gray-600 dark:text-gray-400">{item.menu.restaurant.name}</p>
-                              <p className="text-sm font-medium text-violet-600">₹{parseFloat(item.unitPrice.toString()).toFixed(2)} each</p>
+                              <p className="text-sm font-medium text-gray-800 dark:text-white mt-1">
+                                ₹{parseFloat(item.unitPrice.toString()).toFixed(2)} each
+                              </p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex items-center border border-gray-300 dark:border-neutral-500 rounded-lg">
+                                <button
+                                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <FaMinus className="text-xs" />
+                                </button>
+                                
+                                <span className="px-3 py-1 text-sm font-semibold text-gray-800 dark:text-white min-w-[2.5rem] text-center">
+                                  {item.quantity}
+                                </span>
+                                
+                                <button
+                                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors rounded-r-lg"
+                                >
+                                  <FaPlus className="text-xs" />
+                                </button>
+                              </div>
+                              
                               <p className="font-bold text-gray-800 dark:text-white">
                                 ₹{(item.quantity * parseFloat(item.unitPrice.toString())).toFixed(2)}
                               </p>
@@ -513,11 +558,9 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {/* Step 2: Details Form */}
               {currentStep === 2 && (
                 <div>
 
-                  {/* Contact Information */}
                   <div className="mb-6">
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Contact Information</h2>
                     <div className="space-y-4">
@@ -533,11 +576,9 @@ const CheckoutPage = () => {
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
                   <div className="mb-6">
                     <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Delivery Address</h2>
                     
-                    {/* Address Selection Toggle */}
                     {addresses.length > 0 && (
                       <div className="mb-4">
                         <div className="flex gap-4">
@@ -565,7 +606,6 @@ const CheckoutPage = () => {
                       </div>
                     )}
 
-                    {/* Existing Address Selection */}
                     {formData.useExistingAddress && addresses.length > 0 && (
                       <div className="space-y-3">
                         <div className="space-y-2">
@@ -603,7 +643,6 @@ const CheckoutPage = () => {
                       </div>
                     )}
 
-                    {/* New Address Form */}
                     {!formData.useExistingAddress && (
                       <div className="space-y-4">
                         <div>
@@ -667,7 +706,6 @@ const CheckoutPage = () => {
                       </div>
                     )}
 
-                    {/* Delivery Instructions */}
                     <div className="mt-6">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Delivery Instructions (Optional)
@@ -685,7 +723,6 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {/* Step 3: Payment Method */}
               {currentStep === 3 && (
                 <div>
                   <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Payment Method</h2>
@@ -708,7 +745,6 @@ const CheckoutPage = () => {
                 </div>
               )}
               
-              {/* Navigation Buttons */}
               {currentStep < 4 && (
                 <div className="flex justify-between mt-8">
                   <button
@@ -742,7 +778,6 @@ const CheckoutPage = () => {
         </div>
       </div>
       
-      {/* Address Error Toast */}
       {showAddressErrorToast && (
         <AddressErrorToast
           message="Please add a delivery address to continue with checkout."
@@ -754,7 +789,6 @@ const CheckoutPage = () => {
         />
       )}
 
-      {/* Manage Address Modal */}
       {showManageAddressModal && (
         <ManageCustomerAddressModal
           isOpen={showManageAddressModal}
