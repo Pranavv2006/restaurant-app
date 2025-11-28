@@ -79,7 +79,6 @@ export interface SearchRestaurantResponse {
   error?: string;
 }
 
-// Select Restaurant
 export interface SelectRestaurantData {
   restaurantId: number;
 }
@@ -91,14 +90,12 @@ export interface SelectRestaurantResponse {
   error?: string;
 }
 
-// Retrieve Cart
 export interface RetrieveCartResponse {
   success: boolean;
   data?: any;
   message?: string;
 }
 
-// Update Cart Item
 export interface UpdateCartItemData {
   cartItemId: number;
   quantity: number;
@@ -110,13 +107,11 @@ export interface UpdateCartItemResponse {
   message?: string;
 }
 
-// Remove Cart Item
 export interface RemoveCartItemResponse {
   success: boolean;
   message?: string;
 }
 
-// Customer Address Interfaces
 export interface Address {
   id: number;
   customerId: number;
@@ -221,7 +216,6 @@ export interface EditCustomerAddressResponse {
   message?: string;
 }
 
-// Nearby Restaurants
 export interface NearbyRestaurantsData {
   latitude: number;
   longitude: number;
@@ -243,7 +237,6 @@ export interface NearbyRestaurantsResponse {
   message?: string;
 }
 
-// Place Order
 export interface PlaceOrderItem {
   id: number;
   quantity: number;
@@ -269,7 +262,6 @@ export interface PlaceOrderResponse {
   message?: string;
 }
 
-// Multiple Orders Support
 export interface MultipleOrdersResult {
   successfulOrders: number[];
   failedOrders: { restaurantName: string; error: string }[];
@@ -283,7 +275,6 @@ export interface CustomerAddressResponse {
   longitude?: number;
 }
 
-// Orders Data
 export interface OrdersData {
   id: number;
   total: number;
@@ -314,7 +305,6 @@ export const addToCart = async (
   payload: AddToCartData
 ): Promise<AddToCartResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
@@ -349,7 +339,6 @@ export const selectRestaurants = async (
   payload: SelectRestaurantData
 ): Promise<SelectRestaurantResponse> => {
   try {
-    // This endpoint should be public since viewing restaurant menus doesn't require customer authentication
     const url = `/home/select-restaurant/${payload.restaurantId}`;
 
     const response = await axiosInstance.get<SelectRestaurantResponse>(url);
@@ -369,7 +358,6 @@ export const searchRestaurants = async (
   payload: SearchRestaurantData
 ): Promise<SearchRestaurantResponse> => {
   try {
-    // Restaurant search should be public - anyone can search for restaurants
     const response = await axiosInstance.get<SearchRestaurantResponse>(
       "/home/search-restaurants",
       {
@@ -392,7 +380,6 @@ export const retrieveCart = async (
   customerId: number
 ): Promise<RetrieveCartResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
@@ -416,7 +403,6 @@ export const retrieveCart = async (
   } catch (error: any) {
     console.error("Error calling retrieveCart API:", error);
     
-    // Handle 404 - cart doesn't exist yet (normal case)
     if (error.response?.status === 404) {
       return {
         success: true,
@@ -438,12 +424,10 @@ export const retrieveCart = async (
   }
 };
 
-// Update Cart Item
 export const updateCartItem = async (
   payload: UpdateCartItemData
 ): Promise<UpdateCartItemResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,

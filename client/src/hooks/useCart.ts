@@ -27,7 +27,6 @@ interface UseCartReturn {
   error: string | null;
 }
 
-// Global cart update event system
 const cartUpdateListeners = new Set<() => void>();
 
 export const triggerCartUpdate = () => {
@@ -40,13 +39,11 @@ export const useCart = (): UseCartReturn => {
   const [error, setError] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const { user, isAuthenticated } = useAuth();
-
-  // Helper function to check if user is authenticated customer
+  
   const isCustomer = () => {
     return isAuthenticated && user?.roleType === 'Customer';
   };
 
-  // Get customer ID from user profile
   useEffect(() => {
     const getCustomerId = async () => {
       if (!isCustomer() || !user?.id) {
@@ -95,15 +92,12 @@ export const useCart = (): UseCartReturn => {
     }
   }, [customerId, isAuthenticated, user]);
 
-  // Calculate cart item count
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Initial load
   useEffect(() => {
     refreshCart();
   }, [refreshCart]);
 
-  // Listen for global cart updates
   useEffect(() => {
     const handleCartUpdate = () => {
       refreshCart();

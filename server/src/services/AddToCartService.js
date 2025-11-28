@@ -6,7 +6,6 @@ const AddToCartService = async ({ customerId, menuId, quantity = 1 }) => {
       return { success: false, message: "customerId and menuId are required." };
     }
 
-    // Check if customer exists first
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
     });
