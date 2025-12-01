@@ -121,7 +121,7 @@ const limiter = rateLimit({
 const openPaths = ["/login", "/register", "/refresh-token"];
 
 const jwtGuard = (req, res, next) => {
-  if (req.path.startsWith("/uploads") || openPaths.includes(req.path)) {
+  if (req.path.startsWith("/uploads") || openPaths.includes(req.path) || req.path.startsWith("/auth")) {
     return next();
   }
   return authenticate(req, res, next);

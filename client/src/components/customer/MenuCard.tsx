@@ -31,11 +31,7 @@ const MenuCard = ({
   onDecrease,
 } : MenuCardProps) => {
   const [internalQuantity, setInternalQuantity] = useState(1);
-
-  // Use external quantity if provided, otherwise use internal
   const currentQuantity = externalQuantity !== undefined ? externalQuantity : internalQuantity;
-
-  // Sync internal quantity with external when external changes
   useEffect(() => {
     if (externalQuantity !== undefined) {
       setInternalQuantity(externalQuantity);
@@ -59,7 +55,6 @@ const MenuCard = ({
   };
 
   const handleAddToCart = () => {
-    
     if (onAddToCart && !isAddingToCart) {
       onAddToCart(currentQuantity);
     }

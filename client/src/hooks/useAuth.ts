@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { authService } from '../services/AuthService';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -16,23 +17,14 @@ export const useAuth = (): AuthState => {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const userStr = localStorage.getItem('user');
+        const isAuthenticated = authService.isAuthenticated();
+        const user = authService.getUser();
         
-        if (token && userStr) {
-          const user = JSON.parse(userStr);
-          setAuthState({
-            isAuthenticated: true,
-            user: user,
-            loading: false,
-          });
-        } else {
-          setAuthState({
-            isAuthenticated: false,
-            user: null,
-            loading: false,
-          });
-        }
+        setAuthState({
+          isAuthenticated,
+          user,
+          loading: false,
+        });
       } catch (error) {
         console.error('Error checking authentication state:', error);
         setAuthState({
@@ -45,7 +37,6 @@ export const useAuth = (): AuthState => {
 
     checkAuth();
 
-    // Listen for auth changes (e.g., login/logout from other tabs)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'authToken' || e.key === 'user') {
         checkAuth();

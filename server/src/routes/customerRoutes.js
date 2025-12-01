@@ -14,6 +14,7 @@ const deleteAddress = require("../controllers/deleteAddress");
 const placeOrder = require("../controllers/placeOrder");
 const retrieveAddress = require("../controllers/retrieveCustomerAddress");
 const getCustomerOrders = require("../controllers/getCustomerOrders");
+const cancelOrder = require("../controllers/cancelOrder");
 
 router.use((req, res, next) => {
   console.log(`🍽️ Customer route: ${req.method} ${req.path}`);
@@ -59,5 +60,6 @@ router.delete(
 // Order management
 router.post("/orders", placeOrder.placeOrderController);
 router.get("/orders/:userId", getCustomerOrders.getCustomerOrdersController);
+router.put("/order/:orderId", cancelOrder.cancelOrderController);
 
 module.exports = router;

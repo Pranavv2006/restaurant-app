@@ -267,36 +267,13 @@ const merchantService = {
     checkRestaurantData: CheckRestaurantData
   ): Promise<CheckRestaurantResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const response = await axiosInstance.post<CheckRestaurantResponse>(
         "/Merchant/check-restaurant",
-        checkRestaurantData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        checkRestaurantData
       );
       return response.data;
     } catch (error: any) {
       console.error("checkRestaurant error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as CheckRestaurantResponse;
@@ -310,23 +287,12 @@ const merchantService = {
     formData: FormData
   ): Promise<CreateRestaurantResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          message: "No authentication token found. Please login again.",
-          error: "Authentication required",
-        };
-      }
-
       const response = await axiosInstance.post<CreateRestaurantResponse>(
         "/Merchant/create-restaurant",
-        formData, // Pass FormData directly
+        formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data", // Ensure correct content type
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -334,16 +300,6 @@ const merchantService = {
       return response.data;
     } catch (error: any) {
       console.error("createRestaurant error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          message: "Authentication expired. Please login again.",
-          error: "Authentication expired",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as CreateRestaurantResponse;
@@ -361,37 +317,12 @@ const merchantService = {
     merchantId: MerchantProfileData
   ): Promise<MerchantProfileResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          message: "No authentication token found. Please login again.",
-          error: "Authentication required",
-        };
-      }
-
       const response = await axiosInstance.get<MerchantProfileResponse>(
-        `/Merchant/merchant-profile/${merchantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/merchant-profile/${merchantId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("getMerchantProfile error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          message: "Authentication expired. Please login again.",
-          error: "Authentication expired",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as MerchantProfileResponse;
@@ -409,35 +340,12 @@ const merchantService = {
     retrieveMenuData: MenuItemData
   ): Promise<RetrieveMenuResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const response = await axiosInstance.get<RetrieveMenuResponse>(
-        `/Merchant/retrieve-menu?restaurantId=${retrieveMenuData.restaurantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/retrieve-menu?restaurantId=${retrieveMenuData.restaurantId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("retrieveMenu error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as RetrieveMenuResponse;
@@ -454,15 +362,6 @@ const merchantService = {
     addMenuItemData: AddMenuItemData
   ): Promise<AddMenuItemResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const formData = new FormData();
       formData.append("restaurantId", addMenuItemData.restaurantId.toString());
       formData.append("name", addMenuItemData.name);
@@ -477,25 +376,11 @@ const merchantService = {
 
       const response = await axiosInstance.post<AddMenuItemResponse>(
         `/Merchant/add-menu-item`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        formData
       );
       return response.data;
     } catch (error: any) {
       console.error("addMenuItem error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as AddMenuItemResponse;
@@ -512,35 +397,12 @@ const merchantService = {
     removeMenuItemData: RemoveMenuItemData
   ): Promise<RemoveMenuItemResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const response = await axiosInstance.delete<RemoveMenuItemResponse>(
-        `/Merchant/remove-menu-item/${removeMenuItemData.menuItemId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/remove-menu-item/${removeMenuItemData.menuItemId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("removeMenuItem error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as RemoveMenuItemResponse;
@@ -557,38 +419,15 @@ const merchantService = {
     editMenuItemData: EditMenuItemData
   ): Promise<EditMenuItemResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const { menuItemId, ...bodyData } = editMenuItemData;
 
       const response = await axiosInstance.put<EditMenuItemResponse>(
         `/Merchant/edit-menu-item/${menuItemId}`,
-        bodyData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        bodyData
       );
       return response.data;
     } catch (error: any) {
       console.error("editMenuItem error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as EditMenuItemResponse;
@@ -605,37 +444,14 @@ const merchantService = {
     weeklyOrdersData: WeeklyOrdersData
   ): Promise<WeeklyOrdersResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const { restaurantId } = weeklyOrdersData;
 
       const response = await axiosInstance.get<WeeklyOrdersResponse>(
-        `/Merchant/weekly-orders/${restaurantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/weekly-orders/${restaurantId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("WeeklyOrders error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as WeeklyOrdersResponse;
@@ -652,35 +468,12 @@ const merchantService = {
     merchantId: number
   ): Promise<RetrieveRestaurantsResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const response = await axiosInstance.get<RetrieveRestaurantsResponse>(
-        `/Merchant/retrieve-restaurant/${merchantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/retrieve-restaurant/${merchantId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("getMerchantRestaurants error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as RetrieveRestaurantsResponse;
@@ -697,36 +490,12 @@ const merchantService = {
     removeRestaurantData: RemoveRestaurantData
   ): Promise<RemoveRestaurantResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          message: "No authentication token found. Please login again.",
-          error: "No authentication token found. Please login again.",
-        };
-      }
-
       const response = await axiosInstance.delete<RemoveRestaurantResponse>(
-        `/Merchant/remove-restaurant/${removeRestaurantData.restaurantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/remove-restaurant/${removeRestaurantData.restaurantId}`
       );
       return response.data;
     } catch (error: any) {
       console.error("removeRestaurant error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          error: "Authentication expired. Please login again.",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as RemoveRestaurantResponse;
@@ -743,38 +512,13 @@ const merchantService = {
     editRestaurantData: EditRestaurantData
   ): Promise<EditRestaurantResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          message: "No authentication token found. Please login again.",
-          error: "Authentication required",
-        };
-      }
-
       const response = await axiosInstance.put<EditRestaurantResponse>(
         "/Merchant/edit-restaurant",
-        editRestaurantData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        editRestaurantData
       );
       return response.data;
     } catch (error: any) {
       console.error("editRestaurant error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          message: "Authentication expired. Please login again.",
-          error: "Authentication expired",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as EditRestaurantResponse;
@@ -793,38 +537,13 @@ const merchantService = {
     restaurantId: number
   ): Promise<PendingOrdersResponse> => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        return {
-          success: false,
-          message: "Authentication token not found. Please login again.",
-          error: "No authentication token",
-        };
-      }
-
       const response = await axiosInstance.get<PendingOrdersResponse>(
-        `/Merchant/restaurants/${restaurantId}/pending-orders`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/Merchant/restaurants/${restaurantId}/pending-orders`
       );
 
       return response.data;
     } catch (error: any) {
       console.error("getPendingOrders error:", error);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        return {
-          success: false,
-          message: "Authentication expired. Please login again.",
-          error: "Authentication expired",
-        };
-      }
 
       if (error?.response?.data) {
         return error.response.data as PendingOrdersResponse;

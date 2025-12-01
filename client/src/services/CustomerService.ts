@@ -1,17 +1,14 @@
 import axiosInstance from "../api/axiosConfig";
+import { authService } from "./AuthService";
 
-// Helper function to check if user is authenticated customer
 const isAuthenticatedCustomer = (): boolean => {
   try {
-    const token = localStorage.getItem("authToken");
-    const userStr = localStorage.getItem("user");
-    
-    if (!token || !userStr) {
+    if (!authService.isAuthenticated()) {
       return false;
     }
     
-    const user = JSON.parse(userStr);
-    return user.roleType === 'Customer';
+    const user = authService.getUser();
+    return user?.roleType === 'Customer';
   } catch (error) {
     console.error("Error checking customer authentication:", error);
     return false;
@@ -67,7 +64,6 @@ export interface AddToCartResponse {
   message?: string;
 }
 
-// Search Restaurants
 export interface SearchRestaurantData {
   query: string;
 }
@@ -246,7 +242,6 @@ export interface PlaceOrderData {
   customerId: number;
   restaurantId: number;
   items: PlaceOrderItem[];
-  customerEmail: string;
 }
 
 export interface PlaceOrderResponse {
@@ -281,24 +276,47 @@ export interface OrdersData {
   deliveryFee: number;
   status: string;
   orderDate: string;
-  address: string;
+  deliveryAddress: string;
   restaurant: {
     id: number;
     name: string;
-    address: string;
+    location: string;
+    phone: string;
+    cuisine: string;
+    imageUrl: string;
   };
-  orderItems: {
+  orderItems?: {
     id: number;
     quantity: number;
-    price: number;
+    unitPrice: number;
+    subtotal: number;
     menu: {
       id: number;
       name: string;
       description: string;
       price: number;
       imageUrl: string;
+      category: string;
     };
   }[];
+}
+
+export interface CancelOrderResponse {
+  success: boolean;
+  data?: {
+    orderId: number;
+    status: string;
+    restaurant: string;
+    total: number;
+    orderDate: string;
+    items: {
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      subtotal: number;
+    }[];
+  };
+  message?: string;
 }
 
 export const addToCart = async (
@@ -309,14 +327,6 @@ export const addToCart = async (
       return {
         success: false,
         message: "Please log in as a customer to add items to cart.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -387,14 +397,6 @@ export const retrieveCart = async (
       };
     }
 
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
-    }
-
     const response = await axiosInstance.get<RetrieveCartResponse>(
       `/Customer/cart/${customerId}`
     );
@@ -435,14 +437,6 @@ export const updateCartItem = async (
       };
     }
 
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
-    }
-
     const response = await axiosInstance.put<UpdateCartItemResponse>(
       "/Customer/cart/update",
       payload
@@ -462,19 +456,10 @@ export const removeCartItem = async (
   cartItemId: number
 ): Promise<RemoveCartItemResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         message: "Please log in as a customer to remove cart items.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -496,21 +481,11 @@ export const checkCustomerAddress = async (
   userId: number
 ): Promise<CheckCustomerAddressResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         hasAddress: false,
         message: "Please log in as a customer to access address features.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        hasAddress: false,
-        message: "Not authenticated - please login to access address features.",
       };
     }
 
@@ -533,19 +508,10 @@ export const createCustomerAddress = async (
   payload: CreateCustomerAddressData
 ): Promise<CreateCustomerAddressResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         message: "Please log in as a customer to create addresses.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -568,14 +534,6 @@ export const editCustomerAddress = async (
   payload: EditCustomerAddressData
 ): Promise<EditCustomerAddressResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
-    }
-
     const response = await axiosInstance.put<EditCustomerAddressResponse>(
       "/Customer/address/edit",
       payload
@@ -595,7 +553,6 @@ export const getNearbyRestaurants = async (
   payload: NearbyRestaurantsData
 ): Promise<NearbyRestaurantsResponse> => {
   try {
-    // Finding nearby restaurants should be public - anyone can search for nearby restaurants
     const { latitude, longitude, radiusKm } = payload;
     const queryParams = new URLSearchParams({
       latitude: latitude.toString(),
@@ -624,14 +581,6 @@ export const placeOrder = async (
   payload: PlaceOrderData
 ): Promise<PlaceOrderResponse> => {
   try {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
-      };
-    }
-
     const response = await axiosInstance.post<PlaceOrderResponse>(
       "/Customer/orders",
       payload
@@ -639,7 +588,6 @@ export const placeOrder = async (
 
     return response.data;
   } catch (error: any) {
-    console.error("❌ placeOrder API Error:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Something went wrong",
@@ -655,9 +603,7 @@ export const placeMultipleOrders = async (
     menu: { id: number; name: string; price: number };
     restaurant: { id: number; name: string };
   }>,
-  customerEmail: string,
 ): Promise<MultipleOrdersResult> => {
-  // Group items by restaurant
   const itemsByRestaurant = cartItems.reduce((acc, item) => {
     const restaurantId = item.restaurant.id;
     if (!acc[restaurantId]) {
@@ -674,14 +620,12 @@ export const placeMultipleOrders = async (
     return acc;
   }, {} as Record<number, { restaurantId: number; restaurantName: string; items: PlaceOrderItem[] }>);
 
-  // Create orders for each restaurant
   const orderPromises = Object.values(itemsByRestaurant).map(
     async (restaurantOrder) => {
       const orderData: PlaceOrderData = {
         customerId,
         restaurantId: restaurantOrder.restaurantId,
         items: restaurantOrder.items,
-        customerEmail
       };
 
       try {
@@ -702,10 +646,8 @@ export const placeMultipleOrders = async (
     }
   );
 
-  // Wait for all orders to complete
   const results = await Promise.allSettled(orderPromises);
 
-  // Process results
   const successfulOrders: number[] = [];
   const failedOrders: { restaurantName: string; error: string }[] = [];
 
@@ -741,15 +683,8 @@ export const retrieveCustomerAddress = async (
   customerId: number
 ): Promise<CustomerAddressResponse | null> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       console.log("User not authenticated as customer. Address features unavailable.");
-      return null;
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.log("No authentication token - user not logged in. Address features unavailable.");
       return null;
     }
 
@@ -771,7 +706,6 @@ export const retrieveCustomerAddress = async (
   }
 };
 
-// Legacy function - Use getDefaultAddress() for new implementations
 export const retrieveDefaultCustomerAddress = async (
   userId: number
 ): Promise<Address | null> => {
@@ -784,17 +718,10 @@ export const retrieveDefaultCustomerAddress = async (
   }
 };
 
-// Get Customer Orders
 export const getCustomerOrders = async (
   userId: number
 ): Promise<OrdersData[]> => {
   try {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.error("No authentication token found. Please login again.");
-      return [];
-    }
-
     const response = await axiosInstance.get<{
       success: boolean;
       data: OrdersData[];
@@ -802,6 +729,11 @@ export const getCustomerOrders = async (
     }>(`/Customer/orders/${userId}`);
 
     if (response.data.success) {
+      console.log('Orders received from backend:', response.data.data);
+      if (response.data.data.length > 0) {
+        console.log('First order:', response.data.data[0]);
+        console.log('First order items:', response.data.data[0].orderItems);
+      }
       return response.data.data;
     } else {
       console.warn("Failed to fetch orders:", response.data.message);
@@ -817,7 +749,6 @@ export const getProximityRestaurants = async (
   payload: ProximitySearchData
 ): Promise<ProximitySearchResponse> => {
   try {
-    // Proximity search should be public - anyone can search for restaurants by location
     const { latitude, longitude, radiusKm } = payload;
 
     const queryParams = new URLSearchParams({
@@ -843,25 +774,15 @@ export const getProximityRestaurants = async (
   }
 };
 
-// ===== MULTIPLE ADDRESS MANAGEMENT FUNCTIONS =====
 
 export const getAllCustomerAddresses = async (
   userId: number
 ): Promise<GetAllAddressesResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         message: "Please log in as a customer to view addresses.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -883,19 +804,10 @@ export const setDefaultAddress = async (
   payload: SetDefaultAddressData
 ): Promise<SetDefaultAddressResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         message: "Please log in as a customer to manage addresses.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -919,19 +831,10 @@ export const deleteCustomerAddress = async (
   addressId: number
 ): Promise<DeleteAddressResponse> => {
   try {
-    // Check if user is authenticated customer
     if (!isAuthenticatedCustomer()) {
       return {
         success: false,
         message: "Please log in as a customer to delete addresses.",
-      };
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return {
-        success: false,
-        message: "No authentication token found. Please login again.",
       };
     }
 
@@ -949,7 +852,6 @@ export const deleteCustomerAddress = async (
   }
 };
 
-// ===== UTILITY FUNCTIONS FOR ADDRESS MANAGEMENT =====
 
 export const getDefaultAddress = async (userId: number): Promise<Address | null> => {
   try {
@@ -994,5 +896,33 @@ export const findAddressById = async (userId: number, addressId: number): Promis
   } catch (error) {
     console.error("Error finding address by ID:", error);
     return null;
+  }
+};
+
+export const cancelOrder = async (orderId: number): Promise<CancelOrderResponse> => {
+  try {
+    if (!isAuthenticatedCustomer()) {
+      return {
+        success: false,
+        message: "Please log in as a customer to cancel orders.",
+      };
+    }
+
+    const response = await axiosInstance.put<CancelOrderResponse>(
+      `/Customer/order/${orderId}`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error cancelling order:", error);
+    
+    if (error?.response?.data) {
+      return error.response.data as CancelOrderResponse;
+    }
+
+    return {
+      success: false,
+      message: error?.message || "Failed to cancel order. Please try again.",
+    };
   }
 };

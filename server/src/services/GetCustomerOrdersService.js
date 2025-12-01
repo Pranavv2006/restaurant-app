@@ -101,7 +101,7 @@ const GetCustomerOrdersService = async (userId) => {
         cuisine: order.restaurant.cuisine,
         imageUrl: order.restaurant.imageUrl
       },
-      items: order.items.map(item => ({
+      orderItems: order.items.map(item => ({
         id: item.id,
         orderId: item.orderId,
         menuId: item.menuId,

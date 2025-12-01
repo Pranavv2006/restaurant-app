@@ -350,8 +350,7 @@ const CheckoutPage = () => {
 
       const results: MultipleOrdersResult = await placeMultipleOrders(
         customerId,
-        orderCartItems,
-        user?.email || ''
+        orderCartItems
       );
       
       if (results.totalSuccessful > 0) {
@@ -519,33 +518,34 @@ const CheckoutPage = () => {
                             />
                             <div className="flex-1">
                               <h3 className="font-semibold text-gray-800 dark:text-white">{item.menu.name}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{item.menu.description}</p>
                               <p className="text-sm text-gray-600 dark:text-gray-400">{item.menu.restaurant.name}</p>
-                              <p className="text-sm font-medium text-gray-800 dark:text-white mt-1">
+                              <p className="text-sm font-medium text-violet-600 dark:text-violet-400 mt-1">
                                 ₹{parseFloat(item.unitPrice.toString()).toFixed(2)} each
                               </p>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="flex items-center border border-gray-300 dark:border-neutral-500 rounded-lg">
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                  disabled={item.quantity <= 1}
-                                >
-                                  <FaMinus className="text-xs" />
-                                </button>
-                                
-                                <span className="px-3 py-1 text-sm font-semibold text-gray-800 dark:text-white min-w-[2.5rem] text-center">
-                                  {item.quantity}
-                                </span>
-                                
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors rounded-r-lg"
-                                >
-                                  <FaPlus className="text-xs" />
-                                </button>
-                              </div>
-                              
+                            
+                            {/* Quantity Controls - matching CartModal style */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
+                                className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-neutral-500 transition-colors"
+                              >
+                                <FaMinus className="text-xs" />
+                              </button>
+                              <span className="w-8 text-center font-semibold text-gray-800 dark:text-white">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-neutral-500 transition-colors"
+                              >
+                                <FaPlus className="text-xs" />
+                              </button>
+                            </div>
+                            
+                            {/* Item Total */}
+                            <div className="text-right">
                               <p className="font-bold text-gray-800 dark:text-white">
                                 ₹{(item.quantity * parseFloat(item.unitPrice.toString())).toFixed(2)}
                               </p>
@@ -816,6 +816,14 @@ const CheckoutPage = () => {
         }}
       />
       
+      <style>{`
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 };

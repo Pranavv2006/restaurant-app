@@ -43,6 +43,22 @@ export interface LoginResponse {
     };
 }
 
+export interface RefreshTokenResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        accessToken: string;
+        refreshToken: string;
+        user: {
+            id: number;
+            email: string;
+            firstName: string;
+            lastName: string;
+            roleType: string;
+        };
+    };
+}
+
 export const authService = {
     register: async (userData: RegisterData): Promise<RegisterResponse> => {
         try {
@@ -76,17 +92,16 @@ export const authService = {
 
     login: async (loginData: LoginData): Promise<LoginResponse> => {
         try {
-            console.log('Sending login data:', loginData);
 
             const response = await axiosInstance.post<LoginResponse>('/login', loginData);
-
-            console.log('Login response:', response.data);
 
             if (response.data.success === true && response.data.data?.accessToken) {
                 localStorage.setItem('authToken', response.data.data.accessToken);
                 localStorage.setItem('refreshToken', response.data.data.refreshToken);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.accessToken}`;
+                
             }
             
             return response.data;
@@ -105,20 +120,85 @@ export const authService = {
         }
     },
 
+    refreshToken: async (): Promise<boolean> => {
+        try {
+            
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (!refreshToken) {
+                return false;
+            }
+
+            const response = await axiosInstance.post<RefreshTokenResponse>(
+                '/auth/refresh-token', 
+                { refreshToken },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response.data.success && response.data.data) {
+                localStorage.setItem('authToken', response.data.data.accessToken);
+                localStorage.setItem('refreshToken', response.data.data.refreshToken);
+                localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                
+                axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.accessToken}`;
+                
+                return true;
+            }
+
+            return false;
+
+        } catch (error: any) {
+            
+            authService.clearTokens();
+            return false;
+        }
+    },
+
     logout: async () => {
         try {
+            
             const refreshToken = localStorage.getItem('refreshToken');
             
             if (refreshToken) {
-                await axiosInstance.post('/auth/logout', { refreshToken });
+                await axiosInstance.post('/auth/logout', 
+                    { refreshToken },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
             }
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('Logout error (continuing with client cleanup):', error);
         } finally {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            delete axiosInstance.defaults.headers.common['Authorization'];
+            authService.clearTokens();
+        }
+    },
+
+    clearTokens: () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        delete axiosInstance.defaults.headers.common['Authorization'];
+    },
+
+    isTokenExpired: (): boolean => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) return true;
+
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            
+            return payload.exp < (currentTime + 300);
+        } catch (error) {
+            console.error('Error checking token expiry:', error);
+            return true;
         }
     },
 
@@ -128,11 +208,41 @@ export const authService = {
         return !!(token && user);
     },
 
+    getValidToken: async (): Promise<string | null> => {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            return null;
+        }
+
+        if (authService.isTokenExpired()) {
+            
+            const refreshed = await authService.refreshToken();
+            if (refreshed) {
+                return localStorage.getItem('authToken');
+            } else {
+                return null;
+            }
+        }
+
+        return token;
+    },
+
     getToken: () => {
         return localStorage.getItem('authToken');
     },
 
     getRefreshToken: () => {
         return localStorage.getItem('refreshToken');
+    },
+
+    getUser: () => {
+        try {
+            const userStr = localStorage.getItem('user');
+            return userStr ? JSON.parse(userStr) : null;
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
     }
 };

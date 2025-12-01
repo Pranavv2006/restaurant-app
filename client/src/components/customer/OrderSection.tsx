@@ -1,16 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { getCustomerOrders, type OrdersData } from "../../services/CustomerService";
+import { useEffect, useState } from "react";
+import { getCustomerOrders, cancelOrder, type OrdersData } from "../../services/CustomerService";
+import Modal from "./Modal";
 
 interface Props {
     userId: number;
 }
 
-const OrderSection: React.FC<Props> = ({ userId }) => {
+const OrderSection = ({ userId }: Props) => {
     const [orders, setOrders] = useState<OrdersData[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [filterDuration, setFilterDuration] = useState<string>("all");
     const [currentPage, setCurrentPage] = useState(1);
+    const [cancellingOrderId, setCancellingOrderId] = useState<number | null>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<OrdersData | null>(null);
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -102,9 +107,41 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
         return ['delivered', 'cancelled'].includes(status.toLowerCase());
     };
 
-    const handleCancelOrder = async (orderId: number) => {
-        console.log('Cancel order:', orderId);
-        alert('Cancel order functionality will be implemented soon');
+    const handleCancelOrder = (order: OrdersData) => {
+        setSelectedOrder(order);
+        setShowCancelModal(true);
+    };
+
+    const confirmCancelOrder = async () => {
+        if (!selectedOrder) return;
+        
+        setCancellingOrderId(selectedOrder.id);
+        setShowCancelModal(false);
+        
+        try {
+            const result = await cancelOrder(selectedOrder.id);
+            
+            if (result.success) {
+                // Update the local orders state
+                setOrders(prevOrders => 
+                    prevOrders.map(order => 
+                        order.id === selectedOrder.id 
+                            ? { ...order, status: 'Cancelled' }
+                            : order
+                    )
+                );
+                
+                alert('Order cancelled successfully!');
+            } else {
+                alert(result.message || 'Failed to cancel order. Please try again.');
+            }
+        } catch (error: any) {
+            console.error('Error cancelling order:', error);
+            alert('Failed to cancel order. Please try again.');
+        } finally {
+            setCancellingOrderId(null);
+            setSelectedOrder(null);
+        }
     };
 
     const handleReorder = async (order: OrdersData) => {
@@ -112,9 +149,15 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
         alert('Reorder functionality will be implemented soon');
     };
 
-    const handleViewDetails = (orderId: number) => {
-        console.log('View details for order:', orderId);
-        alert('Order details view will be implemented soon');
+    const handleViewDetails = (order: OrdersData) => {
+        console.log('Order data received:', order);
+        console.log('Order items:', order.orderItems);
+        if (order.orderItems && order.orderItems.length > 0) {
+            console.log('First item:', order.orderItems[0]);
+            console.log('First item menu:', order.orderItems[0].menu);
+        }
+        setSelectedOrder(order);
+        setShowDetailsModal(true);
     };
 
     const filteredOrders = orders.filter(order => {
@@ -250,75 +293,54 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                <div className="hidden sm:grid sm:grid-cols-4 lg:grid-cols-5 text-sm font-semibold text-gray-500 dark:text-gray-400 py-3 border-b border-gray-200 dark:border-gray-700 mt-6">
+                                    <span>Date</span>
+                                    <span>Restaurant</span>
+                                    <span>Price</span>
+                                    <span>Status</span>
+                                    <span className="text-right">Actions</span>
+                                </div>
                                 {currentOrders.map((order) => (
-                                    <div key={order.id} className="flex flex-wrap items-center gap-y-4 py-6">
-                                        <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
-                                            <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Order ID:</dt>
-                                            <dd className="mt-1.5 text-base font-semibold text-gray-900 dark:text-white">
-                                                <button 
-                                                    onClick={() => handleViewDetails(order.id)}
-                                                    className="hover:underline hover:text-primary-600"
-                                                >
-                                                    #{order.id.toString().padStart(8, '0')}
-                                                </button>
-                                            </dd>
-                                        </dl>
-
-                                        <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
-                                            <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Date:</dt>
-                                            <dd className="mt-1.5 text-base font-semibold text-gray-900 dark:text-white">
-                                                {formatDate(order.orderDate)}
-                                            </dd>
-                                        </dl>
-
-                                        <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
-                                            <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Restaurant:</dt>
-                                            <dd className="mt-1.5 text-base font-semibold text-gray-900 dark:text-white">
-                                                {order.restaurant.name}
-                                            </dd>
-                                        </dl>
-
-                                        <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
-                                            <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Price:</dt>
-                                            <dd className="mt-1.5 text-base font-semibold text-gray-900 dark:text-white">
-                                                {formatPrice(order.total)}
-                                            </dd>
-                                        </dl>
-
-                                        <dl className="w-1/2 sm:w-1/4 lg:w-auto lg:flex-1">
-                                            <dt className="text-base font-medium text-gray-500 dark:text-gray-400">Status:</dt>
-                                            <dd className={`me-2 mt-1.5 inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
+                                    <div key={order.id} className="sm:grid sm:grid-cols-4 lg:grid-cols-5 items-center py-4 border-b border-gray-200 dark:border-gray-700">
+                                        <div className="text-gray-900 dark:text-white">
+                                            {formatDate(order.orderDate)}
+                                        </div>
+                                        <div className="text-gray-900 dark:text-white">
+                                            {order.restaurant.name}
+                                        </div>
+                                        <div className="text-gray-900 dark:text-white">
+                                            {formatPrice(order.total)}
+                                        </div>
+                                        <div>
+                                            <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`}>
                                                 {getStatusIcon(order.status)}
                                                 {order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                            </dd>
-                                        </dl>
-
-                                        <div className="w-full grid sm:grid-cols-2 lg:flex lg:w-64 lg:items-center lg:justify-end gap-4">
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-end space-x-2">
                                             <button 
-                                                onClick={() => handleViewDetails(order.id)}
-                                                className="w-full inline-flex justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 lg:w-auto"
+                                                onClick={() => handleViewDetails(order)}
+                                                className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
                                             >
-                                                View details
+                                                View
                                             </button>
+
                                             {canCancelOrder(order.status) ? (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleCancelOrder(order.id)}
-                                                    className="w-full rounded-lg border border-red-700 px-3 py-2 text-center text-sm font-medium text-red-700 hover:bg-red-700 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900 lg:w-auto"
+                                                <button
+                                                    onClick={() => handleCancelOrder(order)}
+                                                    disabled={cancellingOrderId === order.id}
+                                                    className="rounded-lg border border-red-600 px-2 py-1 text-sm text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    Cancel order
+                                                    {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel'}
                                                 </button>
                                             ) : canReorder(order.status) ? (
-                                                <button 
-                                                    type="button" 
+                                                <button
                                                     onClick={() => handleReorder(order)}
-                                                    className="w-full rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 lg:w-auto"
+                                                    className="rounded-lg bg-primary-700 px-2 py-1 text-sm text-white hover:bg-primary-800"
                                                 >
-                                                    Order again
+                                                    Reorder
                                                 </button>
-                                            ) : (
-                                                <div className="w-full lg:w-auto" /> // Empty space for consistent layout
-                                            )}
+                                            ) : null}
                                         </div>
                                     </div>
                                 ))}
@@ -374,6 +396,124 @@ const OrderSection: React.FC<Props> = ({ userId }) => {
                     )}
                 </div>
             </div>
+
+            {/* Cancel Order Confirmation Modal */}
+            <Modal isOpen={showCancelModal} onClose={() => setShowCancelModal(false)}>
+                <div className="text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        Cancel Order
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Are you sure you want to cancel this order from {selectedOrder?.restaurant.name}? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                        <button
+                            onClick={() => setShowCancelModal(false)}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                        >
+                            Keep Order
+                        </button>
+                        <button
+                            onClick={confirmCancelOrder}
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                            Cancel Order
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Order Details Modal */}
+            <Modal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)}>
+                {selectedOrder && (
+                    <div>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                            Order Details
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Order ID:</span>
+                                <span className="text-sm text-gray-900 dark:text-white">#{selectedOrder.id}</span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Restaurant:</span>
+                                <span className="text-sm text-gray-900 dark:text-white">{selectedOrder.restaurant.name}</span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date:</span>
+                                <span className="text-sm text-gray-900 dark:text-white">{formatDate(selectedOrder.orderDate)}</span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
+                                <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                                    {getStatusIcon(selectedOrder.status)}
+                                    {selectedOrder.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Address:</span>
+                                <span className="text-sm text-gray-900 dark:text-white break-words max-w-xs">{selectedOrder.deliveryAddress}</span>
+                            </div>
+                            
+                            <div className="border-t pt-4">
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Order Items:</h4>
+                                <div className="space-y-2 max-h-32 overflow-y-auto">
+                                    {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 ? (
+                                        selectedOrder.orderItems.map((item) => (
+                                            <div key={item.id} className="flex justify-between text-sm">
+                                                <span className="text-gray-700 dark:text-gray-300">
+                                                    {item.menu?.name || 'Unknown Item'} x{item.quantity}
+                                                </span>
+                                                <span className="text-gray-900 dark:text-white">
+                                                    {formatPrice(item.unitPrice * item.quantity)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            No items found for this order.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="border-t pt-4 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-700 dark:text-gray-300">Subtotal:</span>
+                                    <span className="text-gray-900 dark:text-white">{formatPrice(selectedOrder.total - (selectedOrder.deliveryFee || 0))}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-700 dark:text-gray-300">Delivery Fee:</span>
+                                    <span className="text-gray-900 dark:text-white">{formatPrice(selectedOrder.deliveryFee || 0)}</span>
+                                </div>
+                                <div className="flex justify-between text-base font-medium border-t pt-2">
+                                    <span className="text-gray-900 dark:text-white">Total:</span>
+                                    <span className="text-gray-900 dark:text-white">{formatPrice(selectedOrder.total)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={() => setShowDetailsModal(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </section>
     );
 };

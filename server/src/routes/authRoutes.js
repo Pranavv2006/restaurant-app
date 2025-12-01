@@ -5,7 +5,7 @@ const { authenticate } = require('../middlewares/authenticate');
 
 router.post('/refresh-token', refreshToken);
 
-router.post('/logout', authenticate, logout);
+router.post('/logout', logout);
 router.post('/logout-all', authenticate, logoutAll);
 
 module.exports = router;

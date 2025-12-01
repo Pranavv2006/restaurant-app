@@ -62,17 +62,7 @@ const Login = ({ onClose, onSwitchToRegister}: LoginProps) => {
 
       if (isSuccess) {
         if (loginResponseData?.user) {
-          const userData = {
-            id: loginResponseData.user.id,
-            email: loginResponseData.user.email,
-            firstName: loginResponseData.user.firstName,
-            lastName: loginResponseData.user.lastName,
-            roleType: loginResponseData.user.roleType,
-          };
-
-          console.log("Storing user data:", userData);
-          localStorage.setItem("user", JSON.stringify(userData));
-          localStorage.setItem("authToken", loginResponseData.accessToken); 
+          console.log("Login successful, tokens stored by AuthService");
         }
 
 
