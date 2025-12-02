@@ -1,10 +1,258 @@
 import { useEffect, useState } from "react";
 import { getCustomerOrders, cancelOrder, type OrdersData } from "../../services/CustomerService";
 import Modal from "./Modal";
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 interface Props {
     userId: number;
 }
+
+interface FinalOrderItems {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  image?: string;
+}
+
+interface OrderDetails {
+  items: FinalOrderItems[];
+  phone: string;
+  address: string;
+  instructions?: string;
+  paymentMethod: string;
+  orderIds: number[];
+  deliveryFee?: number;
+  tax?: number;
+}
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontSize: 12,
+    fontFamily: 'Helvetica',
+  },
+  header: {
+    marginBottom: 20,
+    borderBottom: '2px solid #333',
+    paddingBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 3,
+  },
+  section: {
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottom: '1px solid #eee',
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  itemQuantity: {
+    fontSize: 10,
+    color: '#666',
+  },
+  itemPrice: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  infoColumn: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 3,
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontSize: 11,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 5,
+  },
+  summaryLabel: {
+    fontSize: 11,
+  },
+  summaryValue: {
+    fontSize: 11,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    marginTop: 5,
+    borderTop: '2px solid #333',
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  totalValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  alert: {
+    backgroundColor: '#FEF3C7',
+    padding: 10,
+    marginBottom: 15,
+    borderLeft: '4px solid #F59E0B',
+  },
+  alertText: {
+    fontSize: 10,
+    color: '#92400E',
+  },
+});
+
+const mapToOrderDetails = (order: OrdersData): OrderDetails | null => {
+  // If there are no orderItems, we can't build a valid PDF — return null or handle it
+  if (!order.orderItems) return null;
+
+  return {
+    items: order.orderItems.map(item => ({
+      id: item.id,
+      name: item.menu.name,
+      quantity: item.quantity,
+      price: item.unitPrice,
+    })),
+    phone: order.restaurant.phone,   // using restaurant phone, or you may get phone from API if exists
+    address: order.deliveryAddress,
+    instructions: undefined,         // or if your API returns instructions, map it here
+    paymentMethod: 'cash',           // you said it's always cash
+    orderIds: [order.id],
+    deliveryFee: order.deliveryFee,
+    tax: undefined,                  // if your API doesn't give tax, you can leave undefined or set default
+  };
+};
+
+
+const OrderPDF = ({ orderData }: { orderData: OrderDetails }) => {
+  const calculateSubtotal = () =>
+    orderData.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const calculateTotal = () => 
+    calculateSubtotal() + (orderData.deliveryFee ?? 3.0) + (orderData.tax ?? 2.15);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Order Confirmation</Text>
+          <Text style={styles.subtitle}>Order placed successfully!</Text>
+          {orderData.orderIds.length > 0 && (
+            <Text style={styles.subtitle}>Order ID: #{orderData.orderIds[0]}</Text>
+          )}
+          <Text style={styles.subtitle}>Order Time: {new Date().toLocaleString()}</Text>
+        </View>
+
+        {/* Alert */}
+        <View style={styles.alert}>
+          <Text style={styles.alertText}>Order Status: Preparing</Text>
+          <Text style={styles.alertText}>Your order is being prepared and will be delivered soon.</Text>
+        </View>
+
+        {/* Order Items */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Items</Text>
+          {orderData.items.map((item) => (
+            <View key={item.id} style={styles.itemRow}>
+              <View style={styles.itemDetails}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+              </View>
+              <View>
+                <Text style={styles.itemPrice}>₹{(item.price * item.quantity).toFixed(2)}</Text>
+                <Text style={styles.itemQuantity}>₹{item.price.toFixed(2)} each</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Delivery Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Delivery Information</Text>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoColumn}>
+              <Text style={styles.infoLabel}>Contact</Text>
+              <Text style={styles.infoValue}>{orderData.phone}</Text>
+            </View>
+            <View style={styles.infoColumn}>
+              <Text style={styles.infoLabel}>Address</Text>
+              <Text style={styles.infoValue}>{orderData.address}</Text>
+            </View>
+          </View>
+          {orderData.instructions && (
+            <View>
+              <Text style={styles.infoLabel}>Special Instructions</Text>
+              <Text style={styles.infoValue}>{orderData.instructions}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Order Summary */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Summary</Text>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryValue}>₹{calculateSubtotal().toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery Fee</Text>
+            <Text style={styles.summaryValue}>₹{(orderData.deliveryFee ?? 3.0).toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Tax</Text>
+            <Text style={styles.summaryValue}>₹{(orderData.tax ?? 2.15).toFixed(2)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total Paid</Text>
+            <Text style={styles.totalValue}>₹{calculateTotal().toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {/* Payment */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment</Text>
+          <Text style={styles.infoValue}>
+            {orderData.paymentMethod === "cash" ? "Cash on Delivery" : orderData.paymentMethod}
+          </Text>
+          <Text style={styles.itemQuantity}>Payment will be collected upon delivery</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 const OrderSection = ({ userId }: Props) => {
     const [orders, setOrders] = useState<OrdersData[]>([]);
@@ -300,50 +548,64 @@ const OrderSection = ({ userId }: Props) => {
                                     <span>Status</span>
                                     <span className="text-right">Actions</span>
                                 </div>
-                                {currentOrders.map((order) => (
-                                    <div key={order.id} className="sm:grid sm:grid-cols-4 lg:grid-cols-5 items-center py-4 border-b border-gray-200 dark:border-gray-700">
-                                        <div className="text-gray-900 dark:text-white">
-                                            {formatDate(order.orderDate)}
-                                        </div>
-                                        <div className="text-gray-900 dark:text-white">
-                                            {order.restaurant.name}
-                                        </div>
-                                        <div className="text-gray-900 dark:text-white">
-                                            {formatPrice(order.total)}
-                                        </div>
-                                        <div>
-                                            <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                {getStatusIcon(order.status)}
-                                                {order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-end space-x-2">
-                                            <button 
-                                                onClick={() => handleViewDetails(order)}
-                                                className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
-                                            >
-                                                View
-                                            </button>
+                                {currentOrders.map((order) => {
+                                    const details = mapToOrderDetails(order);
+                                    return (
+                                        <div key={order.id} className="sm:grid sm:grid-cols-4 lg:grid-cols-5 items-center py-4 border-b border-gray-200 dark:border-gray-700">
+                                            <div className="text-gray-900 dark:text-white">
+                                                {formatDate(order.orderDate)}
+                                            </div>
+                                            <div className="text-gray-900 dark:text-white">
+                                                {order.restaurant.name}
+                                            </div>
+                                            <div className="text-gray-900 dark:text-white">
+                                                {formatPrice(order.total)}
+                                            </div>
+                                            <div>
+                                                <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`}>
+                                                    {getStatusIcon(order.status)}
+                                                    {order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-end space-x-2">
+                                                <button 
+                                                    onClick={() => handleViewDetails(order)}
+                                                    className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                >
+                                                    View
+                                                </button>
 
-                                            {canCancelOrder(order.status) ? (
-                                                <button
-                                                    onClick={() => handleCancelOrder(order)}
-                                                    disabled={cancellingOrderId === order.id}
-                                                    className="rounded-lg border border-red-600 px-2 py-1 text-sm text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel'}
-                                                </button>
-                                            ) : canReorder(order.status) ? (
-                                                <button
-                                                    onClick={() => handleReorder(order)}
-                                                    className="rounded-lg bg-primary-700 px-2 py-1 text-sm text-white hover:bg-primary-800"
-                                                >
-                                                    Reorder
-                                                </button>
-                                            ) : null}
+                                                {canCancelOrder(order.status) ? (
+                                                    <button
+                                                        onClick={() => handleCancelOrder(order)}
+                                                        disabled={cancellingOrderId === order.id}
+                                                        className="rounded-lg border border-red-600 px-2 py-1 text-sm text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel'}
+                                                    </button>
+                                                ) : canReorder(order.status) ? (
+                                                    <button
+                                                        onClick={() => handleReorder(order)}
+                                                        className="rounded-lg bg-primary-700 px-2 py-1 text-sm text-white hover:bg-primary-800"
+                                                    >
+                                                        Reorder
+                                                    </button>
+                                                ) : null}
+
+                                                {/* Add download link */}
+                                                {details && (
+                                                    <PDFDownloadLink
+                                                        document={<OrderPDF orderData={details} />}
+                                                        fileName={`order-${order.id}.pdf`}
+                                                        className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                    >
+                                                        {({ loading }) => loading ? 'Preparing…' : 'Download'}
+                                                    </PDFDownloadLink>
+                                                    )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
